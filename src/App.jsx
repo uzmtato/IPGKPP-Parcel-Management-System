@@ -21,7 +21,9 @@ const Icons = {
   Edit: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
   Info: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
   Lock: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
-  X: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+  X: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>,
+  Barcode: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 5v14"/><path d="M8 5v14"/><path d="M12 5v14"/><path d="M17 5v14"/><path d="M21 5v14"/><path d="M3 12h18"/><path d="M8 12v12"/><path d="M17 12v12"/></svg>,
+  Camera: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
 };
 
 const COURIERS = [
@@ -256,6 +258,14 @@ const STYLES = {
     maxWidth: '448px',
     overflow: 'hidden',
   },
+  modalContentLarge: {
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+    width: '100%',
+    maxWidth: '560px',
+    overflow: 'hidden',
+  },
   modalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -287,6 +297,20 @@ const STYLES = {
     fontWeight: 600,
     cursor: 'pointer',
     transition: 'background-color 0.15s',
+  },
+  btnSecondary: {
+    padding: '8px 16px',
+    backgroundColor: '#f1f5f9',
+    color: '#334155',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    transition: 'all 0.15s',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
   },
   btnDanger: {
     padding: '6px',
@@ -417,6 +441,44 @@ const STYLES = {
     margin: 0,
     marginTop: '2px',
   },
+  scannerContainer: {
+    width: '100%',
+    maxWidth: '400px',
+    margin: '0 auto',
+    borderRadius: '12px',
+    overflow: 'hidden',
+    backgroundColor: '#000',
+    position: 'relative',
+  },
+  scannerOverlay: {
+    position: 'absolute',
+    inset: 0,
+    border: '3px solid #4f46e5',
+    borderRadius: '12px',
+    pointerEvents: 'none',
+  },
+  scannerLine: {
+    position: 'absolute',
+    left: '10%',
+    right: '10%',
+    height: '2px',
+    backgroundColor: '#4f46e5',
+    boxShadow: '0 0 10px #4f46e5',
+    animation: 'scanline 2s ease-in-out infinite',
+  },
+  scanSuccess: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 16px',
+    backgroundColor: '#d1fae5',
+    border: '1px solid #a7f3d0',
+    borderRadius: '8px',
+    color: '#065f46',
+    fontSize: '14px',
+    fontWeight: 500,
+    marginTop: '12px',
+  },
 };
 
 function formatDate(dateString) {
@@ -440,6 +502,175 @@ function getTimeAgo(dateString) {
   return 'Today';
 }
 
+// Barcode Scanner Component
+function BarcodeScanner({ onScan, onClose }) {
+  const scannerRef = useRef(null);
+  const html5QrCodeRef = useRef(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [lastScanned, setLastScanned] = useState('');
+  const [error, setError] = useState('');
+  const [isLibraryLoaded, setIsLibraryLoaded] = useState(false);
+  const [cameraPermission, setCameraPermission] = useState('prompt');
+
+  useEffect(() => {
+    // Load html5-qrcode library dynamically
+    if (window.Html5Qrcode) {
+      setIsLibraryLoaded(true);
+      return;
+    }
+    
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+    script.async = true;
+    script.onload = () => {
+      setIsLibraryLoaded(true);
+    };
+    script.onerror = () => {
+      setError('Failed to load barcode scanner library. Please check your internet connection.');
+    };
+    document.head.appendChild(script);
+    
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isLibraryLoaded || !scannerRef.current) return;
+    
+    let qrCodeInstance = null;
+    let scanTimeout = null;
+
+    const startScanning = async () => {
+      try {
+        setError('');
+        qrCodeInstance = new window.Html5Qrcode(scannerRef.current.id);
+        html5QrCodeRef.current = qrCodeInstance;
+        
+        const config = {
+          fps: 10,
+          qrbox: { width: 250, height: 150 },
+          aspectRatio: 1.0,
+        };
+        
+        await qrCodeInstance.start(
+          { facingMode: "environment" },
+          config,
+          (decodedText) => {
+            // Successful scan
+            clearTimeout(scanTimeout);
+            setLastScanned(decodedText);
+            setIsScanning(false);
+            
+            // Stop scanner after successful scan
+            if (qrCodeInstance) {
+              qrCodeInstance.stop().then(() => {
+                qrCodeInstance.clear();
+              }).catch(() => {});
+            }
+            
+            // Auto-register after short delay
+            scanTimeout = setTimeout(() => {
+              onScan(decodedText);
+            }, 500);
+          },
+          () => {
+            // Scan failure - silent
+          }
+        );
+        setIsScanning(true);
+      } catch (err) {
+        console.error('Scanner error:', err);
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          setError('Camera permission denied. Please allow camera access and try again.');
+          setCameraPermission('denied');
+        } else if (err.name === 'NotFoundError') {
+          setError('No camera found on this device.');
+        } else {
+          setError('Failed to start camera: ' + err.message);
+        }
+      }
+    };
+
+    startScanning();
+
+    return () => {
+      clearTimeout(scanTimeout);
+      if (qrCodeInstance) {
+        qrCodeInstance.stop().then(() => {
+          qrCodeInstance.clear();
+        }).catch(() => {});
+      }
+    };
+  }, [isLibraryLoaded]);
+
+  return (
+    <Modal title="📦 Scan Barcode" onClose={onClose} large>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <p style={{ fontSize: '13px', color: '#64748b', margin: 0, textAlign: 'center' }}>
+          Point your camera at the parcel barcode to auto-fill the tracking number
+        </p>
+
+        {!isLibraryLoaded ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+            <div style={{ width: '40px', height: '40px', border: '3px solid #e2e8f0', borderTop: '3px solid #4f46e5', borderRadius: '50%', margin: '0 auto 12px', animation: 'spin 1s linear infinite' }}></div>
+            <p style={{ margin: 0, fontSize: '14px' }}>Loading barcode scanner...</p>
+          </div>
+        ) : error ? (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '12px' }}>📷</div>
+            <p style={{ color: '#dc2626', fontSize: '14px', margin: '0 0 8px 0' }}>{error}</p>
+            <p style={{ color: '#64748b', fontSize: '12px', margin: 0 }}>
+              Make sure you're using HTTPS and have granted camera permissions.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              style={{ ...STYLES.btnPrimary, marginTop: '16px', maxWidth: '200px', margin: '16px auto 0' }}
+            >
+              Reload Page
+            </button>
+          </div>
+        ) : (
+          <>
+            <div style={STYLES.scannerContainer}>
+              <div id="barcode-scanner-container" ref={scannerRef} style={{ width: '100%', minHeight: '300px' }}></div>
+              {isScanning && (
+                <>
+                  <div style={STYLES.scannerOverlay}></div>
+                  <div style={STYLES.scannerLine}></div>
+                </>
+              )}
+            </div>
+
+            {lastScanned && (
+              <div style={STYLES.scanSuccess}>
+                <Icons.CheckCircle width={20} height={20} />
+                <span>Barcode detected: <strong>{lastScanned}</strong></span>
+              </div>
+            )}
+
+            {!isScanning && !lastScanned && !error && (
+              <div style={{ textAlign: 'center', padding: '20px', color: '#64748b', fontSize: '13px' }}>
+                <Icons.Camera width={32} height={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
+                <p style={{ margin: 0 }}>Initializing camera...</p>
+              </div>
+            )}
+          </>
+        )}
+
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={onClose}
+            style={{ ...STYLES.btnPrimary, backgroundColor: '#f1f5f9', color: '#334155' }}
+          >
+            Close Scanner
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 export default function ParcelManagementSystem() {
   const [user, setUser] = useState(null);
   const [view, setView] = useState('dashboard');
@@ -451,6 +682,8 @@ export default function ParcelManagementSystem() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannedTracking, setScannedTracking] = useState('');
   const menuRef = useRef(null);
 
   const [mockUsers, setMockUsers] = useState(() => {
@@ -591,6 +824,7 @@ export default function ParcelManagementSystem() {
     
     setParcels(p => [newParcel, ...p]);
     setAdminForm({ trackingNo: '', sender: '', senderOther: '', recipient: '', status: 'Pending', location: 'Main Post Office', description: '' });
+    setScannedTracking('');
     alert('Parcel registered successfully');
   };
 
@@ -632,6 +866,13 @@ export default function ParcelManagementSystem() {
     setPasswordForm({ current: '', new: '', confirm: '' });
     setActiveModal(null);
     alert('Password updated successfully!');
+  };
+
+  const handleBarcodeScan = (decodedText) => {
+    const cleanText = decodedText.trim().toUpperCase();
+    setScannedTracking(cleanText);
+    setAdminForm(prev => ({ ...prev, trackingNo: cleanText }));
+    setScannerOpen(false);
   };
 
   const isAdmin = user?.role === 'admin';
@@ -791,6 +1032,8 @@ export default function ParcelManagementSystem() {
               <AdminView
                 parcels={parcels} form={adminForm} setForm={setAdminForm}
                 onAdd={handleAddParcel} onUpdate={updateStatus} onDelete={handleDeleteParcel}
+                onOpenScanner={() => setScannerOpen(true)}
+                scannedTracking={scannedTracking}
               />
             )}
 
@@ -885,6 +1128,13 @@ export default function ParcelManagementSystem() {
           </div>
         </Modal>
       )}
+
+      {scannerOpen && (
+        <BarcodeScanner
+          onScan={handleBarcodeScan}
+          onClose={() => setScannerOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -898,10 +1148,10 @@ function DetailRow({ label, value, valueColor }) {
   );
 }
 
-function Modal({ title, children, onClose }) {
+function Modal({ title, children, onClose, large }) {
   return (
     <div style={STYLES.modal} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={STYLES.modalContent}>
+      <div style={large ? STYLES.modalContentLarge : STYLES.modalContent}>
         <div style={STYLES.modalHeader}>
           <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', margin: 0 }}>{title}</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px', borderRadius: '6px' }}
@@ -1164,18 +1414,49 @@ function MyParcelsView({ parcels }) {
   );
 }
 
-function AdminView({ parcels, form, setForm, onAdd, onUpdate, onDelete }) {
+function AdminView({ parcels, form, setForm, onAdd, onUpdate, onDelete, onOpenScanner, scannedTracking }) {
   const up = (k) => (e) => setForm(prev => ({ ...prev, [k]: e.target.value }));
   const isOthers = form.sender === 'Others';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={STYLES.card}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0' }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ fontWeight: 600, color: '#0f172a', margin: 0, fontSize: '16px' }}>Register Incoming Parcel</h3>
+          <button
+            type="button"
+            onClick={onOpenScanner}
+            style={STYLES.btnSecondary}
+            onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#e2e8f0'; }}
+            onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; }}
+          >
+            <Icons.Barcode width={18} height={18} />
+            Scan Barcode
+          </button>
         </div>
         <form onSubmit={onAdd} style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-          <input value={form.trackingNo} onChange={up('trackingNo')} placeholder="Tracking Number" style={STYLES.input} required />
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Tracking Number {scannedTracking && <span style={{ color: '#16a34a', fontWeight: 400, textTransform: 'none', letterSpacing: 'normal' }}>✓ Scanned from barcode</span>}
+            </label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input 
+                value={form.trackingNo} 
+                onChange={up('trackingNo')} 
+                placeholder="Tracking Number (or scan barcode)" 
+                style={{ ...STYLES.input, flex: 1, borderColor: scannedTracking ? '#86efac' : '#cbd5e1' }} 
+                required 
+              />
+              <button
+                type="button"
+                onClick={onOpenScanner}
+                style={{ ...STYLES.btnSecondary, flexShrink: 0, padding: '10px 14px' }}
+                title="Scan barcode"
+              >
+                <Icons.Camera width={18} height={18} />
+              </button>
+            </div>
+          </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <select value={form.sender} onChange={up('sender')} style={{ ...STYLES.input, backgroundColor: '#ffffff' }} required>
