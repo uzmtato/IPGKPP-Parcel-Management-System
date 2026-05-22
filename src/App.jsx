@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 
+const IPGKPP_LOGO = 'https://image.qwenlm.ai/public_source/a5365ccb-778a-4d10-aedb-64b519a3dff3/10c2878d5-8e35-49f7-9978-d6f399874b81.png';
+const IPGKPP_BG = 'https://image.qwenlm.ai/public_source/a5365ccb-778a-4d10-aedb-64b519a3dff3/1ee67feb7-707c-4c46-8395-a946662c0e1d.png';
+
 const Icons = {
   Package: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" x2="12" y1="22.08" y2="12"/></svg>,
   LayoutDashboard: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>,
@@ -21,6 +24,41 @@ const Icons = {
   X: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
 };
 
+const COURIERS = [
+  { label: 'Pos Laju', value: 'Pos Laju' },
+  { label: 'J&T Express', value: 'J&T Express' },
+  { label: 'Shopee Express', value: 'Shopee Express' },
+  { label: 'DHL eCommerce', value: 'DHL eCommerce' },
+  { label: 'FedEx', value: 'FedEx' },
+  { label: 'UPS', value: 'UPS' },
+  { label: 'CityLink Express', value: 'CityLink Express' },
+  { label: 'Ninja Van', value: 'Ninja Van' },
+  { label: 'GDEX', value: 'GDEX' },
+  { label: 'Skynet', value: 'Skynet' },
+  { label: 'Others', value: 'Others' }
+];
+
+const STORAGE_KEYS = {
+  USERS: 'ipgkpp_parcels_users',
+  PARCELS: 'ipgkpp_parcels_data',
+  SESSION: 'ipgkpp_parcels_session'
+};
+
+const DEFAULT_USERS = [
+  { username: 'student1', email: 'student1@ipgkpp.edu', password: '123456', name: 'Ahmad Ali', idNo: 'D20201234', phone: '012-3456789', role: 'student', createdAt: new Date('2024-01-15T08:00:00').toISOString() },
+  { username: 'staff1', email: 'staff1@ipgkpp.edu', password: '123456', name: 'Siti Aminah', idNo: 'ST-9988', phone: '013-9876543', role: 'staff', createdAt: new Date('2024-03-20T10:30:00').toISOString() },
+  { username: 'admin', email: 'admin@ipgkpp.edu', password: '123456', name: 'Admin Office', idNo: 'ADM-001', phone: '011-1111111', role: 'admin', createdAt: new Date('2023-06-01T09:00:00').toISOString() },
+];
+
+const DEFAULT_PARCELS = [
+  { id: 1, trackingNo: 'PKG-8821X', sender: 'Shopee Express', recipient: 'student1', status: 'Arrived', dateReceived: '2025-05-18', location: 'Main Post Office', description: 'Academic Textbooks & Stationery (Handle with care)' },
+  { id: 2, trackingNo: 'PL-4490A', sender: 'Pos Laju', recipient: 'staff1', status: 'Pending', dateReceived: '2025-05-20', location: 'Admin Counter', description: 'Departmental Office Supplies' },
+  { id: 3, trackingNo: 'JT-7723B', sender: 'J&T Express', recipient: 'student1', status: 'Overdue', dateReceived: '2025-05-10', location: 'Storage Room B', description: 'Personal Clothing Items' },
+  { id: 4, trackingNo: 'DHL-9910C', sender: 'DHL eCommerce', recipient: 'admin', status: 'Collected', dateReceived: '2025-05-15', location: 'Admin Counter', description: 'Server Maintenance Parts' },
+  { id: 5, trackingNo: 'FE-1123D', sender: 'FedEx', recipient: 'student1', status: 'Pending', dateReceived: '2025-05-22', location: 'Main Post Office', description: 'Electronics' },
+  { id: 6, trackingNo: 'UPS-5566E', sender: 'UPS', recipient: 'staff1', status: 'Arrived', dateReceived: '2025-05-21', location: 'Admin Counter', description: 'Medical Supplies' },
+];
+
 const STYLES = {
   app: {
     display: 'flex',
@@ -30,7 +68,7 @@ const STYLES = {
     backgroundColor: '#f8fafc',
   },
   sidebar: {
-    width: '256px',
+    width: '260px',
     backgroundColor: '#ffffff',
     borderRight: '1px solid #e2e8f0',
     display: 'flex',
@@ -49,16 +87,16 @@ const STYLES = {
     transform: 'translateX(0)',
   },
   sidebarHeader: {
-    padding: '24px',
+    padding: '16px 10px',
     borderBottom: '1px solid #e2e8f0',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
   },
-  logoText: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-    color: '#0f172a',
+  sidebarLogo: {
+    width: '220px',
+    height: 'auto',
+    objectFit: 'contain',
   },
   nav: {
     flex: 1,
@@ -85,7 +123,7 @@ const STYLES = {
   }),
   main: {
     flex: 1,
-    marginLeft: '256px',
+    marginLeft: '260px',
     display: 'flex',
     flexDirection: 'column',
     minWidth: 0,
@@ -96,7 +134,7 @@ const STYLES = {
   header: {
     backgroundColor: '#ffffff',
     borderBottom: '1px solid #e2e8f0',
-    padding: '12px 16px',
+    padding: '8px 16px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -104,10 +142,42 @@ const STYLES = {
     top: 0,
     zIndex: 50,
   },
+  headerInstitution: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+  },
+  headerInstitutionLogo: {
+    height: '32px',
+    width: 'auto',
+    objectFit: 'contain',
+  },
+  headerInstitutionText: {
+    fontSize: '11px',
+    fontWeight: 700,
+    color: '#1e3a8a',
+    letterSpacing: '0.025em',
+    lineHeight: '1.2',
+  },
   content: {
     flex: 1,
     padding: '24px 32px',
     overflowY: 'auto',
+    position: 'relative',
+  },
+  contentBg: {
+    position: 'absolute',
+    inset: 0,
+    backgroundImage: `url(${IPGKPP_BG})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    opacity: 0.25,
+    pointerEvents: 'none',
+    zIndex: 0,
+  },
+  contentInner: {
+    position: 'relative',
+    zIndex: 1,
   },
   hamburger: {
     padding: '8px',
@@ -250,12 +320,16 @@ const STYLES = {
     borderRadius: '12px',
     border: '1px solid #e2e8f0',
     overflow: 'hidden',
+    position: 'relative',
+    zIndex: 1,
   },
   statCard: {
     backgroundColor: '#ffffff',
     padding: '16px',
     borderRadius: '12px',
     border: '1px solid #e2e8f0',
+    position: 'relative',
+    zIndex: 1,
   },
   table: {
     width: '100%',
@@ -285,6 +359,8 @@ const STYLES = {
     marginTop: '16px',
     paddingTop: '16px',
     borderTop: '1px solid #e2e8f0',
+    position: 'relative',
+    zIndex: 1,
   },
   pageBtn: (active) => ({
     width: '32px',
@@ -306,16 +382,49 @@ const STYLES = {
     backgroundColor: 'rgba(0,0,0,0.4)',
     zIndex: 99,
   },
+  pageBanner: {
+    position: 'relative',
+    zIndex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    padding: '12px 20px',
+    marginBottom: '20px',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0',
+    backdropFilter: 'blur(8px)',
+  },
+  bannerLogo: {
+    height: '48px',
+    width: 'auto',
+    objectFit: 'contain',
+  },
+  bannerText: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  bannerTitle: {
+    fontSize: '14px',
+    fontWeight: 700,
+    color: '#1e3a8a',
+    margin: 0,
+    letterSpacing: '0.025em',
+  },
+  bannerSubtitle: {
+    fontSize: '10px',
+    color: '#64748b',
+    margin: 0,
+    marginTop: '2px',
+  },
 };
 
-// Utility function to format date
 function formatDate(dateString) {
   if (!dateString) return 'N/A';
   const d = new Date(dateString);
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-// Utility function to get time ago string
 function getTimeAgo(dateString) {
   if (!dateString) return '';
   const now = new Date();
@@ -344,30 +453,77 @@ export default function ParcelManagementSystem() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const menuRef = useRef(null);
 
-  // Update current time every second
+  const [mockUsers, setMockUsers] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.USERS);
+      return saved ? JSON.parse(saved) : DEFAULT_USERS;
+    } catch {
+      return DEFAULT_USERS;
+    }
+  });
+
+  const [parcels, setParcels] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.PARCELS);
+      return saved ? JSON.parse(saved) : DEFAULT_PARCELS;
+    } catch {
+      return DEFAULT_PARCELS;
+    }
+  });
+
+  const [adminForm, setAdminForm] = useState({ trackingNo: '', sender: '', senderOther: '', recipient: '', status: 'Pending', location: 'Main Post Office', description: '' });
+  const [profileForm, setProfileForm] = useState({ name: '', email: '', phone: '', address: '' });
+  const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(mockUsers));
+    } catch (e) {
+      console.warn('Failed to save users to localStorage');
+    }
+  }, [mockUsers]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.PARCELS, JSON.stringify(parcels));
+    } catch (e) {
+      console.warn('Failed to save parcels to localStorage');
+    }
+  }, [parcels]);
+
+  useEffect(() => {
+    try {
+      const savedSession = localStorage.getItem(STORAGE_KEYS.SESSION);
+      if (savedSession) {
+        const parsed = JSON.parse(savedSession);
+        setUser(parsed);
+        setProfileForm({ name: parsed.name, email: parsed.email, phone: parsed.phone || '', address: '' });
+      }
+    } catch {
+      // Invalid session, ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      try {
+        localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(user));
+      } catch {
+        console.warn('Failed to save session');
+      }
+    } else {
+      try {
+        localStorage.removeItem(STORAGE_KEYS.SESSION);
+      } catch {
+        // Ignore
+      }
+    }
+  }, [user]);
+
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
-
-  const [mockUsers, setMockUsers] = useState([
-    { username: 'student1', email: 'student1@ipgkpp.edu', password: '123456', name: 'Ahmad Ali', idNo: 'D20201234', phone: '012-3456789', role: 'student', createdAt: new Date('2024-01-15T08:00:00').toISOString() },
-    { username: 'staff1', email: 'staff1@ipgkpp.edu', password: '123456', name: 'Siti Aminah', idNo: 'ST-9988', phone: '013-9876543', role: 'staff', createdAt: new Date('2024-03-20T10:30:00').toISOString() },
-    { username: 'admin', email: 'admin@ipgkpp.edu', password: '123456', name: 'Admin Office', idNo: 'ADM-001', phone: '011-1111111', role: 'admin', createdAt: new Date('2023-06-01T09:00:00').toISOString() },
-  ]);
-
-  const [parcels, setParcels] = useState([
-    { id: 1, trackingNo: 'PKG-8821X', sender: 'Shopee Express', recipient: 'student1', status: 'Arrived', dateReceived: '2025-05-18', location: 'Main Post Office', description: 'Academic Textbooks & Stationery (Handle with care)' },
-    { id: 2, trackingNo: 'PL-4490A', sender: 'Pos Laju', recipient: 'staff1', status: 'Pending', dateReceived: '2025-05-20', location: 'Admin Counter', description: 'Departmental Office Supplies' },
-    { id: 3, trackingNo: 'JT-7723B', sender: 'J&T Express', recipient: 'student1', status: 'Overdue', dateReceived: '2025-05-10', location: 'Storage Room B', description: 'Personal Clothing Items' },
-    { id: 4, trackingNo: 'DHL-9910C', sender: 'DHL eCommerce', recipient: 'admin', status: 'Collected', dateReceived: '2025-05-15', location: 'Admin Counter', description: 'Server Maintenance Parts' },
-    { id: 5, trackingNo: 'FE-1123D', sender: 'FedEx', recipient: 'student1', status: 'Pending', dateReceived: '2025-05-22', location: 'Main Post Office', description: 'Electronics' },
-    { id: 6, trackingNo: 'UPS-5566E', sender: 'UPS', recipient: 'staff1', status: 'Arrived', dateReceived: '2025-05-21', location: 'Admin Counter', description: 'Medical Supplies' },
-  ]);
-
-  const [adminForm, setAdminForm] = useState({ trackingNo: '', sender: '', recipient: '', status: 'Pending', location: 'Main Post Office', description: '' });
-  const [profileForm, setProfileForm] = useState({ name: '', email: '', phone: '', address: '' });
-  const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -395,7 +551,8 @@ export default function ParcelManagementSystem() {
   const handleLogin = (username, password) => {
     const found = mockUsers.find(u => u.username === username && u.password === password);
     if (found) {
-      setUser({ ...found, lastLogin: new Date().toISOString() });
+      const loggedUser = { ...found, lastLogin: new Date().toISOString() };
+      setUser(loggedUser);
       setProfileForm({ name: found.name, email: found.email, phone: found.phone || '', address: '' });
       setView('dashboard');
     } else {
@@ -403,7 +560,12 @@ export default function ParcelManagementSystem() {
     }
   };
 
-  const handleLogout = () => { setUser(null); setView('login'); setUserMenuOpen(false); };
+  const handleLogout = () => { 
+    setUser(null); 
+    setView('login'); 
+    setUserMenuOpen(false); 
+    localStorage.removeItem(STORAGE_KEYS.SESSION);
+  };
 
   const handleSignUp = (data) => {
     if (mockUsers.some(u => u.username === data.username || u.email === data.email)) { alert('Account already exists'); return; }
@@ -416,8 +578,19 @@ export default function ParcelManagementSystem() {
   const handleAddParcel = (e) => {
     e.preventDefault();
     if (!adminForm.trackingNo || !adminForm.recipient) return;
-    setParcels(p => [{ ...adminForm, id: Date.now(), dateReceived: new Date().toISOString().split('T')[0] }, ...p]);
-    setAdminForm({ trackingNo: '', sender: '', recipient: '', status: 'Pending', location: 'Main Post Office', description: '' });
+    const senderValue = adminForm.sender === 'Others' ? adminForm.senderOther : adminForm.sender;
+    if (!senderValue) return;
+    
+    const newParcel = {
+      ...adminForm,
+      sender: senderValue,
+      id: Date.now(),
+      dateReceived: new Date().toISOString().split('T')[0]
+    };
+    delete newParcel.senderOther;
+    
+    setParcels(p => [newParcel, ...p]);
+    setAdminForm({ trackingNo: '', sender: '', senderOther: '', recipient: '', status: 'Pending', location: 'Main Post Office', description: '' });
     alert('Parcel registered successfully');
   };
 
@@ -443,7 +616,9 @@ export default function ParcelManagementSystem() {
 
   const handleSaveInfo = () => {
     if (!profileForm.name || !profileForm.email) { alert('Name and email are required'); return; }
-    setUser(prev => ({ ...prev, ...profileForm }));
+    const updatedUser = { ...user, ...profileForm };
+    setUser(updatedUser);
+    setMockUsers(prev => prev.map(u => u.username === updatedUser.username ? updatedUser : u));
     setActiveModal(null);
     alert('Profile updated successfully!');
   };
@@ -451,7 +626,9 @@ export default function ParcelManagementSystem() {
   const handleChangePassword = () => {
     if (passwordForm.new !== passwordForm.confirm) { alert('Passwords do not match'); return; }
     if (passwordForm.new.length < 6) { alert('Password must be at least 6 characters'); return; }
-    setUser(prev => ({ ...prev, password: passwordForm.new }));
+    const updatedUser = { ...user, password: passwordForm.new };
+    setUser(updatedUser);
+    setMockUsers(prev => prev.map(u => u.username === updatedUser.username ? updatedUser : u));
     setPasswordForm({ current: '', new: '', confirm: '' });
     setActiveModal(null);
     alert('Password updated successfully!');
@@ -478,6 +655,12 @@ export default function ParcelManagementSystem() {
 
   if (!user) return <AuthView onLogin={handleLogin} onSignUp={handleSignUp} view={view === 'dashboard' ? 'login' : view} setView={setView} />;
 
+  const viewTitles = {
+    dashboard: 'Dashboard',
+    myparcels: 'Parcel Tracking',
+    admin: 'Admin Panel'
+  };
+
   return (
     <div style={STYLES.app}>
       {isMobile && sidebarOpen && (
@@ -489,12 +672,7 @@ export default function ParcelManagementSystem() {
         ...(isMobile ? (sidebarOpen ? STYLES.sidebarOpen : STYLES.sidebarMobile) : {}),
       }}>
         <div style={STYLES.sidebarHeader}>
-          <span style={STYLES.logoText}>IPGKPP Parcels</span>
-          {isMobile && (
-            <button onClick={() => setSidebarOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px' }}>
-              <Icons.ChevronLeft width={20} height={20} />
-            </button>
-          )}
+          <img src={IPGKPP_LOGO} alt="IPGKPP" style={STYLES.sidebarLogo} />
         </div>
         <nav style={STYLES.nav}>
           {[
@@ -528,9 +706,10 @@ export default function ParcelManagementSystem() {
           >
             <Icons.Menu width={24} height={24} />
           </button>
-          <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
-            {view === 'myparcels' ? 'Parcel Tracking' : view === 'dashboard' ? 'Dashboard' : 'Admin Panel'}
-          </h2>
+          
+          <div style={STYLES.headerInstitution}>
+            <img src={IPGKPP_LOGO} alt="IPGKPP" style={STYLES.headerInstitutionLogo} />
+          </div>
 
           <div style={STYLES.userMenuContainer} ref={menuRef}>
             <button
@@ -589,54 +768,65 @@ export default function ParcelManagementSystem() {
         </header>
 
         <div style={STYLES.content}>
-          {view === 'dashboard' && (
-            <DashboardView
-              parcels={paginatedParcels}
-              trackInput={trackInput} setTrackInput={setTrackInput} onTrack={handleTrackParcel}
-              foundParcel={foundParcel} onCollect={id => updateStatus(id, 'Collected')}
-              stats={stats} isAdmin={isAdmin}
-            />
-          )}
-          {view === 'myparcels' && <MyParcelsView parcels={paginatedParcels} />}
-          {view === 'admin' && isAdmin && (
-            <AdminView
-              parcels={parcels} form={adminForm} setForm={setAdminForm}
-              onAdd={handleAddParcel} onUpdate={updateStatus} onDelete={handleDeleteParcel}
-            />
-          )}
-
-          {totalPages > 1 && (
-            <div style={STYLES.pagination}>
-              <span style={{ fontSize: '14px', color: '#64748b' }}>
-                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} records
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <button
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  style={{ ...STYLES.pageBtn(false), opacity: currentPage === 1 ? 0.4 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
-                >
-                  <Icons.ChevronLeft width={16} height={16} />
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
-                  <button
-                    key={pg}
-                    onClick={() => setCurrentPage(pg)}
-                    style={STYLES.pageBtn(currentPage === pg)}
-                  >
-                    {pg}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  style={{ ...STYLES.pageBtn(false), opacity: currentPage === totalPages ? 0.4 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
-                >
-                  <Icons.ChevronRight width={16} height={16} />
-                </button>
+          <div style={STYLES.contentBg} />
+          <div style={STYLES.contentInner}>
+            <div style={STYLES.pageBanner}>
+              <img src={IPGKPP_LOGO} alt="IPGKPP" style={STYLES.bannerLogo} />
+              <div style={STYLES.bannerText}>
+                <h2 style={STYLES.bannerTitle}>INSTITUT PENDIDIKAN GURU KAMPUS PULAU PINANG</h2>
+                <p style={STYLES.bannerSubtitle}>Parcel Management System — {viewTitles[view] || 'Dashboard'}</p>
               </div>
             </div>
-          )}
+
+            {view === 'dashboard' && (
+              <DashboardView
+                parcels={paginatedParcels}
+                trackInput={trackInput} setTrackInput={setTrackInput} onTrack={handleTrackParcel}
+                foundParcel={foundParcel} onCollect={id => updateStatus(id, 'Collected')}
+                stats={stats} isAdmin={isAdmin}
+              />
+            )}
+            {view === 'myparcels' && <MyParcelsView parcels={paginatedParcels} />}
+            {view === 'admin' && isAdmin && (
+              <AdminView
+                parcels={parcels} form={adminForm} setForm={setAdminForm}
+                onAdd={handleAddParcel} onUpdate={updateStatus} onDelete={handleDeleteParcel}
+              />
+            )}
+
+            {totalPages > 1 && (
+              <div style={STYLES.pagination}>
+                <span style={{ fontSize: '14px', color: '#64748b' }}>
+                  Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} records
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    style={{ ...STYLES.pageBtn(false), opacity: currentPage === 1 ? 0.4 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                  >
+                    <Icons.ChevronLeft width={16} height={16} />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
+                    <button
+                      key={pg}
+                      onClick={() => setCurrentPage(pg)}
+                      style={STYLES.pageBtn(currentPage === pg)}
+                    >
+                      {pg}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    style={{ ...STYLES.pageBtn(false), opacity: currentPage === totalPages ? 0.4 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                  >
+                    <Icons.ChevronRight width={16} height={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -731,8 +921,9 @@ function AuthView({ onLogin, onSignUp, view, setView }) {
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #312e81 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
       <div style={{ marginBottom: '32px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.025em' }}>IPGKPP Parcel Management System</h1>
-        <p style={{ color: '#c7d2fe', marginTop: '8px', fontSize: '14px' }}>Secure, efficient campus logistics tracking system</p>
+        <img src={IPGKPP_LOGO} alt="IPGKPP" style={{ width: '360px', height: 'auto', marginBottom: '16px', objectFit: 'contain' }} />
+        <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.025em' }}>Parcel Management System</h1>
+        <p style={{ color: '#c7d2fe', marginTop: '4px', fontSize: '13px' }}>Secure, efficient campus logistics tracking</p>
       </div>
       <div style={{ width: '100%', maxWidth: '448px', backgroundColor: '#ffffff', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
         <div style={{ display: 'flex', borderBottom: '1px solid #f1f5f9' }}>
@@ -819,13 +1010,13 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {isAdmin && (
-        <div style={{ backgroundColor: '#eef2ff', border: '1px solid #c7d2fe', color: '#3730a3', padding: '10px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ ...STYLES.statCard, backgroundColor: '#eef2ff', border: '1px solid #c7d2fe', color: '#3730a3', padding: '10px 16px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Icons.Users width={16} height={16} />
           Administrator View: Showing all system parcels
         </div>
       )}
 
-      <div style={{ backgroundColor: '#4f46e5', borderRadius: '12px', padding: '24px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
+      <div style={{ backgroundColor: '#4f46e5', borderRadius: '12px', padding: '24px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', position: 'relative', zIndex: 1 }}>
         <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff', margin: '0 0 8px 0' }}>Track Your Parcel</h2>
         <p style={{ color: '#c7d2fe', marginBottom: '16px', fontSize: '14px' }}>Enter your tracking number to find the status and description of your package.</p>
         <form onSubmit={onTrack} style={{ display: 'flex', gap: '12px' }}>
@@ -974,7 +1165,8 @@ function MyParcelsView({ parcels }) {
 }
 
 function AdminView({ parcels, form, setForm, onAdd, onUpdate, onDelete }) {
-  const up = k => e => setForm(prev => ({ ...prev, [k]: e.target.value }));
+  const up = (k) => (e) => setForm(prev => ({ ...prev, [k]: e.target.value }));
+  const isOthers = form.sender === 'Others';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -984,7 +1176,25 @@ function AdminView({ parcels, form, setForm, onAdd, onUpdate, onDelete }) {
         </div>
         <form onSubmit={onAdd} style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <input value={form.trackingNo} onChange={up('trackingNo')} placeholder="Tracking Number" style={STYLES.input} required />
-          <input value={form.sender} onChange={up('sender')} placeholder="Courier / Sender" style={STYLES.input} required />
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <select value={form.sender} onChange={up('sender')} style={{ ...STYLES.input, backgroundColor: '#ffffff' }} required>
+              <option value="" disabled>Select Courier</option>
+              {COURIERS.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+            {isOthers && (
+              <input 
+                value={form.senderOther} 
+                onChange={up('senderOther')} 
+                placeholder="Enter courier name" 
+                style={STYLES.input} 
+                required={isOthers}
+              />
+            )}
+          </div>
+
           <input value={form.recipient} onChange={up('recipient')} placeholder="Recipient Username" style={STYLES.input} required />
           <select value={form.status} onChange={up('status')} style={{ ...STYLES.input, backgroundColor: '#ffffff' }}>
             <option>Pending</option>
