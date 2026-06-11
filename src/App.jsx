@@ -48,6 +48,12 @@ const STORAGE_KEYS = {
   SESSION: 'ipgkpp_parcels_session'
 };
 
+const getDaysAgo = (days) => {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString().split('T')[0];
+};
+
 const DEFAULT_USERS = [
   { username: 'student1', email: 'student1@ipgkpp.edu', password: '123456', name: 'Ahmad Ali', idNo: 'D20201234', phone: '012-3456789', role: 'student', profilePic: '', createdAt: new Date('2024-01-15T08:00:00').toISOString() },
   { username: 'staff1', email: 'staff1@ipgkpp.edu', password: '123456', name: 'Siti Aminah', idNo: 'ST-9988', phone: '013-9876543', role: 'staff', profilePic: '', createdAt: new Date('2024-03-20T10:30:00').toISOString() },
@@ -55,12 +61,12 @@ const DEFAULT_USERS = [
 ];
 
 const DEFAULT_PARCELS = [
-  { id: 1, trackingNo: 'PKG-8821X', sender: 'Shopee Express', recipient: 'student1', status: 'Arrived', dateReceived: '2025-05-18', location: 'Main Post Office', description: 'Academic Textbooks & Stationery (Handle with care)' },
-  { id: 2, trackingNo: 'PL-4490A', sender: 'Pos Laju', recipient: 'staff1', status: 'Pending', dateReceived: '2025-05-20', location: 'Admin Counter', description: 'Departmental Office Supplies' },
-  { id: 3, trackingNo: 'JT-7723B', sender: 'J&T Express', recipient: 'student1', status: 'Overdue', dateReceived: '2025-05-10', location: 'Storage Room B', description: 'Personal Clothing Items' },
-  { id: 4, trackingNo: 'DHL-9910C', sender: 'DHL eCommerce', recipient: 'admin', status: 'Collected', dateReceived: '2025-05-15', location: 'Admin Counter', description: 'Server Maintenance Parts' },
-  { id: 5, trackingNo: 'FE-1123D', sender: 'FedEx', recipient: 'student1', status: 'Pending', dateReceived: '2025-05-22', location: 'Main Post Office', description: 'Electronics' },
-  { id: 6, trackingNo: 'UPS-5566E', sender: 'UPS', recipient: 'staff1', status: 'Arrived', dateReceived: '2025-05-21', location: 'Admin Counter', description: 'Medical Supplies' },
+  { id: 1, trackingNo: 'PKG-8821X', sender: 'Shopee Express', recipient: 'student1', status: 'Arrived', dateReceived: getDaysAgo(1), location: 'Main Post Office', description: 'Academic Textbooks & Stationery', otp: '849201' },
+  { id: 2, trackingNo: 'PL-4490A', sender: 'Pos Laju', recipient: 'staff1', status: 'Pending', dateReceived: getDaysAgo(0), location: 'Admin Counter', description: 'Departmental Office Supplies', otp: '123456' },
+  { id: 3, trackingNo: 'JT-7723B', sender: 'J&T Express', recipient: 'student1', status: 'Overdue', dateReceived: getDaysAgo(10), location: 'Storage Room B', description: 'Personal Clothing Items', otp: '654321' },
+  { id: 4, trackingNo: 'DHL-9910C', sender: 'DHL eCommerce', recipient: 'admin', status: 'Collected', dateReceived: getDaysAgo(5), location: 'Admin Counter', description: 'Server Maintenance Parts', otp: '987654' },
+  { id: 5, trackingNo: 'FE-1123D', sender: 'FedEx', recipient: 'student1', status: 'Arrived', dateReceived: getDaysAgo(4), location: 'Main Post Office', description: 'Electronics', otp: '112233' },
+  { id: 6, trackingNo: 'UPS-5566E', sender: 'UPS', recipient: 'staff1', status: 'Arrived', dateReceived: getDaysAgo(2), location: 'Admin Counter', description: 'Medical Supplies', otp: '445566' },
 ];
 
 const STYLES = {
@@ -155,13 +161,6 @@ const STYLES = {
     height: '32px',
     width: 'auto',
     objectFit: 'contain',
-  },
-  headerInstitutionText: {
-    fontSize: '11px',
-    fontWeight: 700,
-    color: '#1e3a8a',
-    letterSpacing: '0.025em',
-    lineHeight: '1.2',
   },
   content: {
     flex: 1,
@@ -582,10 +581,8 @@ function getTimeAgo(dateString) {
   return 'Today';
 }
 
-// Barcode Scanner Component
 function BarcodeScanner({ onScan, onClose }) {
   const scannerRef = useRef(null);
-  const html5QrCodeRef = useRef(null);
   const [isScanning, setIsScanning] = useState(false);
   const [lastScanned, setLastScanned] = useState('');
   const [error, setError] = useState('');
@@ -625,7 +622,6 @@ function BarcodeScanner({ onScan, onClose }) {
       try {
         setError('');
         qrCodeInstance = new window.Html5Qrcode(scannerRef.current.id);
-        html5QrCodeRef.current = qrCodeInstance;
         
         const config = {
           fps: 10,
@@ -676,13 +672,13 @@ function BarcodeScanner({ onScan, onClose }) {
         }).catch(() => {});
       }
     };
-  }, [isLibraryLoaded]);
+  }, [isLibraryLoaded, onScan]);
 
   return (
-    <Modal title=" Scan Barcode" onClose={onClose} large>
+    <Modal title="Imbas Kod Barcode / QR" onClose={onClose} large>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <p style={{ fontSize: '13px', color: '#64748b', margin: 0, textAlign: 'center' }}>
-          Point your camera at the parcel barcode to auto-fill the tracking number
+          Point your camera at the parcel barcode or student QR code
         </p>
 
         {!isLibraryLoaded ? (
@@ -692,7 +688,6 @@ function BarcodeScanner({ onScan, onClose }) {
           </div>
         ) : error ? (
           <div style={{ textAlign: 'center', padding: '40px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}></div>
             <p style={{ color: '#dc2626', fontSize: '14px', margin: '0 0 8px 0' }}>{error}</p>
             <p style={{ color: '#64748b', fontSize: '12px', margin: 0 }}>
               Make sure you're using HTTPS and have granted camera permissions.
@@ -714,7 +709,7 @@ function BarcodeScanner({ onScan, onClose }) {
             {lastScanned && (
               <div style={STYLES.scanSuccess}>
                 <Icons.CheckCircle width={20} height={20} />
-                <span>Barcode detected: <strong>{lastScanned}</strong></span>
+                <span>Kod dikesan: <strong>{lastScanned}</strong></span>
               </div>
             )}
 
@@ -728,14 +723,13 @@ function BarcodeScanner({ onScan, onClose }) {
         )}
 
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={onClose} style={{ ...STYLES.btnPrimary, backgroundColor: '#f1f5f9', color: '#334155' }}>Close Scanner</button>
+          <button onClick={onClose} style={{ ...STYLES.btnPrimary, backgroundColor: '#f1f5f9', color: '#334155' }}>Tutup Pengimbas</button>
         </div>
       </div>
     </Modal>
   );
 }
 
-// Profile Picture Upload Component
 function ProfilePicUpload({ currentUser, onUpdate, onClose }) {
   const fileInputRef = useRef(null);
   const [preview, setPreview] = useState(currentUser?.profilePic || '');
@@ -746,13 +740,11 @@ function ProfilePicUpload({ currentUser, onUpdate, onClose }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       setUploadError('Please select an image file (JPG, PNG, GIF)');
       return;
     }
 
-    // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       setUploadError('Image size must be less than 2MB');
       return;
@@ -766,8 +758,6 @@ function ProfilePicUpload({ currentUser, onUpdate, onClose }) {
       const base64Data = event.target.result;
       setPreview(base64Data);
       setIsUploading(false);
-      
-      // Save to user profile
       onUpdate(base64Data);
     };
     reader.onerror = () => {
@@ -783,10 +773,10 @@ function ProfilePicUpload({ currentUser, onUpdate, onClose }) {
   };
 
   return (
-    <Modal title=" Profile Picture" onClose={onClose} large>
+    <Modal title="Gambar Profil" onClose={onClose} large>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
         <p style={{ fontSize: '13px', color: '#64748b', margin: 0, textAlign: 'center' }}>
-          Upload a profile picture to personalize your account
+          Muat naik gambar profil untuk memperibadikan akaun anda
         </p>
 
         <div style={STYLES.profilePicUpload}>
@@ -815,7 +805,7 @@ function ProfilePicUpload({ currentUser, onUpdate, onClose }) {
               disabled={isUploading}
             >
               <Icons.Upload width={16} height={16} />
-              {isUploading ? 'Uploading...' : 'Choose Photo'}
+              {isUploading ? 'Memuat Naik...' : 'Pilih Foto'}
             </button>
 
             {preview && (
@@ -825,7 +815,7 @@ function ProfilePicUpload({ currentUser, onUpdate, onClose }) {
                 onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fee2e2'; }}
                 onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; }}
               >
-                Remove
+                Buang
               </button>
             )}
           </div>
@@ -837,12 +827,83 @@ function ProfilePicUpload({ currentUser, onUpdate, onClose }) {
           )}
 
           <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0, textAlign: 'center' }}>
-            Supported formats: JPG, PNG, GIF • Max size: 2MB
+            Format disokong: JPG, PNG, GIF • Saiz maksimum: 2MB
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '12px', width: '100%', maxWidth: '280px' }}>
-          <button onClick={onClose} style={{ ...STYLES.btnPrimary, backgroundColor: '#f1f5f9', color: '#334155' }}>Done</button>
+          <button onClick={onClose} style={{ ...STYLES.btnPrimary, backgroundColor: '#f1f5f9', color: '#334155' }}>Selesai</button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function CollectionVerifier({ parcel, onClose, onVerify, onOpenScanner }) {
+  const [inputOtp, setInputOtp] = useState('');
+  const [error, setError] = useState('');
+
+  const handleVerify = () => {
+    if (inputOtp === parcel.otp) {
+      onVerify(parcel.id);
+      onClose();
+    } else {
+      setError('Kod OTP tidak sah. Sila cuba lagi.');
+    }
+  };
+
+  const handleScanSuccess = (decodedText) => {
+    const cleanText = decodedText.trim();
+    setInputOtp(cleanText);
+    setTimeout(() => {
+      if (cleanText === parcel.otp) {
+        onVerify(parcel.id);
+        onClose();
+      } else {
+        setError('Kod QR tidak sah untuk parcel ini.');
+      }
+    }, 500);
+  };
+
+  return (
+    <Modal title="Pengesahan Pengambilan Parcel" onClose={onClose} large>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Maklumat Parcel</p>
+          <p style={{ margin: 0, fontWeight: 700, fontSize: '18px', color: '#0f172a' }}>{parcel.trackingNo}</p>
+          <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#334155' }}>Penerima: <strong>{parcel.recipient}</strong></p>
+          <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#334155' }}>Penghantar: <strong>{parcel.sender}</strong></p>
+        </div>
+
+        <div>
+          <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>
+            Masukkan Kod OTP 6-Digit atau Imbas Kod QR Pelajar
+          </label>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input 
+              value={inputOtp} 
+              onChange={(e) => { setInputOtp(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }}
+              placeholder="Contoh: 123456" 
+              style={{ ...STYLES.input, fontFamily: 'monospace', fontSize: '20px', letterSpacing: '6px', textAlign: 'center', borderColor: error ? '#dc2626' : '#cbd5e1', fontWeight: 700 }} 
+            />
+            <button 
+              type="button" 
+              onClick={() => onOpenScanner(handleScanSuccess)} 
+              style={{ ...STYLES.btnSecondary, padding: '10px 16px', whiteSpace: 'nowrap' }}
+            >
+              <Icons.Camera width={18} height={18} />
+              Imbas QR
+            </button>
+          </div>
+          {error && <p style={{ color: '#dc2626', fontSize: '13px', marginTop: '8px', fontWeight: 500 }}>{error}</p>}
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+          <button onClick={onClose} style={{ ...STYLES.btnPrimary, backgroundColor: '#f1f5f9', color: '#334155', flex: 1 }}>Batal</button>
+          <button onClick={handleVerify} style={{ ...STYLES.btnPrimary, backgroundColor: '#16a34a', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <Icons.CheckCircle width={18} height={18} />
+            Sahkan & Ambil
+          </button>
         </div>
       </div>
     </Modal>
@@ -861,9 +922,13 @@ export default function ParcelManagementSystem() {
   const [isMobile, setIsMobile] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerCallback, setScannerCallback] = useState(null);
   const [scannedTracking, setScannedTracking] = useState('');
   const [picModalOpen, setPicModalOpen] = useState(false);
+  const [verifyParcel, setVerifyParcel] = useState(null);
+  const [notification, setNotification] = useState(null);
   const menuRef = useRef(null);
+  const parcelsRef = useRef([]);
 
   const [mockUsers, setMockUsers] = useState(() => {
     try {
@@ -886,6 +951,37 @@ export default function ParcelManagementSystem() {
   const [adminForm, setAdminForm] = useState({ trackingNo: '', sender: '', senderOther: '', recipient: '', status: 'Pending', location: 'Main Post Office', description: '' });
   const [profileForm, setProfileForm] = useState({ name: '', email: '', phone: '', address: '' });
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
+
+  useEffect(() => {
+    parcelsRef.current = parcels;
+  }, [parcels]);
+
+  useEffect(() => {
+    const checkOverdue = () => {
+      const now = new Date();
+      let hasChanges = false;
+      const currentParcels = parcelsRef.current;
+      const updatedParcels = currentParcels.map(p => {
+        if (p.status === 'Arrived' && p.dateReceived) {
+          const receivedDate = new Date(p.dateReceived);
+          const diffTime = now - receivedDate;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          if (diffDays > 3) {
+            hasChanges = true;
+            return { ...p, status: 'Overdue' };
+          }
+        }
+        return p;
+      });
+      if (hasChanges) {
+        setParcels(updatedParcels);
+      }
+    };
+    
+    checkOverdue();
+    const interval = setInterval(checkOverdue, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     try {
@@ -953,12 +1049,17 @@ export default function ParcelManagementSystem() {
   }, []);
 
   useEffect(() => {
-    if (activeModal) {
+    if (activeModal || verifyParcel || scannerOpen || picModalOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
-  }, [activeModal]);
+  }, [activeModal, verifyParcel, scannerOpen, picModalOpen]);
+
+  const showNotification = (message) => {
+    setNotification(message);
+    setTimeout(() => setNotification(null), 5000);
+  };
 
   const handleLogin = (username, password) => {
     const found = mockUsers.find(u => u.username === username && u.password === password);
@@ -993,18 +1094,24 @@ export default function ParcelManagementSystem() {
     const senderValue = adminForm.sender === 'Others' ? adminForm.senderOther : adminForm.sender;
     if (!senderValue) return;
     
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const newParcel = {
       ...adminForm,
       sender: senderValue,
       id: Date.now(),
-      dateReceived: new Date().toISOString().split('T')[0]
+      dateReceived: new Date().toISOString().split('T')[0],
+      otp: otp,
+      status: adminForm.status || 'Pending'
     };
     delete newParcel.senderOther;
     
     setParcels(p => [newParcel, ...p]);
     setAdminForm({ trackingNo: '', sender: '', senderOther: '', recipient: '', status: 'Pending', location: 'Main Post Office', description: '' });
     setScannedTracking('');
-    alert('Parcel registered successfully');
+    
+    const recipientUser = mockUsers.find(u => u.username === newParcel.recipient);
+    const phone = recipientUser?.phone || newParcel.recipient;
+    showNotification(`API WhatsApp/Telegram: "Parcel anda dari ${newParcel.sender} telah sampai di ${newParcel.location}. Kod OTP: ${otp}" dihantar kepada ${phone}.`);
   };
 
   const handleDeleteParcel = (id) => {
@@ -1054,10 +1161,34 @@ export default function ParcelManagementSystem() {
   };
 
   const handleBarcodeScan = (decodedText) => {
-    const cleanText = decodedText.trim().toUpperCase();
-    setScannedTracking(cleanText);
-    setAdminForm(prev => ({ ...prev, trackingNo: cleanText }));
+    if (scannerCallback) {
+      scannerCallback(decodedText);
+      setScannerCallback(null);
+    } else {
+      const cleanText = decodedText.trim().toUpperCase();
+      setScannedTracking(cleanText);
+      setAdminForm(prev => ({ ...prev, trackingNo: cleanText }));
+    }
     setScannerOpen(false);
+  };
+
+  const openScannerForTracking = () => {
+    setScannerCallback(null);
+    setScannerOpen(true);
+  };
+  
+  const openScannerForVerification = (callback) => {
+    setScannerCallback(() => callback);
+    setScannerOpen(true);
+  };
+
+  const handleRequestCollect = (parcel) => {
+    setVerifyParcel(parcel);
+  };
+
+  const handleVerifiedCollect = (id) => {
+    updateStatus(id, 'Collected');
+    showNotification("Parcel berjaya disahkan dan ditanda sebagai 'Collected'.");
   };
 
   const isAdmin = user?.role === 'admin';
@@ -1077,11 +1208,6 @@ export default function ParcelManagementSystem() {
     arrived: filtered.filter(p => p.status === 'Arrived').length,
     collected: filtered.filter(p => p.status === 'Collected').length,
     overdue: filtered.filter(p => p.status === 'Overdue').length
-  };
-
-  const getUserInitials = (name) => {
-    if (!name) return '?';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   const renderAvatar = (size = 32) => {
@@ -1105,6 +1231,22 @@ export default function ParcelManagementSystem() {
 
   return (
     <div style={STYLES.app}>
+      <style>{`
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes scanline {
+          0% { top: 10%; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 90%; opacity: 0; }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+
       {isMobile && sidebarOpen && (
         <div style={STYLES.overlay} onClick={() => setSidebarOpen(false)} />
       )}
@@ -1239,16 +1381,16 @@ export default function ParcelManagementSystem() {
               <DashboardView
                 parcels={paginatedParcels}
                 trackInput={trackInput} setTrackInput={setTrackInput} onTrack={handleTrackParcel}
-                foundParcel={foundParcel} onCollect={id => updateStatus(id, 'Collected')}
-                stats={stats} isAdmin={isAdmin}
+                foundParcel={foundParcel} onRequestCollect={handleRequestCollect}
+                stats={stats} isAdmin={isAdmin} user={user}
               />
             )}
-            {view === 'myparcels' && <MyParcelsView parcels={paginatedParcels} />}
+            {view === 'myparcels' && <MyParcelsView parcels={paginatedParcels} user={user} />}
             {view === 'admin' && isAdmin && (
               <AdminView
                 parcels={parcels} form={adminForm} setForm={setAdminForm}
-                onAdd={handleAddParcel} onUpdate={updateStatus} onDelete={handleDeleteParcel}
-                onOpenScanner={() => setScannerOpen(true)}
+                onAdd={handleAddParcel} onRequestCollect={handleRequestCollect} onDelete={handleDeleteParcel}
+                onOpenScanner={openScannerForTracking}
                 scannedTracking={scannedTracking}
               />
             )}
@@ -1344,8 +1486,17 @@ export default function ParcelManagementSystem() {
         </Modal>
       )}
 
+      {verifyParcel && (
+        <CollectionVerifier 
+          parcel={verifyParcel} 
+          onClose={() => setVerifyParcel(null)} 
+          onVerify={handleVerifiedCollect}
+          onOpenScanner={openScannerForVerification}
+        />
+      )}
+
       {scannerOpen && (
-        <BarcodeScanner onScan={handleBarcodeScan} onClose={() => setScannerOpen(false)} />
+        <BarcodeScanner onScan={handleBarcodeScan} onClose={() => { setScannerOpen(false); setScannerCallback(null); }} />
       )}
 
       {picModalOpen && (
@@ -1354,6 +1505,31 @@ export default function ParcelManagementSystem() {
           onUpdate={handleUpdateProfilePic}
           onClose={() => setPicModalOpen(false)}
         />
+      )}
+
+      {notification && (
+        <div style={{ 
+          position: 'fixed', 
+          top: '20px', 
+          right: '20px', 
+          backgroundColor: '#16a34a', 
+          color: 'white', 
+          padding: '16px 24px', 
+          borderRadius: '12px', 
+          boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)', 
+          zIndex: 9999, 
+          display: 'flex', 
+          alignItems: 'flex-start', 
+          gap: '12px',
+          maxWidth: '400px',
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          <Icons.CheckCircle width={20} height={20} style={{ flexShrink: 0, marginTop: '2px' }} />
+          <div>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: '14px', letterSpacing: '0.025em' }}>Notifikasi Dihantar</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '13px', opacity: 0.95, lineHeight: '1.4' }}>{notification}</p>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -1469,7 +1645,7 @@ function SignUpForm({ onSignUp }) {
   );
 }
 
-function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParcel, onCollect, stats, isAdmin }) {
+function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParcel, onRequestCollect, stats, isAdmin, user }) {
   const cardGrid = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -1524,9 +1700,40 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
               <p style={{ marginTop: '8px', color: '#1e293b', fontWeight: 500, lineHeight: '1.6', margin: '8px 0 0 0' }}>{foundParcel.description || "No description provided"}</p>
             </div>
           </div>
-          {foundParcel.status !== 'Collected' && foundParcel.status !== 'Overdue' && (
+          
+          {foundParcel.status === 'Arrived' && user?.role !== 'admin' && (
+            <div style={{ padding: '24px', backgroundColor: '#f0fdf4', borderTop: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+              <p style={{ margin: 0, fontWeight: 700, color: '#166534', fontSize: '16px' }}>Kod Pengambilan Anda</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#166534', fontWeight: 600, textTransform: 'uppercase' }}>Kod OTP</p>
+                  <div style={{ backgroundColor: '#ffffff', padding: '12px 24px', borderRadius: '8px', border: '2px dashed #16a34a', fontFamily: 'monospace', fontSize: '32px', fontWeight: 700, color: '#16a34a', letterSpacing: '4px' }}>
+                    {foundParcel.otp || '------'}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#166534', fontWeight: 600, textTransform: 'uppercase' }}>Kod QR</p>
+                  <div style={{ backgroundColor: '#ffffff', padding: '8px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(foundParcel.otp || '')}`} 
+                      alt="QR Code" 
+                      style={{ width: '120px', height: '120px', display: 'block' }} 
+                    />
+                  </div>
+                </div>
+              </div>
+              <p style={{ margin: 0, fontSize: '13px', color: '#15803d', textAlign: 'center', maxWidth: '400px' }}>
+                Tunjukkan kod ini kepada staf pos untuk pengesahan sebelum mengambil parcel.
+              </p>
+            </div>
+          )}
+
+          {foundParcel.status === 'Arrived' && (
             <div style={{ padding: '12px 24px', backgroundColor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
-              <button onClick={() => onCollect(foundParcel.id)} style={{ padding: '8px 24px', backgroundColor: '#16a34a', color: '#ffffff', borderRadius: '8px', fontWeight: 600, border: 'none', cursor: 'pointer', fontSize: '14px' }}>Mark as Collected</button>
+              <button onClick={() => onRequestCollect(foundParcel)} style={{ padding: '8px 24px', backgroundColor: '#4f46e5', color: '#ffffff', borderRadius: '8px', fontWeight: 600, border: 'none', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Icons.Lock width={16} height={16} />
+                Sahkan & Ambil (OTP/QR)
+              </button>
             </div>
           )}
         </div>
@@ -1579,8 +1786,11 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
                   <td style={STYLES.td}><span style={STYLES.badge(p.status)}>{p.status}</span></td>
                   <td style={STYLES.td}>{p.dateReceived}</td>
                   <td style={STYLES.td}>
-                    {p.status !== 'Collected' && p.status !== 'Overdue' && (
-                      <button onClick={() => onCollect(p.id)} style={{ padding: '4px 12px', backgroundColor: '#eef2ff', color: '#4f46e5', fontSize: '12px', fontWeight: 600, borderRadius: '6px', border: 'none', cursor: 'pointer' }}>Mark Collected</button>
+                    {p.status === 'Arrived' && (
+                      <button onClick={() => onRequestCollect(p)} style={{ padding: '4px 12px', backgroundColor: '#eef2ff', color: '#4f46e5', fontSize: '12px', fontWeight: 600, borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Icons.Lock width={14} height={14} />
+                        Verify
+                      </button>
                     )}
                   </td>
                 </tr>
@@ -1593,48 +1803,71 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
   );
 }
 
-function MyParcelsView({ parcels }) {
+function MyParcelsView({ parcels, user }) {
   return (
-    <div style={STYLES.card}>
-      <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0' }}>
-        <h3 style={{ fontWeight: 600, color: '#0f172a', margin: 0, fontSize: '16px' }}>Complete Tracking History</h3>
-      </div>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={STYLES.table}>
-          <thead>
-            <tr>
-              <th style={STYLES.th}>Tracking</th>
-              <th style={STYLES.th}>Sender</th>
-              <th style={STYLES.th}>Description</th>
-              <th style={STYLES.th}>Status</th>
-              <th style={STYLES.th}>Location</th>
-              <th style={STYLES.th}>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {parcels.length === 0 ? (
-              <tr><td colSpan="6" style={{ ...STYLES.td, textAlign: 'center', padding: '32px', color: '#64748b' }}>No active records available. Collected parcels are hidden.</td></tr>
-            ) : parcels.map(p => (
-              <tr key={p.id} style={{ transition: 'background-color 0.15s' }}
-                onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
-                onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-              >
-                <td style={STYLES.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.trackingNo}</span></td>
-                <td style={STYLES.td}>{p.sender}</td>
-                <td style={{ ...STYLES.td, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description || '-'}</td>
-                <td style={STYLES.td}><span style={STYLES.badge(p.status)}>{p.status}</span></td>
-                <td style={STYLES.td}>{p.location}</td>
-                <td style={STYLES.td}>{p.dateReceived}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {parcels.map(p => (
+        <div key={p.id} style={{ ...STYLES.card, padding: '0' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '16px', color: '#0f172a' }}>{p.trackingNo}</span>
+              <span style={{ marginLeft: '12px' }}><span style={STYLES.badge(p.status)}>{p.status}</span></span>
+            </div>
+            <span style={{ fontSize: '14px', color: '#64748b' }}>{p.dateReceived}</span>
+          </div>
+          <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Penghantar</p>
+              <p style={{ margin: 0, fontSize: '14px', fontWeight: 500 }}>{p.sender}</p>
+            </div>
+            <div>
+              <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Lokasi</p>
+              <p style={{ margin: 0, fontSize: '14px', fontWeight: 500 }}>{p.location}</p>
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Deskripsi</p>
+              <p style={{ margin: 0, fontSize: '14px', color: '#334155' }}>{p.description || '-'}</p>
+            </div>
+          </div>
+          {p.status === 'Arrived' && user?.role !== 'admin' && (
+            <div style={{ padding: '20px', backgroundColor: '#f0fdf4', borderTop: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+              <p style={{ margin: 0, fontWeight: 700, color: '#166534', fontSize: '15px' }}>Kod Pengambilan Anda</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#166534', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Kod OTP</p>
+                  <div style={{ backgroundColor: '#ffffff', padding: '10px 20px', borderRadius: '8px', border: '2px dashed #16a34a', fontFamily: 'monospace', fontSize: '28px', fontWeight: 800, color: '#16a34a', letterSpacing: '4px' }}>
+                    {p.otp || '------'}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#166534', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Kod QR</p>
+                  <div style={{ backgroundColor: '#ffffff', padding: '6px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(p.otp || '')}`} 
+                      alt="QR Code" 
+                      style={{ width: '100px', height: '100px', display: 'block' }} 
+                    />
+                  </div>
+                </div>
+              </div>
+              <p style={{ margin: 0, fontSize: '12px', color: '#15803d', textAlign: 'center', maxWidth: '350px', lineHeight: '1.4' }}>
+                Tunjukkan kod ini kepada staf pos untuk pengesahan sebelum mengambil parcel.
+              </p>
+            </div>
+          )}
+        </div>
+      ))}
+      {parcels.length === 0 && (
+        <div style={{ ...STYLES.card, padding: '40px', textAlign: 'center', color: '#64748b' }}>
+          <Icons.Inbox width={48} height={48} style={{ marginBottom: '12px', opacity: 0.3 }} />
+          <p style={{ margin: 0, fontSize: '15px' }}>Tiada rekod parcel aktif.</p>
+        </div>
+      )}
     </div>
   );
 }
 
-function AdminView({ parcels, form, setForm, onAdd, onUpdate, onDelete, onOpenScanner, scannedTracking }) {
+function AdminView({ parcels, form, setForm, onAdd, onRequestCollect, onDelete, onOpenScanner, scannedTracking }) {
   const up = (k) => (e) => setForm(prev => ({ ...prev, [k]: e.target.value }));
   const isOthers = form.sender === 'Others';
 
@@ -1715,12 +1948,12 @@ function AdminView({ parcels, form, setForm, onAdd, onUpdate, onDelete, onOpenSc
                   <td style={STYLES.td}><span style={STYLES.badge(p.status)}>{p.status}</span></td>
                   <td style={STYLES.td}>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <select value={p.status} onChange={e => onUpdate(p.id, e.target.value)} style={{ padding: '6px 8px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '12px', backgroundColor: '#ffffff', cursor: 'pointer' }}>
-                        <option>Pending</option>
-                        <option>Arrived</option>
-                        <option>Collected</option>
-                        <option>Overdue</option>
-                      </select>
+                      {p.status === 'Arrived' && (
+                        <button onClick={() => onRequestCollect(p)} style={{ padding: '6px 12px', backgroundColor: '#4f46e5', color: '#ffffff', fontSize: '12px', fontWeight: 600, borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Icons.Lock width={14} height={14} />
+                          Verify
+                        </button>
+                      )}
                       <button onClick={() => onDelete(p.id)} style={STYLES.btnDanger}>
                         <Icons.Trash2 width={18} height={18} />
                       </button>
