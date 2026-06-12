@@ -37,6 +37,9 @@ const Icons = {
   MapPin: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
   Cpu: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>,
   Scan: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" x2="7.01" y1="12" y2="12"/></svg>,
+  Wrench: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>,
+  Check: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="20 6 9 17 4 12"/></svg>,
+  Settings: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
 };
 
 const COURIERS = [
@@ -91,6 +94,9 @@ const DEFAULT_RACKS = ['A', 'B', 'C'].map(rackLetter => ({
     weight: 0,
     maxWeight: 10,
     ledColor: 'green',
+    maintenance: false,
+    maintenanceReason: '',
+    maintenanceDate: null,
   })),
 }));
 
@@ -131,7 +137,7 @@ const STYLES = {
   btnSecondary: { padding: '8px 16px', backgroundColor: '#f1f5f9', color: '#334155', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '6px' },
   btnDanger: { padding: '6px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', color: '#dc2626', borderRadius: '6px' },
   badge: (status) => {
-    const colors = { Pending: { bg: '#fef3c7', color: '#92400e', border: '#fde68a' }, Arrived: { bg: '#dbeafe', color: '#1e40af', border: '#bfdbfe' }, Collected: { bg: '#d1fae5', color: '#065f46', border: '#a7f3d0' }, Overdue: { bg: '#fee2e2', color: '#991b1b', border: '#fecaca' } };
+    const colors = { Pending: { bg: '#fef3c7', color: '#92400e', border: '#fde68a' }, Arrived: { bg: '#dbeafe', color: '#1e40af', border: '#bfdbfe' }, Collected: { bg: '#d1fae5', color: '#065f46', border: '#a7f3d0' }, Overdue: { bg: '#fee2e2', color: '#991b1b', border: '#fecaca' }, Maintenance: { bg: '#fef3c7', color: '#92400e', border: '#fde68a' } };
     const c = colors[status] || colors.Pending;
     return { display: 'inline-flex', padding: '4px 10px', borderRadius: '9999px', fontSize: '12px', fontWeight: 600, backgroundColor: c.bg, color: c.color, border: `1px solid ${c.border}` };
   },
@@ -355,13 +361,15 @@ function CollectionVerifier({ parcel, onClose, onVerify, onOpenScanner }) {
   );
 }
 
-function SmartRackView({ racks, parcels, onShelfClick }) {
+function SmartRackView({ racks, parcels, onShelfClick, isAdmin, onToggleMaintenance }) {
   const totalShelves = racks.reduce((sum, r) => sum + r.shelves.length, 0);
   const occupiedShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status === 'occupied').length, 0);
   const readyShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status === 'ready').length, 0);
-  const emptyShelves = totalShelves - occupiedShelves - readyShelves;
+  const maintenanceShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.maintenance).length, 0);
+  const emptyShelves = totalShelves - occupiedShelves - readyShelves - maintenanceShelves;
 
   const getShelfColor = (shelf) => {
+    if (shelf.maintenance) return { bg: '#fef3c7', border: '#fde68a', led: '#d97706', label: 'Maintenance' };
     if (shelf.status === 'empty') return { bg: '#f0fdf4', border: '#bbf7d0', led: '#16a34a', label: 'Empty' };
     if (shelf.status === 'ready') return { bg: '#eff6ff', border: '#bfdbfe', led: '#2563eb', label: 'Ready' };
     return { bg: '#fef2f2', border: '#fecaca', led: '#dc2626', label: 'Occupied' };
@@ -390,13 +398,19 @@ function SmartRackView({ racks, parcels, onShelfClick }) {
             <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{emptyShelves}</p>
           </div>
           <div style={{ backgroundColor: 'rgba(220,38,38,0.3)', padding: '12px', borderRadius: '8px' }}>
-            <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔴 Occupied</p>
+            <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}> Occupied</p>
             <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{occupiedShelves}</p>
           </div>
           <div style={{ backgroundColor: 'rgba(37,99,235,0.3)', padding: '12px', borderRadius: '8px' }}>
             <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔵 Ready</p>
             <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{readyShelves}</p>
           </div>
+          {maintenanceShelves > 0 && (
+            <div style={{ backgroundColor: 'rgba(217,119,6,0.3)', padding: '12px', borderRadius: '8px' }}>
+              <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🟠 Maintenance</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{maintenanceShelves}</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -424,60 +438,85 @@ function SmartRackView({ racks, parcels, onShelfClick }) {
 
       {/* Rack Visualization */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-        {racks.map((rack) => (
-          <div key={rack.id} style={{ ...STYLES.card, overflow: 'visible' }}>
-            <div style={{ padding: '12px 16px', backgroundColor: '#1e3a8a', color: 'white', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
-              <Icons.Layers width={18} height={18} />
-              <span style={{ fontWeight: 700, fontSize: '14px' }}>RACK {rack.letter}</span>
-            </div>
-            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#f8fafc' }}>
-              {rack.shelves.map((shelf) => {
-                const shelfInfo = getShelfColor(shelf);
-                const shelfParcel = parcels.find(p => p.id === shelf.parcelId);
-                return (
-                  <div
-                    key={shelf.id}
-                    onClick={() => onShelfClick(shelf, rack.letter)}
-                    style={{
-                      backgroundColor: shelfInfo.bg,
-                      border: `2px solid ${shelfInfo.border}`,
-                      borderRadius: '8px',
-                      padding: '12px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      position: 'relative',
-                    }}
-                    onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; }}
-                    onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{
-                        width: '14px',
-                        height: '14px',
-                        borderRadius: '50%',
-                        backgroundColor: shelfInfo.led,
-                        boxShadow: `0 0 10px ${shelfInfo.led}`,
-                        animation: shelf.status !== 'empty' ? 'pulse 2s infinite' : 'none',
-                        flexShrink: 0,
-                      }} />
-                      <div>
-                        <p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{shelf.id}</p>
-                        {shelfParcel && <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#64748b' }}>{shelfParcel.trackingNo}</p>}
+        {racks.map((rack) => {
+          const rackMaintenanceCount = rack.shelves.filter(s => s.maintenance).length;
+          return (
+            <div key={rack.id} style={{ ...STYLES.card, overflow: 'visible' }}>
+              <div style={{ padding: '12px 16px', backgroundColor: '#1e3a8a', color: 'white', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Icons.Layers width={18} height={18} />
+                  <span style={{ fontWeight: 700, fontSize: '14px' }}>RACK {rack.letter}</span>
+                </div>
+                {rackMaintenanceCount > 0 && (
+                  <span style={{ fontSize: '11px', backgroundColor: 'rgba(217,119,6,0.9)', padding: '3px 8px', borderRadius: '9999px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Icons.Wrench width={10} height={10} />{rackMaintenanceCount} under maintenance
+                  </span>
+                )}
+              </div>
+              <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#f8fafc' }}>
+                {rack.shelves.map((shelf) => {
+                  const shelfInfo = getShelfColor(shelf);
+                  const shelfParcel = parcels.find(p => p.id === shelf.parcelId);
+                  return (
+                    <div
+                      key={shelf.id}
+                      onClick={() => onShelfClick(shelf, rack.letter)}
+                      style={{
+                        backgroundColor: shelfInfo.bg,
+                        border: `2px solid ${shelfInfo.border}`,
+                        borderRadius: '8px',
+                        padding: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        position: 'relative',
+                        opacity: shelf.maintenance ? 0.85 : 1,
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                          width: '14px',
+                          height: '14px',
+                          borderRadius: '50%',
+                          backgroundColor: shelfInfo.led,
+                          boxShadow: `0 0 10px ${shelfInfo.led}`,
+                          animation: (shelf.status !== 'empty' && !shelf.maintenance) ? 'pulse 2s infinite' : 'none',
+                          flexShrink: 0,
+                        }} />
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{shelf.id}</p>
+                            {shelf.maintenance && <Icons.Wrench width={14} height={14} style={{ color: '#d97706' }} />}
+                          </div>
+                          {shelfParcel && <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#64748b' }}>{shelfParcel.trackingNo}</p>}
+                          {shelf.maintenance && shelf.maintenanceReason && <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#92400e', fontStyle: 'italic' }}>{shelf.maintenanceReason}</p>}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 600, color: shelfInfo.led, textTransform: 'uppercase' }}>{shelfInfo.label}</span>
+                        {shelf.weight > 0 && <span style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}><Icons.Scale width={10} height={10} />{shelf.weight}kg</span>}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                      <span style={{ fontSize: '10px', fontWeight: 600, color: shelfInfo.led, textTransform: 'uppercase' }}>{shelfInfo.label}</span>
-                      {shelf.weight > 0 && <span style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}><Icons.Scale width={10} height={10} />{shelf.weight}kg</span>}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+              {isAdmin && (
+                <div style={{ padding: '12px 16px', borderTop: '1px solid #e2e8f0', backgroundColor: '#ffffff', borderRadius: '0 0 12px 12px' }}>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onToggleMaintenance(rack.letter, null); }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: rackMaintenanceCount > 0 ? '#f0fdf4' : '#fef3c7', color: rackMaintenanceCount > 0 ? '#166534' : '#92400e', border: `1px solid ${rackMaintenanceCount > 0 ? '#bbf7d0' : '#fde68a'}`, borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                  >
+                    {rackMaintenanceCount > 0 ? <><Icons.Check width={14} height={14} />Mark All as Available</> : <><Icons.Wrench width={14} height={14} />Set Entire Rack to Maintenance</>}
+                  </button>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Legend */}
@@ -496,26 +535,44 @@ function SmartRackView({ racks, parcels, onShelfClick }) {
             <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#2563eb', boxShadow: '0 0 8px #2563eb' }} />
             <span style={{ fontSize: '13px', color: '#334155' }}><strong>BLUE</strong> = Ready for Pickup</span>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#d97706', boxShadow: '0 0 8px #d97706' }} />
+            <span style={{ fontSize: '13px', color: '#334155' }}><strong>ORANGE</strong> = Under Maintenance</span>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function ShelfDetailModal({ shelf, rackLetter, parcel, onClose }) {
+function ShelfDetailModal({ shelf, rackLetter, parcel, onClose, isAdmin, onToggleMaintenance }) {
   if (!shelf) return null;
-  const shelfInfo = shelf.status === 'empty' ? { color: '#16a34a', label: 'Empty' } : shelf.status === 'ready' ? { color: '#2563eb', label: 'Ready for Pickup' } : { color: '#dc2626', label: 'Occupied' };
+  const shelfInfo = shelf.maintenance ? { color: '#d97706', label: 'Under Maintenance' } : shelf.status === 'empty' ? { color: '#16a34a', label: 'Empty' } : shelf.status === 'ready' ? { color: '#2563eb', label: 'Ready for Pickup' } : { color: '#dc2626', label: 'Occupied' };
 
   return (
     <Modal title={`Shelf ${shelf.id} Details`} onClose={onClose} large>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', backgroundColor: shelf.maintenance ? '#fef3c7' : '#f8fafc', borderRadius: '8px', border: `1px solid ${shelf.maintenance ? '#fde68a' : '#e2e8f0'}` }}>
           <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: shelfInfo.color, boxShadow: `0 0 12px ${shelfInfo.color}` }} />
-          <div>
+          <div style={{ flex: 1 }}>
             <p style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>Rack {rackLetter} - Shelf {shelf.id}</p>
             <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: shelfInfo.color, fontWeight: 600 }}>{shelfInfo.label}</p>
           </div>
+          {shelf.maintenance && <Icons.Wrench width={28} height={28} style={{ color: '#d97706' }} />}
         </div>
+
+        {shelf.maintenance && (
+          <div style={{ padding: '12px 16px', backgroundColor: '#fef3c7', borderRadius: '8px', border: '1px solid #fde68a', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+            <Icons.AlertTriangle width={20} height={20} style={{ color: '#d97706', flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#92400e' }}>⚠ Shelf Under Maintenance</p>
+              {shelf.maintenanceReason && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#92400e' }}>Reason: {shelf.maintenanceReason}</p>}
+              {shelf.maintenanceDate && <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#92400e' }}>Since: {formatDate(shelf.maintenanceDate)}</p>}
+              <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#92400e', fontWeight: 500 }}>This shelf cannot be assigned new parcels until maintenance is cleared.</p>
+            </div>
+          </div>
+        )}
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div style={{ padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
             <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Weight Sensor</p>
@@ -527,8 +584,8 @@ function ShelfDetailModal({ shelf, rackLetter, parcel, onClose }) {
           </div>
           <div style={{ padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
             <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Occupancy Sensor</p>
-            <p style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: shelf.status === 'empty' ? '#16a34a' : '#dc2626' }}>
-              {shelf.status === 'empty' ? '✓ Clear' : '● Detected'}
+            <p style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: shelf.maintenance ? '#d97706' : shelf.status === 'empty' ? '#16a34a' : '#dc2626' }}>
+              {shelf.maintenance ? '🔧 Maint.' : shelf.status === 'empty' ? '✓ Clear' : '● Detected'}
             </p>
             <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#94a3b8' }}>Real-time monitoring</p>
           </div>
@@ -543,6 +600,107 @@ function ShelfDetailModal({ shelf, rackLetter, parcel, onClose }) {
             <div style={{ marginTop: '8px' }}><span style={STYLES.badge(parcel.status)}>{parcel.status}</span></div>
           </div>
         )}
+        {isAdmin && (
+          <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+            <p style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Icons.Settings width={16} height={16} /> Admin Controls
+            </p>
+            <button
+              onClick={() => onToggleMaintenance(rackLetter, shelf.id)}
+              style={{
+                width: '100%',
+                padding: '10px',
+                backgroundColor: shelf.maintenance ? '#16a34a' : '#d97706',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
+            >
+              {shelf.maintenance ? <><Icons.Check width={16} height={16} />Mark as Available (Clear Maintenance)</> : <><Icons.Wrench width={16} height={16} />Set to Maintenance Mode</>}
+            </button>
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button onClick={onClose} style={{ ...STYLES.btnPrimary, backgroundColor: '#f1f5f9', color: '#334155' }}>Close</button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function RackMaintenanceModal({ rackLetter, shelves, onClose, onToggleShelf, onToggleAll, parcels }) {
+  const [filter, setFilter] = useState('all'); // all, maintenance, available
+  const filteredShelves = shelves.filter(s => {
+    if (filter === 'maintenance') return s.maintenance;
+    if (filter === 'available') return !s.maintenance;
+    return true;
+  });
+
+  const maintenanceCount = shelves.filter(s => s.maintenance).length;
+  const availableCount = shelves.filter(s => !s.maintenance).length;
+
+  return (
+    <Modal title={`Rack ${rackLetter} — Maintenance Management`} onClose={onClose} xlarge>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: '120px', padding: '12px', backgroundColor: '#fef3c7', borderRadius: '8px', border: '1px solid #fde68a' }}>
+            <p style={{ margin: 0, fontSize: '11px', color: '#92400e', fontWeight: 600, textTransform: 'uppercase' }}>Under Maintenance</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700, color: '#92400e' }}>{maintenanceCount}</p>
+          </div>
+          <div style={{ flex: 1, minWidth: '120px', padding: '12px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+            <p style={{ margin: 0, fontSize: '11px', color: '#166534', fontWeight: 600, textTransform: 'uppercase' }}>Available</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700, color: '#166534' }}>{availableCount}</p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button onClick={() => onToggleAll(false)} style={{ ...STYLES.btnSecondary, flex: 1 }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f0fdf4'; e.currentTarget.style.color = '#166534'; e.currentTarget.style.borderColor = '#bbf7d0'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#334155'; e.currentTarget.style.borderColor = '#e2e8f0'; }}>
+            <Icons.Check width={16} height={16} />Mark All Available
+          </button>
+          <button onClick={() => onToggleAll(true)} style={{ ...STYLES.btnSecondary, flex: 1 }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fef3c7'; e.currentTarget.style.color = '#92400e'; e.currentTarget.style.borderColor = '#fde68a'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#334155'; e.currentTarget.style.borderColor = '#e2e8f0'; }}>
+            <Icons.Wrench width={16} height={16} />Mark All Maintenance
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+          {['all', 'maintenance', 'available'].map(f => (
+            <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 14px', backgroundColor: filter === f ? '#4f46e5' : '#f1f5f9', color: filter === f ? '#ffffff' : '#475569', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}>
+              {f} {f === 'all' ? `(${shelves.length})` : f === 'maintenance' ? `(${maintenanceCount})` : `(${availableCount})`}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px', maxHeight: '400px', overflowY: 'auto' }}>
+          {filteredShelves.map(shelf => {
+            const parcel = parcels.find(p => p.id === shelf.parcelId);
+            return (
+              <div key={shelf.id} style={{ padding: '12px', backgroundColor: shelf.maintenance ? '#fef3c7' : '#f0fdf4', border: `1px solid ${shelf.maintenance ? '#fde68a' : '#bbf7d0'}`, borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 700, fontSize: '14px', color: '#0f172a' }}>{shelf.id}</span>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: shelf.maintenance ? '#92400e' : '#166534', textTransform: 'uppercase', padding: '2px 8px', borderRadius: '9999px', backgroundColor: shelf.maintenance ? '#fde68a' : '#bbf7d0' }}>
+                    {shelf.maintenance ? 'Maintenance' : 'Available'}
+                  </span>
+                </div>
+                {shelf.maintenance && shelf.maintenanceReason && <p style={{ margin: 0, fontSize: '11px', color: '#92400e', fontStyle: 'italic' }}>{shelf.maintenanceReason}</p>}
+                {parcel && <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>Contains: {parcel.trackingNo}</p>}
+                <button
+                  onClick={() => onToggleShelf(shelf.id)}
+                  style={{ padding: '6px', backgroundColor: shelf.maintenance ? '#16a34a' : '#d97706', color: 'white', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                >
+                  {shelf.maintenance ? <><Icons.Check width={12} height={12} />Set Available</> : <><Icons.Wrench width={12} height={12} />Set Maintenance</>}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
         <div style={{ display: 'flex', gap: '12px' }}>
           <button onClick={onClose} style={{ ...STYLES.btnPrimary, backgroundColor: '#f1f5f9', color: '#334155' }}>Close</button>
         </div>
@@ -570,6 +728,8 @@ export default function ParcelManagementSystem() {
   const [notification, setNotification] = useState(null);
   const [selectedShelf, setSelectedShelf] = useState(null);
   const [selectedShelfRack, setSelectedShelfRack] = useState(null);
+  const [maintenanceModal, setMaintenanceModal] = useState(null); // { rackLetter }
+  const [maintenanceReason, setMaintenanceReason] = useState('');
 
   const menuRef = useRef(null);
   const parcelsRef = useRef([]);
@@ -645,9 +805,9 @@ export default function ParcelManagementSystem() {
   }, []);
 
   useEffect(() => {
-    if (activeModal || verifyParcel || scannerOpen || picModalOpen || selectedShelf) document.body.style.overflow = 'hidden';
+    if (activeModal || verifyParcel || scannerOpen || picModalOpen || selectedShelf || maintenanceModal) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = '';
-  }, [activeModal, verifyParcel, scannerOpen, picModalOpen, selectedShelf]);
+  }, [activeModal, verifyParcel, scannerOpen, picModalOpen, selectedShelf, maintenanceModal]);
 
   const showNotification = (message) => { setNotification(message); setTimeout(() => setNotification(null), 5000); };
 
@@ -667,6 +827,43 @@ export default function ParcelManagementSystem() {
     setView('login');
   };
 
+  // Toggle maintenance for a specific shelf or entire rack
+  const handleToggleMaintenance = (rackLetter, shelfId, reason = '') => {
+    setRacks(prev => prev.map(r => {
+      if (r.letter !== rackLetter) return r;
+      if (shelfId === null) {
+        // Toggle entire rack
+        const allMaintenance = r.shelves.every(s => s.maintenance);
+        const updatedShelves = r.shelves.map(s => ({
+          ...s,
+          maintenance: !allMaintenance,
+          maintenanceReason: !allMaintenance ? reason || 'Rack-wide maintenance' : '',
+          maintenanceDate: !allMaintenance ? new Date().toISOString() : null,
+        }));
+        return { ...r, shelves: updatedShelves };
+      } else {
+        // Toggle single shelf
+        return {
+          ...r,
+          shelves: r.shelves.map(s => {
+            if (s.id !== shelfId) return s;
+            return {
+              ...s,
+              maintenance: !s.maintenance,
+              maintenanceReason: !s.maintenance ? reason : '',
+              maintenanceDate: !s.maintenance ? new Date().toISOString() : null,
+            };
+          })
+        };
+      }
+    }));
+    const target = shelfId === null ? `Rack ${rackLetter} (all shelves)` : `Shelf ${shelfId}`;
+    const isNowMaintenance = shelfId === null
+      ? !racks.find(r => r.letter === rackLetter)?.shelves.every(s => s.maintenance)
+      : !racks.find(r => r.letter === rackLetter)?.shelves.find(s => s.id === shelfId)?.maintenance;
+    showNotification(`${target} has been ${isNowMaintenance ? 'set to MAINTENANCE' : 'marked as AVAILABLE'}.`);
+  };
+
   const handleAddParcel = (e) => {
     e.preventDefault();
     if (!adminForm.trackingNo || !adminForm.recipient) return;
@@ -676,17 +873,30 @@ export default function ParcelManagementSystem() {
     let assignedRack = null;
 
     if (adminForm.assignRack && adminForm.selectedRackShelf) {
+      // Check if selected shelf is under maintenance
+      const [rackLetter] = adminForm.selectedRackShelf.split('-');
+      const shelf = racks.find(r => r.letter === rackLetter)?.shelves.find(s => s.id === adminForm.selectedRackShelf);
+      if (shelf?.maintenance) {
+        alert(`Shelf ${adminForm.selectedRackShelf} is under maintenance. Please select another shelf or clear maintenance first.`);
+        return;
+      }
       assignedRack = adminForm.selectedRackShelf;
-      const [rackLetter, shelfNum] = adminForm.selectedRackShelf.split('-');
       setRacks(prev => prev.map(r => r.letter === rackLetter ? { ...r, shelves: r.shelves.map(s => s.id === adminForm.selectedRackShelf ? { ...s, status: 'occupied', parcelId: Date.now(), weight: parseFloat((Math.random() * 5 + 0.5).toFixed(1)) } : s) } : prev));
     } else if (adminForm.assignRack) {
+      // Auto-find empty shelf (excluding maintenance)
+      let assigned = false;
       for (const rack of racks) {
-        const emptyShelf = rack.shelves.find(s => s.status === 'empty');
+        const emptyShelf = rack.shelves.find(s => s.status === 'empty' && !s.maintenance);
         if (emptyShelf) {
           assignedRack = emptyShelf.id;
           setRacks(prev => prev.map(r => r.id === rack.id ? { ...r, shelves: r.shelves.map(s => s.id === emptyShelf.id ? { ...s, status: 'occupied', parcelId: Date.now(), weight: parseFloat((Math.random() * 5 + 0.5).toFixed(1)) } : s) } : prev));
+          assigned = true;
           break;
         }
+      }
+      if (!assigned) {
+        alert('No available shelves found. Some shelves may be under maintenance.');
+        return;
       }
     }
 
@@ -803,7 +1013,9 @@ export default function ParcelManagementSystem() {
     collected: filtered.filter(p => p.status === 'Collected').length,
     overdue: filtered.filter(p => p.status === 'Overdue').length,
     racksTotal: racks.reduce((sum, r) => sum + r.shelves.length, 0),
-    racksOccupied: racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status !== 'empty').length, 0),
+    racksOccupied: racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status !== 'empty' && !s.maintenance).length, 0),
+    racksMaintenance: racks.reduce((sum, r) => sum + r.shelves.filter(s => s.maintenance).length, 0),
+    racksAvailable: racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status === 'empty' && !s.maintenance).length, 0),
   };
 
   const renderAvatar = (size = 32) => {
@@ -813,7 +1025,7 @@ export default function ParcelManagementSystem() {
 
   if (!user) return <AuthView onLogin={handleLogin} onSignUp={handleSignUp} view={view === 'dashboard' ? 'login' : view} setView={setView} />;
 
-  const viewTitles = { dashboard: 'Dashboard', myparcels: 'Parcel Tracking', admin: 'Admin Panel', rack: 'Smart Rack' };
+  const viewTitles = { dashboard: 'Dashboard', myparcels: 'Parcel Tracking', admin: 'Admin Panel', rack: 'Smart Rack', rackmgmt: 'Rack Maintenance' };
 
   return (
     <div style={STYLES.app}>
@@ -835,6 +1047,7 @@ export default function ParcelManagementSystem() {
             { id: 'dashboard', label: 'Dashboard', icon: Icons.LayoutDashboard },
             { id: 'myparcels', label: 'My Parcels', icon: Icons.Inbox },
             { id: 'rack', label: 'Smart Rack', icon: Icons.Layers },
+            { id: 'rackmgmt', label: 'Rack Maintenance', icon: Icons.Wrench, adminOnly: true },
             { id: 'admin', label: 'Admin Panel', icon: Icons.Users, adminOnly: true }
           ].filter(item => !item.adminOnly || isAdmin).map(item => (
             <button key={item.id} onClick={() => { setView(item.id); setSidebarOpen(false); }} style={STYLES.navItem(view === item.id)}>
@@ -913,6 +1126,7 @@ export default function ParcelManagementSystem() {
                 stats={stats} isAdmin={isAdmin} user={user}
                 racks={racks}
                 onGoToRack={() => setView('rack')}
+                onGoToMaintenance={() => setView('rackmgmt')}
               />
             )}
 
@@ -922,10 +1136,36 @@ export default function ParcelManagementSystem() {
               <SmartRackView
                 racks={racks}
                 parcels={parcels}
+                isAdmin={isAdmin}
                 onShelfClick={(shelf, rackLetter) => {
                   const parcel = parcels.find(p => p.id === shelf.parcelId);
                   setSelectedShelf({ shelf, rackLetter, parcel });
                 }}
+                onToggleMaintenance={(rackLetter, shelfId) => {
+                  if (shelfId !== null) {
+                    const reason = prompt('Enter maintenance reason (optional):');
+                    handleToggleMaintenance(rackLetter, shelfId, reason || '');
+                  } else {
+                    const reason = prompt('Enter maintenance reason for entire rack (optional):');
+                    handleToggleMaintenance(rackLetter, null, reason || '');
+                  }
+                }}
+              />
+            )}
+
+            {view === 'rackmgmt' && isAdmin && (
+              <RackManagementView
+                racks={racks}
+                parcels={parcels}
+                onToggleShelf={(rackLetter, shelfId) => {
+                  const reason = prompt('Enter maintenance reason (optional):');
+                  handleToggleMaintenance(rackLetter, shelfId, reason || '');
+                }}
+                onToggleRack={(rackLetter) => {
+                  const reason = prompt('Enter maintenance reason for entire rack (optional):');
+                  handleToggleMaintenance(rackLetter, null, reason || '');
+                }}
+                onOpenDetail={(rackLetter) => setMaintenanceModal({ rackLetter })}
               />
             )}
 
@@ -1028,8 +1268,39 @@ export default function ParcelManagementSystem() {
           rackLetter={selectedShelf.rackLetter}
           parcel={selectedShelf.parcel}
           onClose={() => setSelectedShelf(null)}
+          isAdmin={isAdmin}
+          onToggleMaintenance={(rackLetter, shelfId) => {
+            const reason = prompt(shelfId ? 'Enter maintenance reason (optional):' : 'Enter reason for entire rack (optional):');
+            handleToggleMaintenance(rackLetter, shelfId, reason || '');
+            setSelectedShelf(null);
+          }}
         />
       )}
+
+      {maintenanceModal && (() => {
+        const rack = racks.find(r => r.letter === maintenanceModal.rackLetter);
+        if (!rack) return null;
+        return (
+          <RackMaintenanceModal
+            rackLetter={rack.letter}
+            shelves={rack.shelves}
+            parcels={parcels}
+            onClose={() => setMaintenanceModal(null)}
+            onToggleShelf={(shelfId) => {
+              const reason = prompt('Enter maintenance reason (optional):');
+              handleToggleMaintenance(rack.letter, shelfId, reason || '');
+            }}
+            onToggleAll={(setMaintenance) => {
+              if (setMaintenance) {
+                const reason = prompt('Enter maintenance reason for entire rack (optional):');
+                handleToggleMaintenance(rack.letter, null, reason || '');
+              } else {
+                handleToggleMaintenance(rack.letter, null, '');
+              }
+            }}
+          />
+        );
+      })()}
 
       {notification && (
         <div style={{ position: 'fixed', top: '20px', right: '20px', backgroundColor: '#16a34a', color: 'white', padding: '16px 24px', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)', zIndex: 9999, display: 'flex', alignItems: 'flex-start', gap: '12px', maxWidth: '400px', animation: 'slideIn 0.3s ease-out' }}>
@@ -1040,6 +1311,175 @@ export default function ParcelManagementSystem() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function RackManagementView({ racks, parcels, onToggleShelf, onToggleRack, onOpenDetail }) {
+  const totalShelves = racks.reduce((sum, r) => sum + r.shelves.length, 0);
+  const maintenanceShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.maintenance).length, 0);
+  const availableShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status === 'empty' && !s.maintenance).length, 0);
+  const occupiedShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status === 'occupied').length, 0);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Header */}
+      <div style={{ ...STYLES.card, padding: '24px', background: 'linear-gradient(135deg, #92400e 0%, #d97706 100%)', color: 'white', border: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+          <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '12px' }}>
+            <Icons.Wrench width={32} height={32} />
+          </div>
+          <div>
+            <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>Rack Maintenance Management</h2>
+            <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Admin Control • Toggle Availability • Track Status</p>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+          <div style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '12px', borderRadius: '8px' }}>
+            <p style={{ margin: 0, fontSize: '12px', opacity: 0.8 }}>Total Shelves</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{totalShelves}</p>
+          </div>
+          <div style={{ backgroundColor: 'rgba(22,163,74,0.3)', padding: '12px', borderRadius: '8px' }}>
+            <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}> Available</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{availableShelves}</p>
+          </div>
+          <div style={{ backgroundColor: 'rgba(220,38,38,0.3)', padding: '12px', borderRadius: '8px' }}>
+            <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔴 Occupied</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{occupiedShelves}</p>
+          </div>
+          <div style={{ backgroundColor: 'rgba(217,119,6,0.3)', padding: '12px', borderRadius: '8px' }}>
+            <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🟠 Maintenance</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{maintenanceShelves}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Info Banner */}
+      <div style={{ ...STYLES.statCard, backgroundColor: '#fef3c7', border: '1px solid #fde68a', color: '#92400e', padding: '12px 16px', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <Icons.AlertTriangle width={18} height={18} />
+        <span><strong>Maintenance Mode:</strong> Shelves marked as maintenance cannot be assigned new parcels. Existing parcels remain until collected.</span>
+      </div>
+
+      {/* Rack Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+        {racks.map((rack) => {
+          const rackMaintenanceCount = rack.shelves.filter(s => s.maintenance).length;
+          const rackAvailableCount = rack.shelves.filter(s => s.status === 'empty' && !s.maintenance).length;
+          const rackOccupiedCount = rack.shelves.filter(s => s.status === 'occupied').length;
+          const isFullyMaintenance = rackMaintenanceCount === rack.shelves.length;
+
+          return (
+            <div key={rack.id} style={{ ...STYLES.card, overflow: 'visible' }}>
+              <div style={{ padding: '16px', background: isFullyMaintenance ? 'linear-gradient(135deg, #92400e 0%, #d97706 100%)' : 'linear-gradient(135deg, #1e3a8a 0%, #312e81 100%)', color: 'white', borderRadius: '12px 12px 0 0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ padding: '8px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '8px' }}>
+                      <Icons.Layers width={20} height={20} />
+                    </div>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700 }}>RACK {rack.letter}</h3>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '11px', opacity: 0.9 }}>{rack.shelves.length} shelves total</p>
+                    </div>
+                  </div>
+                  {isFullyMaintenance && (
+                    <span style={{ fontSize: '10px', backgroundColor: 'rgba(255,255,255,0.25)', padding: '4px 10px', borderRadius: '9999px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Icons.Wrench width={10} height={10} />FULL MAINTENANCE
+                    </span>
+                  )}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', fontSize: '11px' }}>
+                  <div style={{ backgroundColor: 'rgba(22,163,74,0.3)', padding: '6px 8px', borderRadius: '6px', textAlign: 'center' }}>
+                    <p style={{ margin: 0, opacity: 0.9 }}>Available</p>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '16px', fontWeight: 700 }}>{rackAvailableCount}</p>
+                  </div>
+                  <div style={{ backgroundColor: 'rgba(220,38,38,0.3)', padding: '6px 8px', borderRadius: '6px', textAlign: 'center' }}>
+                    <p style={{ margin: 0, opacity: 0.9 }}>Occupied</p>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '16px', fontWeight: 700 }}>{rackOccupiedCount}</p>
+                  </div>
+                  <div style={{ backgroundColor: 'rgba(217,119,6,0.3)', padding: '6px 8px', borderRadius: '6px', textAlign: 'center' }}>
+                    <p style={{ margin: 0, opacity: 0.9 }}>Maintenance</p>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '16px', fontWeight: 700 }}>{rackMaintenanceCount}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Shelf List */}
+              <div style={{ padding: '12px', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '220px', overflowY: 'auto' }}>
+                {rack.shelves.map(shelf => {
+                  const parcel = parcels.find(p => p.id === shelf.parcelId);
+                  return (
+                    <div key={shelf.id} style={{ padding: '8px 10px', backgroundColor: shelf.maintenance ? '#fef3c7' : shelf.status === 'occupied' ? '#fef2f2' : '#f0fdf4', border: `1px solid ${shelf.maintenance ? '#fde68a' : shelf.status === 'occupied' ? '#fecaca' : '#bbf7d0'}`, borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: shelf.maintenance ? '#d97706' : shelf.status === 'occupied' ? '#dc2626' : '#16a34a' }} />
+                        <span style={{ fontWeight: 600, color: '#0f172a' }}>{shelf.id}</span>
+                        {parcel && <span style={{ fontSize: '10px', color: '#64748b' }}>({parcel.trackingNo})</span>}
+                      </div>
+                      <span style={{ fontSize: '10px', fontWeight: 600, color: shelf.maintenance ? '#92400e' : shelf.status === 'occupied' ? '#991b1b' : '#166534', textTransform: 'uppercase' }}>
+                        {shelf.maintenance ? '🔧 Maint.' : shelf.status === 'occupied' ? '● Occ.' : '✓ Empty'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Actions */}
+              <div style={{ padding: '12px', borderTop: '1px solid #e2e8f0', backgroundColor: '#ffffff', borderRadius: '0 0 12px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button
+                  onClick={() => onOpenDetail(rack.letter)}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#eef2ff', color: '#4f46e5', border: '1px solid #c7d2fe', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <Icons.Settings width={14} height={14} />Manage Shelves
+                </button>
+                <button
+                  onClick={() => onToggleRack(rack.letter)}
+                  style={{ width: '100%', padding: '8px', backgroundColor: isFullyMaintenance ? '#f0fdf4' : '#fef3c7', color: isFullyMaintenance ? '#166534' : '#92400e', border: `1px solid ${isFullyMaintenance ? '#bbf7d0' : '#fde68a'}`, borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  {isFullyMaintenance ? <><Icons.Check width={14} height={14} />Mark All Available</> : <><Icons.Wrench width={14} height={14} />Set Entire Rack to Maintenance</>}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Maintenance Log */}
+      <div style={STYLES.card}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Icons.AlertTriangle width={20} height={20} style={{ color: '#d97706' }} />
+          <h3 style={{ fontWeight: 600, color: '#0f172a', margin: 0, fontSize: '16px' }}>Current Maintenance Status</h3>
+        </div>
+        <div style={{ padding: '20px 24px' }}>
+          {maintenanceShelves === 0 ? (
+            <div style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
+              <Icons.CheckCircle width={40} height={40} style={{ color: '#16a34a', marginBottom: '8px' }} />
+              <p style={{ margin: 0, fontSize: '14px', fontWeight: 500 }}>All racks are operational. No maintenance required.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px' }}>
+              {racks.flatMap(rack => rack.shelves.filter(s => s.maintenance).map(s => ({ ...s, rackLetter: rack.letter }))).map(shelf => {
+                const parcel = parcels.find(p => p.id === shelf.parcelId);
+                return (
+                  <div key={shelf.id} style={{ padding: '12px', backgroundColor: '#fef3c7', border: '1px solid #fde68a', borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontWeight: 700, fontSize: '13px', color: '#0f172a' }}>Rack {shelf.rackLetter} - {shelf.id}</span>
+                      <Icons.Wrench width={16} height={16} style={{ color: '#d97706' }} />
+                    </div>
+                    {shelf.maintenanceReason && <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: '#92400e', fontStyle: 'italic' }}>Reason: {shelf.maintenanceReason}</p>}
+                    {shelf.maintenanceDate && <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: '#92400e' }}>Since: {formatDate(shelf.maintenanceDate)}</p>}
+                    {parcel && <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#92400e', fontWeight: 600 }}>⚠ Contains parcel: {parcel.trackingNo}</p>}
+                    <button
+                      onClick={() => onToggleShelf(shelf.rackLetter, shelf.id)}
+                      style={{ marginTop: '8px', width: '100%', padding: '6px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                    >
+                      <Icons.Check width={12} height={12} />Clear Maintenance
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1152,7 +1592,7 @@ function SignUpForm({ onSignUp }) {
   );
 }
 
-function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParcel, onRequestCollect, stats, isAdmin, user, racks, onGoToRack }) {
+function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParcel, onRequestCollect, stats, isAdmin, user, racks, onGoToRack, onGoToMaintenance }) {
   const cardGrid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' };
 
   return (
@@ -1232,11 +1672,22 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
           <span style={{ fontSize: '12px', opacity: 0.9, fontWeight: 600 }}>SMART RACK (SMART SHELF)</span>
         </div>
         <p style={{ fontSize: '28px', fontWeight: 700, margin: '0 0 4px 0' }}>{stats.racksTotal}</p>
-        <p style={{ fontSize: '13px', opacity: 0.9, margin: 0 }}>{stats.racksOccupied} occupied • {stats.racksTotal - stats.racksOccupied} available</p>
+        <p style={{ fontSize: '13px', opacity: 0.9, margin: 0 }}>{stats.racksOccupied} occupied • {stats.racksAvailable} available{stats.racksMaintenance > 0 ? ` • ${stats.racksMaintenance} maintenance` : ''}</p>
         <div style={{ marginTop: '12px', height: '6px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '9999px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', backgroundColor: '#16a34a', width: `${((stats.racksTotal - stats.racksOccupied) / stats.racksTotal) * 100}%`, transition: 'width 0.5s' }} />
+          <div style={{ height: '100%', backgroundColor: '#16a34a', width: `${(stats.racksAvailable / stats.racksTotal) * 100}%`, transition: 'width 0.5s' }} />
         </div>
       </div>
+
+      {isAdmin && stats.racksMaintenance > 0 && (
+        <div onClick={onGoToMaintenance} style={{ ...STYLES.statCard, cursor: 'pointer', background: 'linear-gradient(135deg, #92400e 0%, #d97706 100%)', color: 'white', border: 'none' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(146,64,14,0.3)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px' }}><Icons.Wrench width={24} height={24} /></div>
+            <span style={{ fontSize: '12px', opacity: 0.9, fontWeight: 600 }}>⚠ MAINTENANCE ALERT</span>
+          </div>
+          <p style={{ fontSize: '28px', fontWeight: 700, margin: '0 0 4px 0' }}>{stats.racksMaintenance}</p>
+          <p style={{ fontSize: '13px', opacity: 0.9, margin: 0 }}>shelves under maintenance — Click to manage</p>
+        </div>
+      )}
 
       <div style={cardGrid}>
         {[
@@ -1400,7 +1851,8 @@ function AdminView({ parcels, form, setForm, onAdd, onRequestCollect, onDelete, 
   };
 
   const isOthers = form.sender === 'Others';
-  const emptyShelves = racks.flatMap(r => r.shelves.filter(s => s.status === 'empty').map(s => ({ ...s, rackLetter: r.letter })));
+  const emptyShelves = racks.flatMap(r => r.shelves.filter(s => s.status === 'empty' && !s.maintenance).map(s => ({ ...s, rackLetter: r.letter })));
+  const maintenanceShelves = racks.flatMap(r => r.shelves.filter(s => s.maintenance).map(s => ({ ...s, rackLetter: r.letter })));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -1444,6 +1896,12 @@ function AdminView({ parcels, form, setForm, onAdd, onRequestCollect, onDelete, 
             <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Icons.Zap width={18} height={18} style={{ color: '#4f46e5' }} />Smart Rack Assignment (IoT Integration)
             </h4>
+            {maintenanceShelves.length > 0 && (
+              <div style={{ marginBottom: '12px', padding: '8px 12px', backgroundColor: '#fef3c7', border: '1px solid #fde68a', borderRadius: '6px', fontSize: '12px', color: '#92400e', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Icons.AlertTriangle width={14} height={14} />
+                <span><strong>{maintenanceShelves.length} shelf{maintenanceShelves.length > 1 ? 's' : ''} under maintenance</strong> — excluded from auto-assignment</span>
+              </div>
+            )}
             <div>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '8px', cursor: 'pointer' }}>
                 <input type="checkbox" checked={form.assignRack || false} onChange={up('assignRack')} style={{ width: '16px', height: '16px' }} />
@@ -1451,7 +1909,7 @@ function AdminView({ parcels, form, setForm, onAdd, onRequestCollect, onDelete, 
               </label>
               {form.assignRack && (
                 <select value={form.selectedRackShelf || ''} onChange={up('selectedRackShelf')} style={{ ...STYLES.input, backgroundColor: '#ffffff', fontSize: '13px' }}>
-                  <option value="">Auto-find empty shelf</option>
+                  <option value="">Auto-find empty shelf (excludes maintenance)</option>
                   {emptyShelves.map(s => (<option key={s.id} value={s.id}>Rack {s.rackLetter} - Shelf {s.id} (Empty)</option>))}
                 </select>
               )}
