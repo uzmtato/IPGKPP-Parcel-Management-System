@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, createContext, useContext } from 'react';
 
 const IPGKPP_LOGO = 'https://image.qwenlm.ai/public_source/a5365ccb-778a-4d10-aedb-64b519a3dff3/10c2878d5-8e35-49f7-9978-d6f399874b81.png';
 const IPGKPP_BG = 'https://image.qwenlm.ai/public_source/a5365ccb-778a-4d10-aedb-64b519a3dff3/1ee67feb7-707c-4c46-8395-a946662c0e1d.png';
@@ -36,10 +36,15 @@ const Icons = {
   Bell: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>,
   MapPin: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
   Cpu: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>,
-  Scan: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" x2="7.01" y1="12" y2="12"/></svg>,
   Wrench: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>,
   Check: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="20 6 9 17 4 12"/></svg>,
   Settings: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
+  Play: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="5 3 19 12 5 21 5 3"/></svg>,
+  Stop: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>,
+  RefreshCw: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>,
+  Sun: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>,
+  Moon: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
+  Palette: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>,
 };
 
 const COURIERS = [
@@ -60,7 +65,8 @@ const STORAGE_KEYS = {
   USERS: 'ipgkpp_parcels_users',
   PARCELS: 'ipgkpp_parcels_data',
   SESSION: 'ipgkpp_parcels_session',
-  RACKS: 'ipgkpp_racks_data'
+  RACKS: 'ipgkpp_racks_data',
+  THEME: 'ipgkpp_theme_preference'
 };
 
 const getDaysAgo = (days) => {
@@ -100,70 +106,279 @@ const DEFAULT_RACKS = ['A', 'B', 'C'].map(rackLetter => ({
   })),
 }));
 
-const STYLES = {
-  app: { display: 'flex', minHeight: '100vh', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", color: '#1e293b', backgroundColor: '#f8fafc' },
-  sidebar: { width: '260px', backgroundColor: '#ffffff', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 100, transition: 'transform 0.2s ease' },
+// ===== THEME DEFINITIONS =====
+const THEMES = {
+  light: {
+    name: 'light',
+    bg: '#f8fafc',
+    surface: '#ffffff',
+    surfaceHover: '#f1f5f9',
+    border: '#e2e8f0',
+    borderStrong: '#cbd5e1',
+    text: '#1e293b',
+    textSecondary: '#64748b',
+    textMuted: '#94a3b8',
+    inputBg: '#ffffff',
+    inputBorder: '#cbd5e1',
+    inputFocus: '#4f46e5',
+    navActive: '#eef2ff',
+    navActiveText: '#4f46e5',
+    navInactive: 'transparent',
+    navInactiveText: '#475569',
+    headerBg: '#ffffff',
+    sidebarBg: '#ffffff',
+    modalBg: '#ffffff',
+    modalOverlay: 'rgba(0,0,0,0.5)',
+    tableHeaderBg: '#f8fafc',
+    tableRowHover: '#f8fafc',
+    tableBorder: '#f1f5f9',
+    cardBg: '#ffffff',
+    cardBorder: '#e2e8f0',
+    statCardBg: '#ffffff',
+    bannerBg: 'rgba(255,255,255,0.92)',
+    dropdownBg: '#ffffff',
+    dropdownHover: '#eef2ff',
+    dropdownHoverText: '#4f46e5',
+    btnSecondaryBg: '#f1f5f9',
+    btnSecondaryBorder: '#e2e8f0',
+    btnSecondaryText: '#334155',
+    btnSecondaryHover: '#e2e8f0',
+    badgeBg: '#f1f5f9',
+    contentBgOpacity: 0.25,
+    sectionBg: '#f8fafc',
+    sectionBorder: '#e2e8f0',
+    divider: '#e2e8f0',
+    shadow: '0 1px 3px rgba(0,0,0,0.05)',
+    shadowLg: '0 10px 25px rgba(0,0,0,0.08)',
+    iconBg: '#eef2ff',
+    iconColor: '#4f46e5',
+    authBg: 'linear-gradient(135deg, #0f172a 0%, #312e81 100%)',
+    authCardBg: '#ffffff',
+    authText: '#1e293b',
+    authTextSecondary: '#64748b',
+    authBorder: '#f1f5f9',
+    authTabActive: '#eef2ff',
+    authTabActiveText: '#4f46e5',
+    authTabInactiveText: '#64748b',
+    footerText: '#94a3b8',
+    placeholder: '••••••••',
+    bullet: '—',
+    checkMark: '✓',
+    dot: '●',
+    maintenanceBg: '#fef3c7',
+    maintenanceBorder: '#fde68a',
+    maintenanceText: '#92400e',
+    availableBg: '#f0fdf4',
+    availableBorder: '#bbf7d0',
+    availableText: '#166534',
+    occupiedBg: '#fef2f2',
+    occupiedBorder: '#fecaca',
+    occupiedText: '#991b1b',
+    infoBg: '#eff6ff',
+    infoBorder: '#bfdbfe',
+    infoText: '#1e40af',
+    successBg: '#f0fdf4',
+    successBorder: '#bbf7d0',
+    successText: '#166534',
+    warningBg: '#fef3c7',
+    warningBorder: '#fde68a',
+    warningText: '#92400e',
+    themeToggleBg: '#f1f5f9',
+    themeToggleBorder: '#e2e8f0',
+    themeToggleHover: '#e2e8f0',
+    themeToggleText: '#475569',
+    themeToggleActiveBg: '#eef2ff',
+    themeToggleActiveBorder: '#c7d2fe',
+    themeToggleActiveText: '#4f46e5',
+    scanContainerBg: '#000',
+    scanSuccessBg: '#d1fae5',
+    scanSuccessBorder: '#a7f3d0',
+    scanSuccessText: '#065f46',
+    profilePicPlaceholderBg: '#e2e8f0',
+    profilePicPlaceholderBorder: '#cbd5e1',
+    profilePicPlaceholderText: '#94a3b8',
+    uploadBtnBg: '#ffffff',
+    uploadBtnText: '#4f46e5',
+    uploadBtnBorder: '#4f46e5',
+    removeBtnBg: '#fef2f2',
+    removeBtnText: '#dc2626',
+    removeBtnBorder: '#fecaca',
+    bannerTitle: '#1e3a8a',
+    bannerSubtitle: '#64748b',
+  },
+  dark: {
+    name: 'dark',
+    bg: '#0f172a',
+    surface: '#1e293b',
+    surfaceHover: '#334155',
+    border: '#334155',
+    borderStrong: '#475569',
+    text: '#f1f5f9',
+    textSecondary: '#94a3b8',
+    textMuted: '#64748b',
+    inputBg: '#1e293b',
+    inputBorder: '#475569',
+    inputFocus: '#818cf8',
+    navActive: '#1e1b4b',
+    navActiveText: '#a5b4fc',
+    navInactive: 'transparent',
+    navInactiveText: '#cbd5e1',
+    headerBg: '#1e293b',
+    sidebarBg: '#1e293b',
+    modalBg: '#1e293b',
+    modalOverlay: 'rgba(0,0,0,0.75)',
+    tableHeaderBg: '#1e293b',
+    tableRowHover: '#334155',
+    tableBorder: '#334155',
+    cardBg: '#1e293b',
+    cardBorder: '#334155',
+    statCardBg: '#1e293b',
+    bannerBg: 'rgba(30,41,59,0.92)',
+    dropdownBg: '#1e293b',
+    dropdownHover: '#1e1b4b',
+    dropdownHoverText: '#a5b4fc',
+    btnSecondaryBg: '#334155',
+    btnSecondaryBorder: '#475569',
+    btnSecondaryText: '#e2e8f0',
+    btnSecondaryHover: '#475569',
+    badgeBg: '#334155',
+    contentBgOpacity: 0.08,
+    sectionBg: '#1e293b',
+    sectionBorder: '#334155',
+    divider: '#334155',
+    shadow: '0 1px 3px rgba(0,0,0,0.3)',
+    shadowLg: '0 10px 25px rgba(0,0,0,0.5)',
+    iconBg: '#1e1b4b',
+    iconColor: '#a5b4fc',
+    authBg: 'linear-gradient(135deg, #020617 0%, #1e1b4b 100%)',
+    authCardBg: '#1e293b',
+    authText: '#f1f5f9',
+    authTextSecondary: '#94a3b8',
+    authBorder: '#334155',
+    authTabActive: '#1e1b4b',
+    authTabActiveText: '#a5b4fc',
+    authTabInactiveText: '#94a3b8',
+    footerText: '#64748b',
+    placeholder: '••••••••',
+    bullet: '—',
+    checkMark: '✓',
+    dot: '●',
+    maintenanceBg: '#451a03',
+    maintenanceBorder: '#78350f',
+    maintenanceText: '#fbbf24',
+    availableBg: '#052e16',
+    availableBorder: '#14532d',
+    availableText: '#4ade80',
+    occupiedBg: '#450a0a',
+    occupiedBorder: '#7f1d1d',
+    occupiedText: '#fca5a5',
+    infoBg: '#1e1b4b',
+    infoBorder: '#312e81',
+    infoText: '#a5b4fc',
+    successBg: '#052e16',
+    successBorder: '#14532d',
+    successText: '#4ade80',
+    warningBg: '#451a03',
+    warningBorder: '#78350f',
+    warningText: '#fbbf24',
+    themeToggleBg: '#334155',
+    themeToggleBorder: '#475569',
+    themeToggleHover: '#475569',
+    themeToggleText: '#e2e8f0',
+    themeToggleActiveBg: '#1e1b4b',
+    themeToggleActiveBorder: '#4338ca',
+    themeToggleActiveText: '#a5b4fc',
+    scanContainerBg: '#000',
+    scanSuccessBg: '#064e3b',
+    scanSuccessBorder: '#065f46',
+    scanSuccessText: '#6ee7b7',
+    profilePicPlaceholderBg: '#334155',
+    profilePicPlaceholderBorder: '#475569',
+    profilePicPlaceholderText: '#94a3b8',
+    uploadBtnBg: '#1e293b',
+    uploadBtnText: '#a5b4fc',
+    uploadBtnBorder: '#818cf8',
+    removeBtnBg: '#450a0a',
+    removeBtnText: '#fca5a5',
+    removeBtnBorder: '#7f1d1d',
+    bannerTitle: '#a5b4fc',
+    bannerSubtitle: '#94a3b8',
+  }
+};
+
+// ===== STYLES FACTORY =====
+const createStyles = (theme) => ({
+  app: { display: 'flex', minHeight: '100vh', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", color: theme.text, backgroundColor: theme.bg, transition: 'background-color 0.3s ease, color 0.3s ease' },
+  sidebar: { width: '260px', backgroundColor: theme.sidebarBg, borderRight: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 100, transition: 'transform 0.2s ease, background-color 0.3s ease' },
   sidebarMobile: { transform: 'translateX(-100%)' },
   sidebarOpen: { transform: 'translateX(0)' },
-  sidebarHeader: { padding: '16px 10px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  sidebarHeader: { padding: '16px 10px', borderBottom: `1px solid ${theme.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   sidebarLogo: { width: '220px', height: 'auto', objectFit: 'contain' },
   nav: { flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', gap: '4px' },
-  navItem: (isActive) => ({ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: '8px', fontSize: '14px', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'all 0.15s', backgroundColor: isActive ? '#eef2ff' : 'transparent', color: isActive ? '#4f46e5' : '#475569', textAlign: 'left' }),
+  navItem: (isActive) => ({ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: '8px', fontSize: '14px', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'all 0.15s', backgroundColor: isActive ? theme.navActive : theme.navInactive, color: isActive ? theme.navActiveText : theme.navInactiveText, textAlign: 'left' }),
   main: { flex: 1, marginLeft: '260px', display: 'flex', flexDirection: 'column', minWidth: 0 },
   mainNoSidebar: { marginLeft: 0 },
-  header: { backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 },
+  header: { backgroundColor: theme.headerBg, borderBottom: `1px solid ${theme.border}`, padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50, transition: 'background-color 0.3s ease' },
   headerInstitution: { display: 'flex', alignItems: 'center', gap: '6px' },
   headerInstitutionLogo: { height: '32px', width: 'auto', objectFit: 'contain' },
   content: { flex: 1, padding: '24px 32px', overflowY: 'auto', position: 'relative' },
-  contentBg: { position: 'absolute', inset: 0, backgroundImage: `url(${IPGKPP_BG})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.25, pointerEvents: 'none', zIndex: 0 },
+  contentBg: { position: 'absolute', inset: 0, backgroundImage: `url(${IPGKPP_BG})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: theme.contentBgOpacity, pointerEvents: 'none', zIndex: 0 },
   contentInner: { position: 'relative', zIndex: 1 },
-  hamburger: { padding: '8px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', color: '#475569', borderRadius: '8px', display: 'none' },
+  hamburger: { padding: '8px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', color: theme.textSecondary, borderRadius: '8px', display: 'none' },
   userMenuContainer: { position: 'relative' },
-  userMenuBtn: { display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', backgroundColor: '#ffffff', cursor: 'pointer', color: '#475569', transition: 'all 0.15s' },
-  userAvatar: (size = 32) => ({ width: size, height: size, borderRadius: '50%', objectFit: 'cover', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }),
-  avatarPlaceholder: (size = 32) => ({ width: size, height: size, borderRadius: '50%', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', flexShrink: 0 }),
-  dropdown: { position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: '224px', backgroundColor: '#ffffff', borderRadius: '12px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', padding: '8px', zIndex: 200 },
-  dropdownItem: { width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '8px', fontSize: '14px', border: 'none', cursor: 'pointer', backgroundColor: 'transparent', color: '#334155', textAlign: 'left', transition: 'all 0.15s' },
-  dropdownLogout: { color: '#dc2626' },
-  divider: { height: '1px', backgroundColor: '#e2e8f0', margin: '8px 0' },
-  modal: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' },
-  modalContent: { backgroundColor: '#ffffff', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', width: '100%', maxWidth: '448px', overflow: 'hidden' },
-  modalContentLarge: { backgroundColor: '#ffffff', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', width: '100%', maxWidth: '640px', overflow: 'hidden', maxHeight: '90vh' },
-  modalContentXLarge: { backgroundColor: '#ffffff', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', width: '100%', maxWidth: '900px', overflow: 'hidden', maxHeight: '90vh' },
-  modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid #f1f5f9' },
+  userMenuBtn: { display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', border: `1px solid ${theme.border}`, borderRadius: '8px', backgroundColor: theme.surface, cursor: 'pointer', color: theme.textSecondary, transition: 'all 0.15s' },
+  userAvatar: (size = 32) => ({ width: size, height: size, borderRadius: '50%', objectFit: 'cover', backgroundColor: theme.border, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }),
+  avatarPlaceholder: (size = 32) => ({ width: size, height: size, borderRadius: '50%', backgroundColor: theme.border, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.textMuted, flexShrink: 0 }),
+  dropdown: { position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: '224px', backgroundColor: theme.dropdownBg, borderRadius: '12px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25)', border: `1px solid ${theme.border}`, padding: '8px', zIndex: 200 },
+  dropdownItem: { width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '8px', fontSize: '14px', border: 'none', cursor: 'pointer', backgroundColor: 'transparent', color: theme.text, textAlign: 'left', transition: 'all 0.15s' },
+  dropdownLogout: { color: '#f87171' },
+  divider: { height: '1px', backgroundColor: theme.divider, margin: '8px 0' },
+  modal: { position: 'fixed', inset: 0, backgroundColor: theme.modalOverlay, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' },
+  modalContent: { backgroundColor: theme.modalBg, borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)', width: '100%', maxWidth: '448px', overflow: 'hidden' },
+  modalContentLarge: { backgroundColor: theme.modalBg, borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)', width: '100%', maxWidth: '640px', overflow: 'hidden', maxHeight: '90vh' },
+  modalContentXLarge: { backgroundColor: theme.modalBg, borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)', width: '100%', maxWidth: '900px', overflow: 'hidden', maxHeight: '90vh' },
+  modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: `1px solid ${theme.border}` },
   modalBody: { padding: '20px', overflowY: 'auto', maxHeight: 'calc(90vh - 70px)' },
-  input: { width: '100%', padding: '10px 16px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', outline: 'none', transition: 'border-color 0.15s', boxSizing: 'border-box' },
+  input: { width: '100%', padding: '10px 16px', border: `1px solid ${theme.inputBorder}`, borderRadius: '8px', fontSize: '14px', outline: 'none', transition: 'border-color 0.15s, background-color 0.3s', boxSizing: 'border-box', backgroundColor: theme.inputBg, color: theme.text },
   btnPrimary: { width: '100%', padding: '10px 16px', backgroundColor: '#4f46e5', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', transition: 'background-color 0.15s' },
-  btnSecondary: { padding: '8px 16px', backgroundColor: '#f1f5f9', color: '#334155', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '6px' },
-  btnDanger: { padding: '6px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', color: '#dc2626', borderRadius: '6px' },
+  btnSecondary: { padding: '8px 16px', backgroundColor: theme.btnSecondaryBg, color: theme.btnSecondaryText, border: `1px solid ${theme.btnSecondaryBorder}`, borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '6px' },
+  btnDanger: { padding: '6px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', color: '#f87171', borderRadius: '6px' },
   badge: (status) => {
-    const colors = { Pending: { bg: '#fef3c7', color: '#92400e', border: '#fde68a' }, Arrived: { bg: '#dbeafe', color: '#1e40af', border: '#bfdbfe' }, Collected: { bg: '#d1fae5', color: '#065f46', border: '#a7f3d0' }, Overdue: { bg: '#fee2e2', color: '#991b1b', border: '#fecaca' }, Maintenance: { bg: '#fef3c7', color: '#92400e', border: '#fde68a' } };
+    const colors = {
+      Pending: { bg: '#fef3c7', color: '#92400e', border: '#fde68a' },
+      Arrived: { bg: '#dbeafe', color: '#1e40af', border: '#bfdbfe' },
+      Collected: { bg: '#d1fae5', color: '#065f46', border: '#a7f3d0' },
+      Overdue: { bg: '#fee2e2', color: '#991b1b', border: '#fecaca' },
+      Maintenance: { bg: theme.maintenanceBg, color: theme.maintenanceText, border: theme.maintenanceBorder }
+    };
     const c = colors[status] || colors.Pending;
     return { display: 'inline-flex', padding: '4px 10px', borderRadius: '9999px', fontSize: '12px', fontWeight: 600, backgroundColor: c.bg, color: c.color, border: `1px solid ${c.border}` };
   },
-  card: { backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', position: 'relative', zIndex: 1 },
-  statCard: { backgroundColor: '#ffffff', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', position: 'relative', zIndex: 1 },
+  card: { backgroundColor: theme.cardBg, borderRadius: '12px', border: `1px solid ${theme.cardBorder}`, overflow: 'hidden', position: 'relative', zIndex: 1, transition: 'background-color 0.3s ease, border-color 0.3s ease' },
+  statCard: { backgroundColor: theme.statCardBg, padding: '16px', borderRadius: '12px', border: `1px solid ${theme.cardBorder}`, position: 'relative', zIndex: 1, transition: 'background-color 0.3s ease' },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: '14px' },
-  th: { padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: '#475569', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' },
-  td: { padding: '12px 16px', borderBottom: '1px solid #f1f5f9', color: '#334155' },
-  pagination: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', position: 'relative', zIndex: 1 },
-  pageBtn: (active) => ({ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: active ? 'none' : '1px solid #e2e8f0', backgroundColor: active ? '#4f46e5' : '#ffffff', color: active ? '#ffffff' : '#475569', fontSize: '14px', fontWeight: 500, cursor: 'pointer' }),
+  th: { padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: theme.textSecondary, backgroundColor: theme.tableHeaderBg, borderBottom: `1px solid ${theme.border}`, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' },
+  td: { padding: '12px 16px', borderBottom: `1px solid ${theme.tableBorder}`, color: theme.text },
+  pagination: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px', paddingTop: '16px', borderTop: `1px solid ${theme.border}`, position: 'relative', zIndex: 1 },
+  pageBtn: (active) => ({ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: active ? 'none' : `1px solid ${theme.border}`, backgroundColor: active ? '#4f46e5' : theme.surface, color: active ? '#ffffff' : theme.text, fontSize: '14px', fontWeight: 500, cursor: 'pointer' }),
   overlay: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 99 },
-  pageBanner: { position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '16px', padding: '12px 20px', marginBottom: '20px', backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: '12px', border: '1px solid #e2e8f0', backdropFilter: 'blur(8px)' },
+  pageBanner: { position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '16px', padding: '12px 20px', marginBottom: '20px', backgroundColor: theme.bannerBg, borderRadius: '12px', border: `1px solid ${theme.border}`, backdropFilter: 'blur(8px)', transition: 'background-color 0.3s ease' },
   bannerLogo: { height: '48px', width: 'auto', objectFit: 'contain' },
   bannerText: { display: 'flex', flexDirection: 'column' },
-  bannerTitle: { fontSize: '14px', fontWeight: 700, color: '#1e3a8a', margin: 0, letterSpacing: '0.025em' },
-  bannerSubtitle: { fontSize: '10px', color: '#64748b', margin: 0, marginTop: '2px' },
-  scannerContainer: { width: '100%', maxWidth: '400px', margin: '0 auto', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#000', position: 'relative' },
+  bannerTitle: { fontSize: '14px', fontWeight: 700, color: theme.bannerTitle, margin: 0, letterSpacing: '0.025em' },
+  bannerSubtitle: { fontSize: '10px', color: theme.bannerSubtitle, margin: 0, marginTop: '2px' },
+  scannerContainer: { width: '100%', maxWidth: '400px', margin: '0 auto', borderRadius: '12px', overflow: 'hidden', backgroundColor: theme.scanContainerBg, position: 'relative' },
   scannerOverlay: { position: 'absolute', inset: 0, border: '3px solid #4f46e5', borderRadius: '12px', pointerEvents: 'none' },
   scannerLine: { position: 'absolute', left: '10%', right: '10%', height: '2px', backgroundColor: '#4f46e5', boxShadow: '0 0 10px #4f46e5', animation: 'scanline 2s ease-in-out infinite' },
-  scanSuccess: { display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', backgroundColor: '#d1fae5', border: '1px solid #a7f3d0', borderRadius: '8px', color: '#065f46', fontSize: '14px', fontWeight: 500, marginTop: '12px' },
+  scanSuccess: { display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', backgroundColor: theme.scanSuccessBg, border: `1px solid ${theme.scanSuccessBorder}`, borderRadius: '8px', color: theme.scanSuccessText, fontSize: '14px', fontWeight: 500, marginTop: '12px' },
   profilePicUpload: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '20px' },
-  profilePicPreview: { width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '3px solid #e2e8f0', transition: 'border-color 0.2s' },
-  profilePicPlaceholder: { width: '100px', height: '100px', borderRadius: '50%', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', border: '3px dashed #cbd5e1' },
-  uploadBtn: { padding: '8px 20px', backgroundColor: '#ffffff', color: '#4f46e5', border: '1px solid #4f46e5', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '6px' },
-  removePicBtn: { padding: '6px 12px', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', transition: 'all 0.15s' },
-};
+  profilePicPreview: { width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', backgroundColor: theme.border, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: `3px solid ${theme.border}`, transition: 'border-color 0.2s' },
+  profilePicPlaceholder: { width: '100px', height: '100px', borderRadius: '50%', backgroundColor: theme.profilePicPlaceholderBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.profilePicPlaceholderText, border: `3px dashed ${theme.profilePicPlaceholderBorder}` },
+  uploadBtn: { padding: '8px 20px', backgroundColor: theme.uploadBtnBg, color: theme.uploadBtnText, border: `1px solid ${theme.uploadBtnBorder}`, borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '6px' },
+  removePicBtn: { padding: '6px 12px', backgroundColor: theme.removeBtnBg, color: theme.removeBtnText, border: `1px solid ${theme.removeBtnBorder}`, borderRadius: '6px', fontSize: '12px', cursor: 'pointer', transition: 'all 0.15s' },
+  themeToggle: { padding: '8px', border: `1px solid ${theme.themeToggleBorder}`, borderRadius: '8px', backgroundColor: theme.themeToggleBg, cursor: 'pointer', color: theme.themeToggleText, transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  themeToggleHover: { backgroundColor: theme.themeToggleHover },
+});
 
 function formatDate(dateString) {
   if (!dateString) return 'N/A';
@@ -185,12 +400,18 @@ function getTimeAgo(dateString) {
   return 'Today';
 }
 
-function BarcodeScanner({ onScan, onClose }) {
+function BarcodeScanner({ onScan, onClose, theme }) {
   const scannerRef = useRef(null);
+  const qrInstanceRef = useRef(null);
   const [isScanning, setIsScanning] = useState(false);
   const [lastScanned, setLastScanned] = useState('');
   const [error, setError] = useState('');
   const [isLibraryLoaded, setIsLibraryLoaded] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
+  const [hasPermission, setHasPermission] = useState(null);
+  const scanTimeoutRef = useRef(null);
+  const isUnmountingRef = useRef(false);
+  const styles = createStyles(theme);
 
   useEffect(() => {
     if (window.Html5Qrcode) { setIsLibraryLoaded(true); return; }
@@ -198,80 +419,129 @@ function BarcodeScanner({ onScan, onClose }) {
     script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
     script.async = true;
     script.onload = () => setIsLibraryLoaded(true);
-    script.onerror = () => setError('Failed to load barcode scanner library.');
+    script.onerror = () => setError('Failed to load barcode scanner library. Please check your internet connection.');
     document.head.appendChild(script);
     return () => { if (document.head.contains(script)) document.head.removeChild(script); };
   }, []);
 
-  useEffect(() => {
-    if (!isLibraryLoaded || !scannerRef.current) return;
-    let qrCodeInstance = null;
-    let scanTimeout = null;
-    const startScanning = async () => {
-      try {
-        setError('');
-        qrCodeInstance = new window.Html5Qrcode(scannerRef.current.id);
-        const config = { fps: 10, qrbox: { width: 250, height: 150 }, aspectRatio: 1.0 };
-        await qrCodeInstance.start({ facingMode: "environment" }, config, (decodedText) => {
-          clearTimeout(scanTimeout);
-          setLastScanned(decodedText);
-          setIsScanning(false);
-          if (qrCodeInstance) { qrCodeInstance.stop().then(() => qrCodeInstance.clear()).catch(() => {}); }
-          scanTimeout = setTimeout(() => onScan(decodedText), 500);
-        }, () => {});
-        setIsScanning(true);
-      } catch (err) {
-        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') setError('Camera permission denied.');
-        else if (err.name === 'NotFoundError') setError('No camera found.');
-        else setError('Failed to start camera: ' + err.message);
+  const safeStopScanner = async () => {
+    setIsStarting(true);
+    try {
+      if (qrInstanceRef.current) {
+        const instance = qrInstanceRef.current;
+        qrInstanceRef.current = null;
+        try { if (typeof instance.isScanning === 'function' && instance.isScanning()) await instance.stop(); } catch (e) {}
+        try { await instance.clear(); } catch (e) {}
       }
+    } catch (e) {}
+    finally { setIsStarting(false); setIsScanning(false); }
+  };
+
+  useEffect(() => {
+    return () => {
+      isUnmountingRef.current = true;
+      if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+      safeStopScanner();
     };
-    startScanning();
-    return () => { clearTimeout(scanTimeout); if (qrCodeInstance) { qrCodeInstance.stop().then(() => qrCodeInstance.clear()).catch(() => {}); } };
-  }, [isLibraryLoaded, onScan]);
+  }, []);
+
+  const startScanner = async () => {
+    if (!scannerRef.current || !isLibraryLoaded) return;
+    if (isStarting) return;
+    setError('');
+    setIsStarting(true);
+    setLastScanned('');
+    await safeStopScanner();
+    try {
+      if (navigator.permissions && navigator.permissions.query) {
+        try {
+          const permResult = await navigator.permissions.query({ name: 'camera' });
+          setHasPermission(permResult.state === 'granted');
+          if (permResult.state === 'denied') {
+            setError('Camera permission denied. Please enable camera access in your browser settings.');
+            setIsStarting(false);
+            return;
+          }
+        } catch (permErr) {}
+      }
+      const instance = new window.Html5Qrcode(`barcode-scanner-container-${Date.now()}`);
+      qrInstanceRef.current = instance;
+      const config = { fps: 10, qrbox: { width: 250, height: 150 }, aspectRatio: 1.0, disableFlip: false };
+      await instance.start({ facingMode: "environment" }, config, (decodedText) => {
+        if (isUnmountingRef.current) return;
+        if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+        setLastScanned(decodedText);
+        setIsScanning(false);
+        setIsStarting(false);
+        safeStopScanner().then(() => {
+          scanTimeoutRef.current = setTimeout(() => { if (!isUnmountingRef.current) onScan(decodedText); }, 500);
+        });
+      }, () => {});
+      setIsScanning(true);
+      setHasPermission(true);
+    } catch (err) {
+      console.error('Scanner start error:', err);
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') { setError('Camera permission denied. Please allow camera access in your browser settings and try again.'); setHasPermission(false); }
+      else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') setError('No camera found on this device.');
+      else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') setError('Camera is already in use by another application. Please close other apps using the camera.');
+      else if (err.name === 'OverconstrainedError') setError('Camera constraints not satisfied. Try using a different browser.');
+      else setError(`Camera error: ${err.message || 'Unknown error'}. Try refreshing the page.`);
+      setIsScanning(false);
+    } finally { setIsStarting(false); }
+  };
+
+  const stopScanner = async () => { await safeStopScanner(); };
 
   return (
-    <Modal title="Imbas Kod Barcode / QR" onClose={onClose} large>
+    <Modal title="Imbas Kod Barcode / QR" onClose={onClose} large theme={theme}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <p style={{ fontSize: '13px', color: '#64748b', margin: 0, textAlign: 'center' }}>Point your camera at the parcel barcode or student QR code</p>
+        <p style={{ fontSize: '13px', color: theme.textSecondary, margin: 0, textAlign: 'center' }}>Point your camera at the parcel barcode or student QR code</p>
         {!isLibraryLoaded ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-            <div style={{ width: '40px', height: '40px', border: '3px solid #e2e8f0', borderTop: '3px solid #4f46e5', borderRadius: '50%', margin: '0 auto 12px', animation: 'spin 1s linear infinite' }}></div>
+          <div style={{ textAlign: 'center', padding: '40px', color: theme.textSecondary }}>
+            <div style={{ width: '40px', height: '40px', border: `3px solid ${theme.border}`, borderTop: '3px solid #4f46e5', borderRadius: '50%', margin: '0 auto 12px', animation: 'spin 1s linear infinite' }}></div>
             <p style={{ margin: 0, fontSize: '14px' }}>Loading barcode scanner...</p>
           </div>
         ) : error ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <p style={{ color: '#dc2626', fontSize: '14px', margin: '0 0 8px 0' }}>{error}</p>
-            <button onClick={() => window.location.reload()} style={{ ...STYLES.btnPrimary, marginTop: '16px', maxWidth: '200px', margin: '16px auto 0' }}>Reload Page</button>
+          <div style={{ textAlign: 'center', padding: '30px' }}>
+            <Icons.AlertTriangle width={48} height={48} style={{ color: '#dc2626', marginBottom: '12px' }} />
+            <p style={{ color: '#dc2626', fontSize: '14px', margin: '0 0 8px 0', fontWeight: 600 }}>{error}</p>
+            <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 16px 0' }}>{hasPermission === false ? 'Go to your browser settings → Site Settings → Camera → Allow access for this site.' : 'Make sure you are using HTTPS or localhost, and that your device has a camera.'}</p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button onClick={startScanner} style={{ ...styles.btnPrimary, maxWidth: '200px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Icons.RefreshCw width={16} height={16} />Try Again</button>
+              <button onClick={onClose} style={{ ...styles.btnPrimary, maxWidth: '200px', backgroundColor: styles.btnSecondaryBg, color: styles.btnSecondaryText, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>Close</button>
+            </div>
           </div>
         ) : (
           <>
-            <div style={STYLES.scannerContainer}>
-              <div id="barcode-scanner-container" ref={scannerRef} style={{ width: '100%', minHeight: '300px' }}></div>
-              {isScanning && (<><div style={STYLES.scannerOverlay}></div><div style={STYLES.scannerLine}></div></>)}
-            </div>
-            {lastScanned && (<div style={STYLES.scanSuccess}><Icons.CheckCircle width={20} height={20} /><span>Kod dikesan: <strong>{lastScanned}</strong></span></div>)}
-            {!isScanning && !lastScanned && !error && (
-              <div style={{ textAlign: 'center', padding: '20px', color: '#64748b', fontSize: '13px' }}>
-                <Icons.Camera width={32} height={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
-                <p style={{ margin: 0 }}>Initializing camera...</p>
+            <div style={styles.scannerContainer}>
+              <div id={`barcode-scanner-container-${Date.now()}`} ref={scannerRef} style={{ width: '100%', minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.textSecondary, fontSize: '13px' }}>
+                {!isScanning && !isStarting && 'Camera preview will appear here'}
               </div>
-            )}
+              {isScanning && (<><div style={styles.scannerOverlay}></div><div style={styles.scannerLine}></div></>)}
+            </div>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {!isScanning && !isStarting && (<button onClick={startScanner} style={{ ...styles.btnPrimary, maxWidth: '220px', backgroundColor: '#16a34a', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><Icons.Play width={16} height={16} />Start Camera</button>)}
+              {isScanning && (<button onClick={stopScanner} style={{ ...styles.btnPrimary, maxWidth: '220px', backgroundColor: '#dc2626', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><Icons.Stop width={16} height={16} />Stop Camera</button>)}
+              {isStarting && (<div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', color: theme.textSecondary, fontSize: '13px' }}><div style={{ width: '16px', height: '16px', border: `2px solid ${theme.border}`, borderTop: '2px solid #4f46e5', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div><span>Initializing camera...</span></div>)}
+            </div>
+            {lastScanned && (<div style={styles.scanSuccess}><Icons.CheckCircle width={20} height={20} /><span>Kod dikesan: <strong>{lastScanned}</strong></span></div>)}
+            {isScanning && (<div style={{ textAlign: 'center', padding: '12px', backgroundColor: theme.infoBg, borderRadius: '8px', border: `1px solid ${theme.infoBorder}` }}><p style={{ margin: 0, fontSize: '13px', color: theme.infoText, fontWeight: 500 }}>📷 Camera active — Point at barcode/QR code</p><p style={{ margin: '4px 0 0 0', fontSize: '11px', color: theme.textSecondary }}>Tap "Stop Camera" when done or wait for auto-detection</p></div>)}
           </>
         )}
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={onClose} style={{ ...STYLES.btnPrimary, backgroundColor: '#f1f5f9', color: '#334155' }}>Tutup Pengimbas</button>
+          <button onClick={onClose} style={{ ...styles.btnPrimary, backgroundColor: styles.btnSecondaryBg, color: styles.btnSecondaryText }}>Tutup Pengimbas</button>
         </div>
       </div>
     </Modal>
   );
 }
 
-function ProfilePicUpload({ currentUser, onUpdate, onClose }) {
+function ProfilePicUpload({ currentUser, onUpdate, onClose, theme }) {
   const fileInputRef = useRef(null);
   const [preview, setPreview] = useState(currentUser?.profilePic || '');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const styles = createStyles(theme);
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -289,32 +559,31 @@ function ProfilePicUpload({ currentUser, onUpdate, onClose }) {
   const handleRemovePic = () => { setPreview(''); onUpdate(''); };
 
   return (
-    <Modal title="Gambar Profil" onClose={onClose} large>
+    <Modal title="Gambar Profil" onClose={onClose} large theme={theme}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-        <p style={{ fontSize: '13px', color: '#64748b', margin: 0, textAlign: 'center' }}>Muat naik gambar profil untuk memperibadikan akaun anda</p>
-        <div style={STYLES.profilePicUpload}>
-          {preview ? <img src={preview} alt="Profile" style={STYLES.profilePicPreview} /> : (<div style={STYLES.profilePicPlaceholder}><Icons.User width={40} height={40} /></div>)}
+        <p style={{ fontSize: '13px', color: theme.textSecondary, margin: 0, textAlign: 'center' }}>Muat naik gambar profil untuk memperibadikan akaun anda</p>
+        <div style={styles.profilePicUpload}>
+          {preview ? <img src={preview} alt="Profile" style={styles.profilePicPreview} /> : (<div style={styles.profilePicPlaceholder}><Icons.User width={40} height={40} /></div>)}
           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <button onClick={() => fileInputRef.current?.click()} style={STYLES.uploadBtn} disabled={isUploading}>
-              <Icons.Upload width={16} height={16} />{isUploading ? 'Memuat Naik...' : 'Pilih Foto'}
-            </button>
-            {preview && <button onClick={handleRemovePic} style={STYLES.removePicBtn}>Buang</button>}
+            <button onClick={() => fileInputRef.current?.click()} style={styles.uploadBtn} disabled={isUploading}><Icons.Upload width={16} height={16} />{isUploading ? 'Memuat Naik...' : 'Pilih Foto'}</button>
+            {preview && <button onClick={handleRemovePic} style={styles.removePicBtn}>Buang</button>}
           </div>
           {uploadError && <p style={{ color: '#dc2626', fontSize: '12px', margin: 0, textAlign: 'center' }}>{uploadError}</p>}
-          <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0, textAlign: 'center' }}>Format disokong: JPG, PNG, GIF • Saiz maksimum: 2MB</p>
+          <p style={{ fontSize: '11px', color: theme.textMuted, margin: 0, textAlign: 'center' }}>Format disokong: JPG, PNG, GIF • Saiz maksimum: 2MB</p>
         </div>
         <div style={{ display: 'flex', gap: '12px', width: '100%', maxWidth: '280px' }}>
-          <button onClick={onClose} style={{ ...STYLES.btnPrimary, backgroundColor: '#f1f5f9', color: '#334155' }}>Selesai</button>
+          <button onClick={onClose} style={{ ...styles.btnPrimary, backgroundColor: styles.btnSecondaryBg, color: styles.btnSecondaryText }}>Selesai</button>
         </div>
       </div>
     </Modal>
   );
 }
 
-function CollectionVerifier({ parcel, onClose, onVerify, onOpenScanner }) {
+function CollectionVerifier({ parcel, onClose, onVerify, onOpenScanner, theme }) {
   const [inputOtp, setInputOtp] = useState('');
   const [error, setError] = useState('');
+  const styles = createStyles(theme);
 
   const handleVerify = () => {
     if (inputOtp === parcel.otp) { onVerify(parcel.id); onClose(); }
@@ -331,90 +600,66 @@ function CollectionVerifier({ parcel, onClose, onVerify, onOpenScanner }) {
   };
 
   return (
-    <Modal title="Pengesahan Pengambilan Parcel" onClose={onClose} large>
+    <Modal title="Pengesahan Pengambilan Parcel" onClose={onClose} large theme={theme}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-          <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Maklumat Parcel</p>
-          <p style={{ margin: 0, fontWeight: 700, fontSize: '18px', color: '#0f172a' }}>{parcel.trackingNo}</p>
-          <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#334155' }}>Penerima: <strong>{parcel.recipient}</strong></p>
-          <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#334155' }}>Penghantar: <strong>{parcel.sender}</strong></p>
-          {parcel.rackLocation && <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#334155' }}>Rak: <strong style={{ color: '#4f46e5' }}>{parcel.rackLocation}</strong></p>}
+        <div style={{ backgroundColor: styles.sectionBg, padding: '16px', borderRadius: '8px', border: `1px solid ${styles.sectionBorder}` }}>
+          <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Maklumat Parcel</p>
+          <p style={{ margin: 0, fontWeight: 700, fontSize: '18px', color: theme.text }}>{parcel.trackingNo}</p>
+          <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: theme.text }}>Penerima: <strong>{parcel.recipient}</strong></p>
+          <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: theme.text }}>Penghantar: <strong>{parcel.sender}</strong></p>
+          {parcel.rackLocation && <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: theme.text }}>Rak: <strong style={{ color: '#4f46e5' }}>{parcel.rackLocation}</strong></p>}
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>Masukkan Kod OTP 6-Digit atau Imbas Kod QR Pelajar</label>
+          <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: theme.text, marginBottom: '8px' }}>Masukkan Kod OTP 6-Digit atau Imbas Kod QR Pelajar</label>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <input value={inputOtp} onChange={(e) => { setInputOtp(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }} placeholder="Contoh: 123456" style={{ ...STYLES.input, fontFamily: 'monospace', fontSize: '20px', letterSpacing: '6px', textAlign: 'center', borderColor: error ? '#dc2626' : '#cbd5e1', fontWeight: 700 }} />
-            <button type="button" onClick={() => onOpenScanner(handleScanSuccess)} style={{ ...STYLES.btnSecondary, padding: '10px 16px', whiteSpace: 'nowrap' }}>
-              <Icons.Camera width={18} height={18} />Imbas QR
-            </button>
+            <input value={inputOtp} onChange={(e) => { setInputOtp(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }} placeholder="Contoh: 123456" style={{ ...styles.input, fontFamily: 'monospace', fontSize: '20px', letterSpacing: '6px', textAlign: 'center', borderColor: error ? '#dc2626' : styles.inputBorder, fontWeight: 700 }} />
+            <button type="button" onClick={() => onOpenScanner(handleScanSuccess)} style={{ ...styles.btnSecondary, padding: '10px 16px', whiteSpace: 'nowrap' }}><Icons.Camera width={18} height={18} />Imbas QR</button>
           </div>
           {error && <p style={{ color: '#dc2626', fontSize: '13px', marginTop: '8px', fontWeight: 500 }}>{error}</p>}
         </div>
         <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-          <button onClick={onClose} style={{ ...STYLES.btnPrimary, backgroundColor: '#f1f5f9', color: '#334155', flex: 1 }}>Batal</button>
-          <button onClick={handleVerify} style={{ ...STYLES.btnPrimary, backgroundColor: '#16a34a', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-            <Icons.CheckCircle width={18} height={18} />Sahkan & Ambil
-          </button>
+          <button onClick={onClose} style={{ ...styles.btnPrimary, backgroundColor: styles.btnSecondaryBg, color: styles.btnSecondaryText, flex: 1 }}>Batal</button>
+          <button onClick={handleVerify} style={{ ...styles.btnPrimary, backgroundColor: '#16a34a', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><Icons.CheckCircle width={18} height={18} />Sahkan & Ambil</button>
         </div>
       </div>
     </Modal>
   );
 }
 
-function SmartRackView({ racks, parcels, onShelfClick, isAdmin, onToggleMaintenance }) {
+function SmartRackView({ racks, parcels, onShelfClick, isAdmin, onToggleMaintenance, theme }) {
   const totalShelves = racks.reduce((sum, r) => sum + r.shelves.length, 0);
   const occupiedShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status === 'occupied').length, 0);
   const readyShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status === 'ready').length, 0);
   const maintenanceShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.maintenance).length, 0);
   const emptyShelves = totalShelves - occupiedShelves - readyShelves - maintenanceShelves;
+  const styles = createStyles(theme);
 
   const getShelfColor = (shelf) => {
-    if (shelf.maintenance) return { bg: '#fef3c7', border: '#fde68a', led: '#d97706', label: 'Maintenance' };
-    if (shelf.status === 'empty') return { bg: '#f0fdf4', border: '#bbf7d0', led: '#16a34a', label: 'Empty' };
-    if (shelf.status === 'ready') return { bg: '#eff6ff', border: '#bfdbfe', led: '#2563eb', label: 'Ready' };
-    return { bg: '#fef2f2', border: '#fecaca', led: '#dc2626', label: 'Occupied' };
+    if (shelf.maintenance) return { bg: theme.maintenanceBg, border: theme.maintenanceBorder, led: '#d97706', label: 'Maintenance' };
+    if (shelf.status === 'empty') return { bg: theme.availableBg, border: theme.availableBorder, led: '#16a34a', label: 'Empty' };
+    if (shelf.status === 'ready') return { bg: theme.infoBg, border: theme.infoBorder, led: '#2563eb', label: 'Ready' };
+    return { bg: theme.occupiedBg, border: theme.occupiedBorder, led: '#dc2626', label: 'Occupied' };
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Header */}
-      <div style={{ ...STYLES.card, padding: '24px', background: 'linear-gradient(135deg, #0f172a 0%, #312e81 100%)', color: 'white', border: 'none' }}>
+      <div style={{ ...styles.card, padding: '24px', background: 'linear-gradient(135deg, #0f172a 0%, #312e81 100%)', color: 'white', border: 'none' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-          <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '12px' }}>
-            <Icons.Layers width={32} height={32} />
-          </div>
+          <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '12px' }}><Icons.Layers width={32} height={32} /></div>
           <div>
             <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>Smart Rack System (Smart Shelf)</h2>
             <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Organized • Tracked • Real-Time Monitoring</p>
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
-          <div style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '12px', borderRadius: '8px' }}>
-            <p style={{ margin: 0, fontSize: '12px', opacity: 0.8 }}>Total Shelves</p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{totalShelves}</p>
-          </div>
-          <div style={{ backgroundColor: 'rgba(22,163,74,0.3)', padding: '12px', borderRadius: '8px' }}>
-            <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🟢 Empty</p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{emptyShelves}</p>
-          </div>
-          <div style={{ backgroundColor: 'rgba(220,38,38,0.3)', padding: '12px', borderRadius: '8px' }}>
-            <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}> Occupied</p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{occupiedShelves}</p>
-          </div>
-          <div style={{ backgroundColor: 'rgba(37,99,235,0.3)', padding: '12px', borderRadius: '8px' }}>
-            <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔵 Ready</p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{readyShelves}</p>
-          </div>
-          {maintenanceShelves > 0 && (
-            <div style={{ backgroundColor: 'rgba(217,119,6,0.3)', padding: '12px', borderRadius: '8px' }}>
-              <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🟠 Maintenance</p>
-              <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{maintenanceShelves}</p>
-            </div>
-          )}
+          <div style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.8 }}>Total Shelves</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{totalShelves}</p></div>
+          <div style={{ backgroundColor: 'rgba(22,163,74,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}> Empty</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{emptyShelves}</p></div>
+          <div style={{ backgroundColor: 'rgba(220,38,38,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔴 Occupied</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{occupiedShelves}</p></div>
+          <div style={{ backgroundColor: 'rgba(37,99,235,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔵 Ready</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{readyShelves}</p></div>
+          {maintenanceShelves > 0 && (<div style={{ backgroundColor: 'rgba(217,119,6,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🟠 Maintenance</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{maintenanceShelves}</p></div>)}
         </div>
       </div>
 
-      {/* Features */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
         {[
           { icon: Icons.Zap, label: 'LED Indicator (Status)', desc: 'Green/Red/Blue status' },
@@ -424,92 +669,50 @@ function SmartRackView({ racks, parcels, onShelfClick, isAdmin, onToggleMaintena
           { icon: Icons.Wifi, label: 'Real-Time Tracking', desc: 'IoT-based monitoring' },
           { icon: Icons.Cpu, label: 'Smart Campus IoT', desc: 'Integrated with website' },
         ].map((feat, idx) => (
-          <div key={idx} style={{ ...STYLES.statCard, display: 'flex', alignItems: 'center', gap: '12px', padding: '12px' }}>
-            <div style={{ padding: '8px', backgroundColor: '#eef2ff', borderRadius: '8px' }}>
-              <feat.icon width={20} height={20} style={{ color: '#4f46e5' }} />
-            </div>
+          <div key={idx} style={{ ...styles.statCard, display: 'flex', alignItems: 'center', gap: '12px', padding: '12px' }}>
+            <div style={{ padding: '8px', backgroundColor: theme.iconBg, borderRadius: '8px' }}><feat.icon width={20} height={20} style={{ color: theme.iconColor }} /></div>
             <div>
-              <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>{feat.label}</p>
-              <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>{feat.desc}</p>
+              <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: theme.text }}>{feat.label}</p>
+              <p style={{ margin: 0, fontSize: '11px', color: theme.textSecondary }}>{feat.desc}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Rack Visualization */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
         {racks.map((rack) => {
           const rackMaintenanceCount = rack.shelves.filter(s => s.maintenance).length;
           return (
-            <div key={rack.id} style={{ ...STYLES.card, overflow: 'visible' }}>
+            <div key={rack.id} style={{ ...styles.card, overflow: 'visible' }}>
               <div style={{ padding: '12px 16px', backgroundColor: '#1e3a8a', color: 'white', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Icons.Layers width={18} height={18} />
-                  <span style={{ fontWeight: 700, fontSize: '14px' }}>RACK {rack.letter}</span>
-                </div>
-                {rackMaintenanceCount > 0 && (
-                  <span style={{ fontSize: '11px', backgroundColor: 'rgba(217,119,6,0.9)', padding: '3px 8px', borderRadius: '9999px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Icons.Wrench width={10} height={10} />{rackMaintenanceCount} under maintenance
-                  </span>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Icons.Layers width={18} height={18} /><span style={{ fontWeight: 700, fontSize: '14px' }}>RACK {rack.letter}</span></div>
+                {rackMaintenanceCount > 0 && (<span style={{ fontSize: '11px', backgroundColor: 'rgba(217,119,6,0.9)', padding: '3px 8px', borderRadius: '9999px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}><Icons.Wrench width={10} height={10} />{rackMaintenanceCount} under maintenance</span>)}
               </div>
-              <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#f8fafc' }}>
+              <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: styles.sectionBg }}>
                 {rack.shelves.map((shelf) => {
                   const shelfInfo = getShelfColor(shelf);
                   const shelfParcel = parcels.find(p => p.id === shelf.parcelId);
                   return (
-                    <div
-                      key={shelf.id}
-                      onClick={() => onShelfClick(shelf, rack.letter)}
-                      style={{
-                        backgroundColor: shelfInfo.bg,
-                        border: `2px solid ${shelfInfo.border}`,
-                        borderRadius: '8px',
-                        padding: '12px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        position: 'relative',
-                        opacity: shelf.maintenance ? 0.85 : 1,
-                      }}
-                      onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; }}
-                      onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}
-                    >
+                    <div key={shelf.id} onClick={() => onShelfClick(shelf, rack.letter)} style={{ backgroundColor: shelfInfo.bg, border: `2px solid ${shelfInfo.border}`, borderRadius: '8px', padding: '12px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', opacity: shelf.maintenance ? 0.85 : 1 }} onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{
-                          width: '14px',
-                          height: '14px',
-                          borderRadius: '50%',
-                          backgroundColor: shelfInfo.led,
-                          boxShadow: `0 0 10px ${shelfInfo.led}`,
-                          animation: (shelf.status !== 'empty' && !shelf.maintenance) ? 'pulse 2s infinite' : 'none',
-                          flexShrink: 0,
-                        }} />
+                        <div style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: shelfInfo.led, boxShadow: `0 0 10px ${shelfInfo.led}`, animation: (shelf.status !== 'empty' && !shelf.maintenance) ? 'pulse 2s infinite' : 'none', flexShrink: 0 }} />
                         <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{shelf.id}</p>
-                            {shelf.maintenance && <Icons.Wrench width={14} height={14} style={{ color: '#d97706' }} />}
-                          </div>
-                          {shelfParcel && <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#64748b' }}>{shelfParcel.trackingNo}</p>}
-                          {shelf.maintenance && shelf.maintenanceReason && <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#92400e', fontStyle: 'italic' }}>{shelf.maintenanceReason}</p>}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: theme.text }}>{shelf.id}</p>{shelf.maintenance && <Icons.Wrench width={14} height={14} style={{ color: '#d97706' }} />}</div>
+                          {shelfParcel && <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: theme.textSecondary }}>{shelfParcel.trackingNo}</p>}
+                          {shelf.maintenance && shelf.maintenanceReason && <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: theme.maintenanceText, fontStyle: 'italic' }}>{shelf.maintenanceReason}</p>}
                         </div>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
                         <span style={{ fontSize: '10px', fontWeight: 600, color: shelfInfo.led, textTransform: 'uppercase' }}>{shelfInfo.label}</span>
-                        {shelf.weight > 0 && <span style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}><Icons.Scale width={10} height={10} />{shelf.weight}kg</span>}
+                        {shelf.weight > 0 && <span style={{ fontSize: '10px', color: theme.textSecondary, display: 'flex', alignItems: 'center', gap: '4px' }}><Icons.Scale width={10} height={10} />{shelf.weight}kg</span>}
                       </div>
                     </div>
                   );
                 })}
               </div>
               {isAdmin && (
-                <div style={{ padding: '12px 16px', borderTop: '1px solid #e2e8f0', backgroundColor: '#ffffff', borderRadius: '0 0 12px 12px' }}>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onToggleMaintenance(rack.letter, null); }}
-                    style={{ width: '100%', padding: '8px', backgroundColor: rackMaintenanceCount > 0 ? '#f0fdf4' : '#fef3c7', color: rackMaintenanceCount > 0 ? '#166534' : '#92400e', border: `1px solid ${rackMaintenanceCount > 0 ? '#bbf7d0' : '#fde68a'}`, borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                  >
+                <div style={{ padding: '12px 16px', borderTop: `1px solid ${theme.border}`, backgroundColor: styles.cardBg, borderRadius: '0 0 12px 12px' }}>
+                  <button onClick={(e) => { e.stopPropagation(); onToggleMaintenance(rack.letter, null); }} style={{ width: '100%', padding: '8px', backgroundColor: rackMaintenanceCount > 0 ? theme.availableBg : theme.maintenanceBg, color: rackMaintenanceCount > 0 ? theme.availableText : theme.maintenanceText, border: `1px solid ${rackMaintenanceCount > 0 ? theme.availableBorder : theme.maintenanceBorder}`, borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                     {rackMaintenanceCount > 0 ? <><Icons.Check width={14} height={14} />Mark All as Available</> : <><Icons.Wrench width={14} height={14} />Set Entire Rack to Maintenance</>}
                   </button>
                 </div>
@@ -519,124 +722,89 @@ function SmartRackView({ racks, parcels, onShelfClick, isAdmin, onToggleMaintena
         })}
       </div>
 
-      {/* Legend */}
-      <div style={{ ...STYLES.card, padding: '16px 24px' }}>
-        <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>LED Status Legend</h4>
+      <div style={{ ...styles.card, padding: '16px 24px' }}>
+        <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600, color: theme.text }}>LED Status Legend</h4>
         <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#16a34a', boxShadow: '0 0 8px #16a34a' }} />
-            <span style={{ fontSize: '13px', color: '#334155' }}><strong>GREEN</strong> = Empty</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#dc2626', boxShadow: '0 0 8px #dc2626' }} />
-            <span style={{ fontSize: '13px', color: '#334155' }}><strong>RED</strong> = Occupied</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#2563eb', boxShadow: '0 0 8px #2563eb' }} />
-            <span style={{ fontSize: '13px', color: '#334155' }}><strong>BLUE</strong> = Ready for Pickup</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#d97706', boxShadow: '0 0 8px #d97706' }} />
-            <span style={{ fontSize: '13px', color: '#334155' }}><strong>ORANGE</strong> = Under Maintenance</span>
-          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#16a34a', boxShadow: '0 0 8px #16a34a' }} /><span style={{ fontSize: '13px', color: theme.text }}><strong>GREEN</strong> = Empty</span></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#dc2626', boxShadow: '0 0 8px #dc2626' }} /><span style={{ fontSize: '13px', color: theme.text }}><strong>RED</strong> = Occupied</span></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#2563eb', boxShadow: '0 0 8px #2563eb' }} /><span style={{ fontSize: '13px', color: theme.text }}><strong>BLUE</strong> = Ready for Pickup</span></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#d97706', boxShadow: '0 0 8px #d97706' }} /><span style={{ fontSize: '13px', color: theme.text }}><strong>ORANGE</strong> = Under Maintenance</span></div>
         </div>
       </div>
     </div>
   );
 }
 
-function ShelfDetailModal({ shelf, rackLetter, parcel, onClose, isAdmin, onToggleMaintenance }) {
+function ShelfDetailModal({ shelf, rackLetter, parcel, onClose, isAdmin, onToggleMaintenance, theme }) {
   if (!shelf) return null;
+  const styles = createStyles(theme);
   const shelfInfo = shelf.maintenance ? { color: '#d97706', label: 'Under Maintenance' } : shelf.status === 'empty' ? { color: '#16a34a', label: 'Empty' } : shelf.status === 'ready' ? { color: '#2563eb', label: 'Ready for Pickup' } : { color: '#dc2626', label: 'Occupied' };
 
   return (
-    <Modal title={`Shelf ${shelf.id} Details`} onClose={onClose} large>
+    <Modal title={`Shelf ${shelf.id} Details`} onClose={onClose} large theme={theme}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', backgroundColor: shelf.maintenance ? '#fef3c7' : '#f8fafc', borderRadius: '8px', border: `1px solid ${shelf.maintenance ? '#fde68a' : '#e2e8f0'}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', backgroundColor: shelf.maintenance ? theme.maintenanceBg : styles.sectionBg, borderRadius: '8px', border: `1px solid ${shelf.maintenance ? theme.maintenanceBorder : styles.sectionBorder}` }}>
           <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: shelfInfo.color, boxShadow: `0 0 12px ${shelfInfo.color}` }} />
           <div style={{ flex: 1 }}>
-            <p style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>Rack {rackLetter} - Shelf {shelf.id}</p>
+            <p style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: theme.text }}>Rack {rackLetter} - Shelf {shelf.id}</p>
             <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: shelfInfo.color, fontWeight: 600 }}>{shelfInfo.label}</p>
           </div>
           {shelf.maintenance && <Icons.Wrench width={28} height={28} style={{ color: '#d97706' }} />}
         </div>
 
         {shelf.maintenance && (
-          <div style={{ padding: '12px 16px', backgroundColor: '#fef3c7', borderRadius: '8px', border: '1px solid #fde68a', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+          <div style={{ padding: '12px 16px', backgroundColor: theme.maintenanceBg, borderRadius: '8px', border: `1px solid ${theme.maintenanceBorder}`, display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
             <Icons.AlertTriangle width={20} height={20} style={{ color: '#d97706', flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#92400e' }}>⚠ Shelf Under Maintenance</p>
-              {shelf.maintenanceReason && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#92400e' }}>Reason: {shelf.maintenanceReason}</p>}
-              {shelf.maintenanceDate && <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#92400e' }}>Since: {formatDate(shelf.maintenanceDate)}</p>}
-              <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#92400e', fontWeight: 500 }}>This shelf cannot be assigned new parcels until maintenance is cleared.</p>
+              <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: theme.maintenanceText }}>⚠ Shelf Under Maintenance</p>
+              {shelf.maintenanceReason && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: theme.maintenanceText }}>Reason: {shelf.maintenanceReason}</p>}
+              {shelf.maintenanceDate && <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: theme.maintenanceText }}>Since: {formatDate(shelf.maintenanceDate)}</p>}
+              <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: theme.maintenanceText, fontWeight: 500 }}>This shelf cannot be assigned new parcels until maintenance is cleared.</p>
             </div>
           </div>
         )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <div style={{ padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-            <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Weight Sensor</p>
-            <p style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Icons.Scale width={20} height={20} style={{ color: '#4f46e5' }} />
-              {shelf.weight}kg
-            </p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#94a3b8' }}>Max capacity: {shelf.maxWeight}kg</p>
+          <div style={{ padding: '12px', backgroundColor: styles.sectionBg, borderRadius: '8px' }}>
+            <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Weight Sensor</p>
+            <p style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}><Icons.Scale width={20} height={20} style={{ color: '#4f46e5' }} />{shelf.weight}kg</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: theme.textMuted }}>Max capacity: {shelf.maxWeight}kg</p>
           </div>
-          <div style={{ padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-            <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Occupancy Sensor</p>
-            <p style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: shelf.maintenance ? '#d97706' : shelf.status === 'empty' ? '#16a34a' : '#dc2626' }}>
-              {shelf.maintenance ? '🔧 Maint.' : shelf.status === 'empty' ? '✓ Clear' : '● Detected'}
-            </p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#94a3b8' }}>Real-time monitoring</p>
+          <div style={{ padding: '12px', backgroundColor: styles.sectionBg, borderRadius: '8px' }}>
+            <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Occupancy Sensor</p>
+            <p style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: shelf.maintenance ? '#d97706' : shelf.status === 'empty' ? '#16a34a' : '#dc2626' }}>{shelf.maintenance ? '🔧 Maint.' : shelf.status === 'empty' ? '✓ Clear' : '● Detected'}</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: theme.textMuted }}>Real-time monitoring</p>
           </div>
         </div>
         {parcel && (
-          <div style={{ padding: '16px', backgroundColor: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
-            <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#1e40af', fontWeight: 600, textTransform: 'uppercase' }}>Assigned Parcel</p>
-            <p style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>{parcel.trackingNo}</p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#334155' }}>Recipient: <strong>{parcel.recipient}</strong></p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#334155' }}>Sender: <strong>{parcel.sender}</strong></p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#334155' }}>Weight: <strong>{parcel.weight}</strong></p>
-            <div style={{ marginTop: '8px' }}><span style={STYLES.badge(parcel.status)}>{parcel.status}</span></div>
+          <div style={{ padding: '16px', backgroundColor: theme.infoBg, borderRadius: '8px', border: `1px solid ${theme.infoBorder}` }}>
+            <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: theme.infoText, fontWeight: 600, textTransform: 'uppercase' }}>Assigned Parcel</p>
+            <p style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: theme.text }}>{parcel.trackingNo}</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: theme.text }}>Recipient: <strong>{parcel.recipient}</strong></p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: theme.text }}>Sender: <strong>{parcel.sender}</strong></p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: theme.text }}>Weight: <strong>{parcel.weight}</strong></p>
+            <div style={{ marginTop: '8px' }}><span style={styles.badge(parcel.status)}>{parcel.status}</span></div>
           </div>
         )}
         {isAdmin && (
-          <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-            <p style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Icons.Settings width={16} height={16} /> Admin Controls
-            </p>
-            <button
-              onClick={() => onToggleMaintenance(rackLetter, shelf.id)}
-              style={{
-                width: '100%',
-                padding: '10px',
-                backgroundColor: shelf.maintenance ? '#16a34a' : '#d97706',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-              }}
-            >
+          <div style={{ padding: '16px', backgroundColor: styles.sectionBg, borderRadius: '8px', border: `1px solid ${styles.sectionBorder}` }}>
+            <p style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: 700, color: theme.text, display: 'flex', alignItems: 'center', gap: '6px' }}><Icons.Settings width={16} height={16} /> Admin Controls</p>
+            <button onClick={() => onToggleMaintenance(rackLetter, shelf.id)} style={{ width: '100%', padding: '10px', backgroundColor: shelf.maintenance ? '#16a34a' : '#d97706', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
               {shelf.maintenance ? <><Icons.Check width={16} height={16} />Mark as Available (Clear Maintenance)</> : <><Icons.Wrench width={16} height={16} />Set to Maintenance Mode</>}
             </button>
           </div>
         )}
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={onClose} style={{ ...STYLES.btnPrimary, backgroundColor: '#f1f5f9', color: '#334155' }}>Close</button>
+          <button onClick={onClose} style={{ ...styles.btnPrimary, backgroundColor: styles.btnSecondaryBg, color: styles.btnSecondaryText }}>Close</button>
         </div>
       </div>
     </Modal>
   );
 }
 
-function RackMaintenanceModal({ rackLetter, shelves, onClose, onToggleShelf, onToggleAll, parcels }) {
-  const [filter, setFilter] = useState('all'); // all, maintenance, available
+function RackMaintenanceModal({ rackLetter, shelves, onClose, onToggleShelf, onToggleAll, parcels, theme }) {
+  const [filter, setFilter] = useState('all');
+  const styles = createStyles(theme);
   const filteredShelves = shelves.filter(s => {
     if (filter === 'maintenance') return s.maintenance;
     if (filter === 'available') return !s.maintenance;
@@ -647,33 +815,21 @@ function RackMaintenanceModal({ rackLetter, shelves, onClose, onToggleShelf, onT
   const availableCount = shelves.filter(s => !s.maintenance).length;
 
   return (
-    <Modal title={`Rack ${rackLetter} — Maintenance Management`} onClose={onClose} xlarge>
+    <Modal title={`Rack ${rackLetter} — Maintenance Management`} onClose={onClose} xlarge theme={theme}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: '120px', padding: '12px', backgroundColor: '#fef3c7', borderRadius: '8px', border: '1px solid #fde68a' }}>
-            <p style={{ margin: 0, fontSize: '11px', color: '#92400e', fontWeight: 600, textTransform: 'uppercase' }}>Under Maintenance</p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700, color: '#92400e' }}>{maintenanceCount}</p>
-          </div>
-          <div style={{ flex: 1, minWidth: '120px', padding: '12px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
-            <p style={{ margin: 0, fontSize: '11px', color: '#166534', fontWeight: 600, textTransform: 'uppercase' }}>Available</p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700, color: '#166534' }}>{availableCount}</p>
-          </div>
+          <div style={{ flex: 1, minWidth: '120px', padding: '12px', backgroundColor: theme.maintenanceBg, borderRadius: '8px', border: `1px solid ${theme.maintenanceBorder}` }}><p style={{ margin: 0, fontSize: '11px', color: theme.maintenanceText, fontWeight: 600, textTransform: 'uppercase' }}>Under Maintenance</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700, color: theme.maintenanceText }}>{maintenanceCount}</p></div>
+          <div style={{ flex: 1, minWidth: '120px', padding: '12px', backgroundColor: theme.availableBg, borderRadius: '8px', border: `1px solid ${theme.availableBorder}` }}><p style={{ margin: 0, fontSize: '11px', color: theme.availableText, fontWeight: 600, textTransform: 'uppercase' }}>Available</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700, color: theme.availableText }}>{availableCount}</p></div>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button onClick={() => onToggleAll(false)} style={{ ...STYLES.btnSecondary, flex: 1 }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f0fdf4'; e.currentTarget.style.color = '#166534'; e.currentTarget.style.borderColor = '#bbf7d0'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#334155'; e.currentTarget.style.borderColor = '#e2e8f0'; }}>
-            <Icons.Check width={16} height={16} />Mark All Available
-          </button>
-          <button onClick={() => onToggleAll(true)} style={{ ...STYLES.btnSecondary, flex: 1 }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fef3c7'; e.currentTarget.style.color = '#92400e'; e.currentTarget.style.borderColor = '#fde68a'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#334155'; e.currentTarget.style.borderColor = '#e2e8f0'; }}>
-            <Icons.Wrench width={16} height={16} />Mark All Maintenance
-          </button>
+          <button onClick={() => onToggleAll(false)} style={{ ...styles.btnSecondary, flex: 1 }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = theme.availableBg; e.currentTarget.style.color = theme.availableText; e.currentTarget.style.borderColor = theme.availableBorder; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = styles.btnSecondaryBg; e.currentTarget.style.color = styles.btnSecondaryText; e.currentTarget.style.borderColor = styles.btnSecondaryBorder; }}><Icons.Check width={16} height={16} />Mark All Available</button>
+          <button onClick={() => onToggleAll(true)} style={{ ...styles.btnSecondary, flex: 1 }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = theme.maintenanceBg; e.currentTarget.style.color = theme.maintenanceText; e.currentTarget.style.borderColor = theme.maintenanceBorder; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = styles.btnSecondaryBg; e.currentTarget.style.color = styles.btnSecondaryText; e.currentTarget.style.borderColor = styles.btnSecondaryBorder; }}><Icons.Wrench width={16} height={16} />Mark All Maintenance</button>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '12px' }}>
           {['all', 'maintenance', 'available'].map(f => (
-            <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 14px', backgroundColor: filter === f ? '#4f46e5' : '#f1f5f9', color: filter === f ? '#ffffff' : '#475569', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}>
-              {f} {f === 'all' ? `(${shelves.length})` : f === 'maintenance' ? `(${maintenanceCount})` : `(${availableCount})`}
-            </button>
+            <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 14px', backgroundColor: filter === f ? '#4f46e5' : styles.btnSecondaryBg, color: filter === f ? '#ffffff' : theme.text, border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}>{f} {f === 'all' ? `(${shelves.length})` : f === 'maintenance' ? `(${maintenanceCount})` : `(${availableCount})`}</button>
           ))}
         </div>
 
@@ -681,19 +837,16 @@ function RackMaintenanceModal({ rackLetter, shelves, onClose, onToggleShelf, onT
           {filteredShelves.map(shelf => {
             const parcel = parcels.find(p => p.id === shelf.parcelId);
             return (
-              <div key={shelf.id} style={{ padding: '12px', backgroundColor: shelf.maintenance ? '#fef3c7' : '#f0fdf4', border: `1px solid ${shelf.maintenance ? '#fde68a' : '#bbf7d0'}`, borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div key={shelf.id} style={{ padding: '12px', backgroundColor: shelf.maintenance ? theme.maintenanceBg : theme.availableBg, border: `1px solid ${shelf.maintenance ? theme.maintenanceBorder : theme.availableBorder}`, borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 700, fontSize: '14px', color: '#0f172a' }}>{shelf.id}</span>
-                  <span style={{ fontSize: '10px', fontWeight: 600, color: shelf.maintenance ? '#92400e' : '#166534', textTransform: 'uppercase', padding: '2px 8px', borderRadius: '9999px', backgroundColor: shelf.maintenance ? '#fde68a' : '#bbf7d0' }}>
+                  <span style={{ fontWeight: 700, fontSize: '14px', color: theme.text }}>{shelf.id}</span>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: shelf.maintenance ? theme.maintenanceText : theme.availableText, textTransform: 'uppercase', padding: '2px 8px', borderRadius: '9999px', backgroundColor: shelf.maintenance ? theme.maintenanceBorder : theme.availableBorder }}>
                     {shelf.maintenance ? 'Maintenance' : 'Available'}
                   </span>
                 </div>
-                {shelf.maintenance && shelf.maintenanceReason && <p style={{ margin: 0, fontSize: '11px', color: '#92400e', fontStyle: 'italic' }}>{shelf.maintenanceReason}</p>}
-                {parcel && <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>Contains: {parcel.trackingNo}</p>}
-                <button
-                  onClick={() => onToggleShelf(shelf.id)}
-                  style={{ padding: '6px', backgroundColor: shelf.maintenance ? '#16a34a' : '#d97706', color: 'white', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
-                >
+                {shelf.maintenance && shelf.maintenanceReason && <p style={{ margin: 0, fontSize: '11px', color: theme.maintenanceText, fontStyle: 'italic' }}>{shelf.maintenanceReason}</p>}
+                {parcel && <p style={{ margin: 0, fontSize: '11px', color: theme.textSecondary }}>Contains: {parcel.trackingNo}</p>}
+                <button onClick={() => onToggleShelf(shelf.id)} style={{ padding: '6px', backgroundColor: shelf.maintenance ? '#16a34a' : '#d97706', color: 'white', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                   {shelf.maintenance ? <><Icons.Check width={12} height={12} />Set Available</> : <><Icons.Wrench width={12} height={12} />Set Maintenance</>}
                 </button>
               </div>
@@ -702,7 +855,7 @@ function RackMaintenanceModal({ rackLetter, shelves, onClose, onToggleShelf, onT
         </div>
 
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={onClose} style={{ ...STYLES.btnPrimary, backgroundColor: '#f1f5f9', color: '#334155' }}>Close</button>
+          <button onClick={onClose} style={{ ...styles.btnPrimary, backgroundColor: styles.btnSecondaryBg, color: styles.btnSecondaryText }}>Close</button>
         </div>
       </div>
     </Modal>
@@ -727,9 +880,25 @@ export default function ParcelManagementSystem() {
   const [verifyParcel, setVerifyParcel] = useState(null);
   const [notification, setNotification] = useState(null);
   const [selectedShelf, setSelectedShelf] = useState(null);
-  const [selectedShelfRack, setSelectedShelfRack] = useState(null);
-  const [maintenanceModal, setMaintenanceModal] = useState(null); // { rackLetter }
-  const [maintenanceReason, setMaintenanceReason] = useState('');
+  const [maintenanceModal, setMaintenanceModal] = useState(null);
+
+  // ===== THEME STATE =====
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.THEME);
+      if (saved === 'dark' || saved === 'light') return saved;
+    } catch {}
+    return 'light';
+  });
+
+  const themeObj = THEMES[theme] || THEMES.light;
+  const styles = createStyles(themeObj);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    try { localStorage.setItem(STORAGE_KEYS.THEME, newTheme); } catch {}
+  };
 
   const menuRef = useRef(null);
   const parcelsRef = useRef([]);
@@ -827,40 +996,19 @@ export default function ParcelManagementSystem() {
     setView('login');
   };
 
-  // Toggle maintenance for a specific shelf or entire rack
   const handleToggleMaintenance = (rackLetter, shelfId, reason = '') => {
     setRacks(prev => prev.map(r => {
       if (r.letter !== rackLetter) return r;
       if (shelfId === null) {
-        // Toggle entire rack
         const allMaintenance = r.shelves.every(s => s.maintenance);
-        const updatedShelves = r.shelves.map(s => ({
-          ...s,
-          maintenance: !allMaintenance,
-          maintenanceReason: !allMaintenance ? reason || 'Rack-wide maintenance' : '',
-          maintenanceDate: !allMaintenance ? new Date().toISOString() : null,
-        }));
+        const updatedShelves = r.shelves.map(s => ({ ...s, maintenance: !allMaintenance, maintenanceReason: !allMaintenance ? reason || 'Rack-wide maintenance' : '', maintenanceDate: !allMaintenance ? new Date().toISOString() : null }));
         return { ...r, shelves: updatedShelves };
       } else {
-        // Toggle single shelf
-        return {
-          ...r,
-          shelves: r.shelves.map(s => {
-            if (s.id !== shelfId) return s;
-            return {
-              ...s,
-              maintenance: !s.maintenance,
-              maintenanceReason: !s.maintenance ? reason : '',
-              maintenanceDate: !s.maintenance ? new Date().toISOString() : null,
-            };
-          })
-        };
+        return { ...r, shelves: r.shelves.map(s => { if (s.id !== shelfId) return s; return { ...s, maintenance: !s.maintenance, maintenanceReason: !s.maintenance ? reason : '', maintenanceDate: !s.maintenance ? new Date().toISOString() : null }; }) };
       }
     }));
     const target = shelfId === null ? `Rack ${rackLetter} (all shelves)` : `Shelf ${shelfId}`;
-    const isNowMaintenance = shelfId === null
-      ? !racks.find(r => r.letter === rackLetter)?.shelves.every(s => s.maintenance)
-      : !racks.find(r => r.letter === rackLetter)?.shelves.find(s => s.id === shelfId)?.maintenance;
+    const isNowMaintenance = shelfId === null ? !racks.find(r => r.letter === rackLetter)?.shelves.every(s => s.maintenance) : !racks.find(r => r.letter === rackLetter)?.shelves.find(s => s.id === shelfId)?.maintenance;
     showNotification(`${target} has been ${isNowMaintenance ? 'set to MAINTENANCE' : 'marked as AVAILABLE'}.`);
   };
 
@@ -873,17 +1021,12 @@ export default function ParcelManagementSystem() {
     let assignedRack = null;
 
     if (adminForm.assignRack && adminForm.selectedRackShelf) {
-      // Check if selected shelf is under maintenance
       const [rackLetter] = adminForm.selectedRackShelf.split('-');
       const shelf = racks.find(r => r.letter === rackLetter)?.shelves.find(s => s.id === adminForm.selectedRackShelf);
-      if (shelf?.maintenance) {
-        alert(`Shelf ${adminForm.selectedRackShelf} is under maintenance. Please select another shelf or clear maintenance first.`);
-        return;
-      }
+      if (shelf?.maintenance) { alert(`Shelf ${adminForm.selectedRackShelf} is under maintenance. Please select another shelf or clear maintenance first.`); return; }
       assignedRack = adminForm.selectedRackShelf;
       setRacks(prev => prev.map(r => r.letter === rackLetter ? { ...r, shelves: r.shelves.map(s => s.id === adminForm.selectedRackShelf ? { ...s, status: 'occupied', parcelId: Date.now(), weight: parseFloat((Math.random() * 5 + 0.5).toFixed(1)) } : s) } : prev));
     } else if (adminForm.assignRack) {
-      // Auto-find empty shelf (excluding maintenance)
       let assigned = false;
       for (const rack of racks) {
         const emptyShelf = rack.shelves.find(s => s.status === 'empty' && !s.maintenance);
@@ -894,22 +1037,10 @@ export default function ParcelManagementSystem() {
           break;
         }
       }
-      if (!assigned) {
-        alert('No available shelves found. Some shelves may be under maintenance.');
-        return;
-      }
+      if (!assigned) { alert('No available shelves found. Some shelves may be under maintenance.'); return; }
     }
 
-    const newParcel = {
-      ...adminForm,
-      sender: senderValue,
-      id: Date.now(),
-      dateReceived: new Date().toISOString().split('T')[0],
-      otp: otp,
-      status: adminForm.status || 'Pending',
-      rackLocation: assignedRack,
-      weight: `${(Math.random() * 5 + 0.5).toFixed(1)}kg`,
-    };
+    const newParcel = { ...adminForm, sender: senderValue, id: Date.now(), dateReceived: new Date().toISOString().split('T')[0], otp: otp, status: adminForm.status || 'Pending', rackLocation: assignedRack, weight: `${(Math.random() * 5 + 0.5).toFixed(1)}kg` };
     delete newParcel.senderOther;
     delete newParcel.assignRack;
     delete newParcel.selectedRackShelf;
@@ -993,10 +1124,7 @@ export default function ParcelManagementSystem() {
   const openScannerForVerification = (callback) => { setScannerCallback(() => callback); setScannerOpen(true); };
 
   const handleRequestCollect = (parcel) => setVerifyParcel(parcel);
-  const handleVerifiedCollect = (id) => {
-    updateStatus(id, 'Collected');
-    showNotification("Parcel berjaya disahkan dan ditanda sebagai 'Collected'. Rak telah dibebaskan.");
-  };
+  const handleVerifiedCollect = (id) => { updateStatus(id, 'Collected'); showNotification("Parcel berjaya disahkan dan ditanda sebagai 'Collected'. Rak telah dibebaskan."); };
 
   const isAdmin = user?.role === 'admin';
   const filtered = isAdmin ? parcels : parcels.filter(p => p.recipient === user?.username && p.status !== 'Collected');
@@ -1019,16 +1147,16 @@ export default function ParcelManagementSystem() {
   };
 
   const renderAvatar = (size = 32) => {
-    if (user?.profilePic) return <img src={user.profilePic} alt={user.name} style={STYLES.userAvatar(size)} />;
-    return (<div style={STYLES.avatarPlaceholder(size)}><Icons.User width={size * 0.55} height={size * 0.55} /></div>);
+    if (user?.profilePic) return <img src={user.profilePic} alt={user.name} style={styles.userAvatar(size)} />;
+    return (<div style={styles.avatarPlaceholder(size)}><Icons.User width={size * 0.55} height={size * 0.55} /></div>);
   };
 
-  if (!user) return <AuthView onLogin={handleLogin} onSignUp={handleSignUp} view={view === 'dashboard' ? 'login' : view} setView={setView} />;
+  if (!user) return <AuthView onLogin={handleLogin} onSignUp={handleSignUp} view={view === 'dashboard' ? 'login' : view} setView={setView} theme={themeObj} />;
 
   const viewTitles = { dashboard: 'Dashboard', myparcels: 'Parcel Tracking', admin: 'Admin Panel', rack: 'Smart Rack', rackmgmt: 'Rack Maintenance' };
 
   return (
-    <div style={STYLES.app}>
+    <div style={styles.app}>
       <style>{`
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes scanline { 0% { top: 10%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 90%; opacity: 0; } }
@@ -1036,13 +1164,13 @@ export default function ParcelManagementSystem() {
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
       `}</style>
 
-      {isMobile && sidebarOpen && <div style={STYLES.overlay} onClick={() => setSidebarOpen(false)} />}
+      {isMobile && sidebarOpen && <div style={styles.overlay} onClick={() => setSidebarOpen(false)} />}
 
-      <aside style={{ ...STYLES.sidebar, ...(isMobile ? (sidebarOpen ? STYLES.sidebarOpen : STYLES.sidebarMobile) : {}) }}>
-        <div style={STYLES.sidebarHeader}>
-          <img src={IPGKPP_LOGO} alt="IPGKPP" style={STYLES.sidebarLogo} />
+      <aside style={{ ...styles.sidebar, ...(isMobile ? (sidebarOpen ? styles.sidebarOpen : styles.sidebarMobile) : {}) }}>
+        <div style={styles.sidebarHeader}>
+          <img src={IPGKPP_LOGO} alt="IPGKPP" style={styles.sidebarLogo} />
         </div>
-        <nav style={STYLES.nav}>
+        <nav style={styles.nav}>
           {[
             { id: 'dashboard', label: 'Dashboard', icon: Icons.LayoutDashboard },
             { id: 'myparcels', label: 'My Parcels', icon: Icons.Inbox },
@@ -1050,150 +1178,130 @@ export default function ParcelManagementSystem() {
             { id: 'rackmgmt', label: 'Rack Maintenance', icon: Icons.Wrench, adminOnly: true },
             { id: 'admin', label: 'Admin Panel', icon: Icons.Users, adminOnly: true }
           ].filter(item => !item.adminOnly || isAdmin).map(item => (
-            <button key={item.id} onClick={() => { setView(item.id); setSidebarOpen(false); }} style={STYLES.navItem(view === item.id)}>
+            <button key={item.id} onClick={() => { setView(item.id); setSidebarOpen(false); }} style={styles.navItem(view === item.id)}>
               <item.icon width={20} height={20} />{item.label}
             </button>
           ))}
         </nav>
-        <div style={{ padding: '16px', borderTop: '1px solid #e2e8f0', fontSize: '11px', color: '#94a3b8', textAlign: 'center' }}>
-          <p style={{ margin: 0, fontWeight: 600 }}>Smart Parcel System v2.0</p>
+        <div style={{ padding: '16px', borderTop: `1px solid ${themeObj.border}`, fontSize: '11px', color: themeObj.textMuted, textAlign: 'center' }}>
+          <p style={{ margin: 0, fontWeight: 600 }}>IPGKPP Smart Rack System v2.0</p>
           <p style={{ margin: '4px 0 0 0' }}>IoT • Secure • Connected</p>
         </div>
       </aside>
 
-      <div style={{ ...STYLES.main, ...(isMobile ? STYLES.mainNoSidebar : {}) }}>
-        <header style={STYLES.header}>
-          <button onClick={() => setSidebarOpen(true)} style={{ ...STYLES.hamburger, display: isMobile ? 'flex' : 'none' }}>
+      <div style={{ ...styles.main, ...(isMobile ? styles.mainNoSidebar : {}) }}>
+        <header style={styles.header}>
+          <button onClick={() => setSidebarOpen(true)} style={{ ...styles.hamburger, display: isMobile ? 'flex' : 'none' }}>
             <Icons.Menu width={24} height={24} />
           </button>
-          <div style={STYLES.headerInstitution}>
-            <img src={IPGKPP_LOGO} alt="IPGKPP" style={STYLES.headerInstitutionLogo} />
+          <div style={styles.headerInstitution}>
+            <img src={IPGKPP_LOGO} alt="IPGKPP" style={styles.headerInstitutionLogo} />
           </div>
-          <div style={STYLES.userMenuContainer} ref={menuRef}>
-            <button onClick={() => setUserMenuOpen(!userMenuOpen)} style={STYLES.userMenuBtn}>
-              {renderAvatar(28)}
-              {!isMobile && <span style={{ fontSize: '14px', fontWeight: 500 }}>{user.name}</span>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* ===== THEME TOGGLE BUTTON ===== */}
+            <button
+              onClick={toggleTheme}
+              title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+              style={styles.themeToggle}
+              onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.themeToggleHover; }}
+              onMouseOut={(e) => { e.currentTarget.style.backgroundColor = styles.themeToggleBg; }}
+            >
+              {theme === 'light' ? <Icons.Moon width={18} height={18} /> : <Icons.Sun width={18} height={18} />}
             </button>
-            {userMenuOpen && (
-              <div style={STYLES.dropdown}>
-                <div style={{ padding: '12px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #f1f5f9', marginBottom: '4px' }}>
-                  {renderAvatar(40)}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontWeight: 600, fontSize: '14px', margin: 0, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</p>
-                    <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</p>
+
+            <div style={styles.userMenuContainer} ref={menuRef}>
+              <button onClick={() => setUserMenuOpen(!userMenuOpen)} style={styles.userMenuBtn}>
+                {renderAvatar(28)}
+                {!isMobile && <span style={{ fontSize: '14px', fontWeight: 500 }}>{user.name}</span>}
+              </button>
+              {userMenuOpen && (
+                <div style={styles.dropdown}>
+                  <div style={{ padding: '12px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: `1px solid ${themeObj.border}`, marginBottom: '4px' }}>
+                    {renderAvatar(40)}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontWeight: 600, fontSize: '14px', margin: 0, color: themeObj.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</p>
+                      <p style={{ fontSize: '12px', color: themeObj.textSecondary, margin: '2px 0 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</p>
+                    </div>
                   </div>
+                  {/* ===== THEME TOGGLE IN DROPDOWN ===== */}
+                  <button onClick={() => { toggleTheme(); }} style={styles.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.dropdownHover; e.currentTarget.style.color = styles.dropdownHoverText; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = themeObj.text; }}>
+                    {theme === 'light' ? <Icons.Moon width={18} height={18} /> : <Icons.Sun width={18} height={18} />}
+                    {theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+                  </button>
+                  <div style={styles.divider} />
+                  <button onClick={() => { setActiveModal('viewInfo'); setUserMenuOpen(false); }} style={styles.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.dropdownHover; e.currentTarget.style.color = styles.dropdownHoverText; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = themeObj.text; }}>
+                    <Icons.Eye width={18} height={18} /> View Info
+                  </button>
+                  <button onClick={() => { setActiveModal('changeInfo'); setUserMenuOpen(false); }} style={styles.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.dropdownHover; e.currentTarget.style.color = styles.dropdownHoverText; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = themeObj.text; }}>
+                    <Icons.Edit width={18} height={18} /> Change Info
+                  </button>
+                  <button onClick={() => { setPicModalOpen(true); setUserMenuOpen(false); }} style={styles.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.dropdownHover; e.currentTarget.style.color = styles.dropdownHoverText; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = themeObj.text; }}>
+                    <Icons.Camera width={18} height={18} /> Profile Picture
+                  </button>
+                  <button onClick={() => { setActiveModal('details'); setUserMenuOpen(false); }} style={styles.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.dropdownHover; e.currentTarget.style.color = styles.dropdownHoverText; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = themeObj.text; }}>
+                    <Icons.Info width={18} height={18} /> Details
+                  </button>
+                  <button onClick={() => { setActiveModal('password'); setUserMenuOpen(false); }} style={styles.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.dropdownHover; e.currentTarget.style.color = styles.dropdownHoverText; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = themeObj.text; }}>
+                    <Icons.Lock width={18} height={18} /> Password
+                  </button>
+                  <div style={styles.divider} />
+                  <button onClick={handleLogout} style={{ ...styles.dropdownItem, ...styles.dropdownLogout }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
+                    <Icons.LogOut width={18} height={18} /> Sign Out
+                  </button>
                 </div>
-                <button onClick={() => { setActiveModal('viewInfo'); setUserMenuOpen(false); }} style={STYLES.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#eef2ff'; e.currentTarget.style.color = '#4f46e5'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#334155'; }}>
-                  <Icons.Eye width={18} height={18} /> View Info
-                </button>
-                <button onClick={() => { setActiveModal('changeInfo'); setUserMenuOpen(false); }} style={STYLES.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#eef2ff'; e.currentTarget.style.color = '#4f46e5'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#334155'; }}>
-                  <Icons.Edit width={18} height={18} /> Change Info
-                </button>
-                <button onClick={() => { setPicModalOpen(true); setUserMenuOpen(false); }} style={STYLES.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#eef2ff'; e.currentTarget.style.color = '#4f46e5'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#334155'; }}>
-                  <Icons.Camera width={18} height={18} /> Profile Picture
-                </button>
-                <button onClick={() => { setActiveModal('details'); setUserMenuOpen(false); }} style={STYLES.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#eef2ff'; e.currentTarget.style.color = '#4f46e5'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#334155'; }}>
-                  <Icons.Info width={18} height={18} /> Details
-                </button>
-                <button onClick={() => { setActiveModal('password'); setUserMenuOpen(false); }} style={STYLES.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#eef2ff'; e.currentTarget.style.color = '#4f46e5'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#334155'; }}>
-                  <Icons.Lock width={18} height={18} /> Password
-                </button>
-                <div style={STYLES.divider} />
-                <button onClick={handleLogout} style={{ ...STYLES.dropdownItem, ...STYLES.dropdownLogout }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
-                  <Icons.LogOut width={18} height={18} /> Sign Out
-                </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </header>
 
-        <div style={STYLES.content}>
-          <div style={STYLES.contentBg} />
-          <div style={STYLES.contentInner}>
-            <div style={STYLES.pageBanner}>
-              <img src={IPGKPP_LOGO} alt="IPGKPP" style={STYLES.bannerLogo} />
-              <div style={STYLES.bannerText}>
-                <h2 style={STYLES.bannerTitle}>INSTITUT PENDIDIKAN GURU KAMPUS PULAU PINANG</h2>
-                <p style={STYLES.bannerSubtitle}>Smart Parcel Locker & Smart Rack System — {viewTitles[view] || 'Dashboard'}</p>
+        <div style={styles.content}>
+          <div style={styles.contentBg} />
+          <div style={styles.contentInner}>
+            <div style={styles.pageBanner}>
+              <img src={IPGKPP_LOGO} alt="IPGKPP" style={styles.bannerLogo} />
+              <div style={styles.bannerText}>
+                <h2 style={styles.bannerTitle}>INSTITUT PENDIDIKAN GURU KAMPUS PULAU PINANG</h2>
+                <p style={styles.bannerSubtitle}>IPGKPP Smart Rack Parcel Management System — {viewTitles[view] || 'Dashboard'}</p>
               </div>
             </div>
 
             {view === 'dashboard' && (
-              <DashboardView
-                parcels={paginatedParcels}
-                trackInput={trackInput} setTrackInput={setTrackInput} onTrack={handleTrackParcel}
-                foundParcel={foundParcel} onRequestCollect={handleRequestCollect}
-                stats={stats} isAdmin={isAdmin} user={user}
-                racks={racks}
-                onGoToRack={() => setView('rack')}
-                onGoToMaintenance={() => setView('rackmgmt')}
-              />
+              <DashboardView parcels={paginatedParcels} trackInput={trackInput} setTrackInput={setTrackInput} onTrack={handleTrackParcel} foundParcel={foundParcel} onRequestCollect={handleRequestCollect} stats={stats} isAdmin={isAdmin} user={user} racks={racks} onGoToRack={() => setView('rack')} onGoToMaintenance={() => setView('rackmgmt')} theme={themeObj} />
             )}
 
-            {view === 'myparcels' && <MyParcelsView parcels={paginatedParcels} user={user} />}
+            {view === 'myparcels' && <MyParcelsView parcels={paginatedParcels} user={user} theme={themeObj} />}
 
             {view === 'rack' && (
               <SmartRackView
-                racks={racks}
-                parcels={parcels}
-                isAdmin={isAdmin}
-                onShelfClick={(shelf, rackLetter) => {
-                  const parcel = parcels.find(p => p.id === shelf.parcelId);
-                  setSelectedShelf({ shelf, rackLetter, parcel });
-                }}
+                racks={racks} parcels={parcels} isAdmin={isAdmin} theme={themeObj}
+                onShelfClick={(shelf, rackLetter) => { const parcel = parcels.find(p => p.id === shelf.parcelId); setSelectedShelf({ shelf, rackLetter, parcel }); }}
                 onToggleMaintenance={(rackLetter, shelfId) => {
-                  if (shelfId !== null) {
-                    const reason = prompt('Enter maintenance reason (optional):');
-                    handleToggleMaintenance(rackLetter, shelfId, reason || '');
-                  } else {
-                    const reason = prompt('Enter maintenance reason for entire rack (optional):');
-                    handleToggleMaintenance(rackLetter, null, reason || '');
-                  }
+                  if (shelfId !== null) { const reason = prompt('Enter maintenance reason (optional):'); handleToggleMaintenance(rackLetter, shelfId, reason || ''); }
+                  else { const reason = prompt('Enter maintenance reason for entire rack (optional):'); handleToggleMaintenance(rackLetter, null, reason || ''); }
                 }}
               />
             )}
 
             {view === 'rackmgmt' && isAdmin && (
               <RackManagementView
-                racks={racks}
-                parcels={parcels}
-                onToggleShelf={(rackLetter, shelfId) => {
-                  const reason = prompt('Enter maintenance reason (optional):');
-                  handleToggleMaintenance(rackLetter, shelfId, reason || '');
-                }}
-                onToggleRack={(rackLetter) => {
-                  const reason = prompt('Enter maintenance reason for entire rack (optional):');
-                  handleToggleMaintenance(rackLetter, null, reason || '');
-                }}
+                racks={racks} parcels={parcels} theme={themeObj}
+                onToggleShelf={(rackLetter, shelfId) => { const reason = prompt('Enter maintenance reason (optional):'); handleToggleMaintenance(rackLetter, shelfId, reason || ''); }}
+                onToggleRack={(rackLetter) => { const reason = prompt('Enter maintenance reason for entire rack (optional):'); handleToggleMaintenance(rackLetter, null, reason || ''); }}
                 onOpenDetail={(rackLetter) => setMaintenanceModal({ rackLetter })}
               />
             )}
 
             {view === 'admin' && isAdmin && (
-              <AdminView
-                parcels={parcels} form={adminForm} setForm={setAdminForm}
-                onAdd={handleAddParcel} onRequestCollect={handleRequestCollect} onDelete={handleDeleteParcel}
-                onOpenScanner={openScannerForTracking}
-                scannedTracking={scannedTracking}
-                racks={racks}
-              />
+              <AdminView parcels={parcels} form={adminForm} setForm={setAdminForm} onAdd={handleAddParcel} onRequestCollect={handleRequestCollect} onDelete={handleDeleteParcel} onOpenScanner={openScannerForTracking} scannedTracking={scannedTracking} racks={racks} theme={themeObj} />
             )}
 
             {totalPages > 1 && (view === 'dashboard' || view === 'myparcels' || view === 'admin') && (
-              <div style={STYLES.pagination}>
-                <span style={{ fontSize: '14px', color: '#64748b' }}>
-                  Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} records
-                </span>
+              <div style={styles.pagination}>
+                <span style={{ fontSize: '14px', color: themeObj.textSecondary }}>Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} records</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} style={{ ...STYLES.pageBtn(false), opacity: currentPage === 1 ? 0.4 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}>
-                    <Icons.ChevronLeft width={16} height={16} />
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
-                    <button key={pg} onClick={() => setCurrentPage(pg)} style={STYLES.pageBtn(currentPage === pg)}>{pg}</button>
-                  ))}
-                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} style={{ ...STYLES.pageBtn(false), opacity: currentPage === totalPages ? 0.4 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}>
-                    <Icons.ChevronRight width={16} height={16} />
-                  </button>
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} style={{ ...styles.pageBtn(false), opacity: currentPage === 1 ? 0.4 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}><Icons.ChevronLeft width={16} height={16} /></button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (<button key={pg} onClick={() => setCurrentPage(pg)} style={styles.pageBtn(currentPage === pg)}>{pg}</button>))}
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} style={{ ...styles.pageBtn(false), opacity: currentPage === totalPages ? 0.4 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}><Icons.ChevronRight width={16} height={16} /></button>
                 </div>
               </div>
             )}
@@ -1202,73 +1310,62 @@ export default function ParcelManagementSystem() {
       </div>
 
       {activeModal === 'viewInfo' && (
-        <Modal onClose={() => setActiveModal(null)} title="Your Information">
+        <Modal onClose={() => setActiveModal(null)} title="Your Information" theme={themeObj}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-              {user?.profilePic ? <img src={user.profilePic} alt={user.name} style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #e2e8f0' }} /> : (<div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}><Icons.User width={36} height={36} /></div>)}
+              {user?.profilePic ? <img src={user.profilePic} alt={user.name} style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${themeObj.border}` }} /> : (<div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: themeObj.border, display: 'flex', alignItems: 'center', justifyContent: 'center', color: themeObj.textMuted }}><Icons.User width={36} height={36} /></div>)}
             </div>
-            <DetailRow label="Name" value={user.name} />
-            <DetailRow label="Email" value={user.email} />
-            <DetailRow label="Phone" value={user.phone || 'Not set'} />
-            <DetailRow label="Role" value={user.role} />
-            <DetailRow label="ID No" value={user.idNo} />
+            <DetailRow label="Name" value={user.name} theme={themeObj} />
+            <DetailRow label="Email" value={user.email} theme={themeObj} />
+            <DetailRow label="Phone" value={user.phone || 'Not set'} theme={themeObj} />
+            <DetailRow label="Role" value={user.role} theme={themeObj} />
+            <DetailRow label="ID No" value={user.idNo} theme={themeObj} />
           </div>
         </Modal>
       )}
 
       {activeModal === 'changeInfo' && (
-        <Modal onClose={() => setActiveModal(null)} title="Change Information">
+        <Modal onClose={() => setActiveModal(null)} title="Change Information" theme={themeObj}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <input value={profileForm.name} onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} placeholder="Full Name" style={STYLES.input} />
-            <input value={profileForm.email} onChange={e => setProfileForm({ ...profileForm, email: e.target.value })} placeholder="Email Address" style={STYLES.input} />
-            <input value={profileForm.phone} onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} placeholder="Phone Number" style={STYLES.input} />
-            <button onClick={handleSaveInfo} style={STYLES.btnPrimary}>Save Changes</button>
+            <input value={profileForm.name} onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} placeholder="Full Name" style={styles.input} />
+            <input value={profileForm.email} onChange={e => setProfileForm({ ...profileForm, email: e.target.value })} placeholder="Email Address" style={styles.input} />
+            <input value={profileForm.phone} onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} placeholder="Phone Number" style={styles.input} />
+            <button onClick={handleSaveInfo} style={styles.btnPrimary}>Save Changes</button>
           </div>
         </Modal>
       )}
 
       {activeModal === 'details' && (
-        <Modal onClose={() => setActiveModal(null)} title="Account Details">
+        <Modal onClose={() => setActiveModal(null)} title="Account Details" theme={themeObj}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '14px' }}>
-            <DetailRow label="Status" value="● Active" valueColor="#16a34a" />
-            <DetailRow label="Verification" value="Email & Phone Verified" valueColor="#2563eb" />
-            <DetailRow label="Member Since" value={user.createdAt ? formatDate(user.createdAt) : 'N/A'} />
-            <DetailRow label="Duration" value={user.createdAt ? getTimeAgo(user.createdAt) : ''} valueColor="#4f46e5" />
-            <DetailRow label="Last Login" value={user.lastLogin ? currentTime.toLocaleString() : 'Just now'} />
+            <DetailRow label="Status" value="● Active" valueColor="#16a34a" theme={themeObj} />
+            <DetailRow label="Verification" value="Email & Phone Verified" valueColor="#2563eb" theme={themeObj} />
+            <DetailRow label="Member Since" value={user.createdAt ? formatDate(user.createdAt) : 'N/A'} theme={themeObj} />
+            <DetailRow label="Duration" value={user.createdAt ? getTimeAgo(user.createdAt) : ''} valueColor="#4f46e5" theme={themeObj} />
+            <DetailRow label="Last Login" value={user.lastLogin ? currentTime.toLocaleString() : 'Just now'} theme={themeObj} />
           </div>
         </Modal>
       )}
 
       {activeModal === 'password' && (
-        <Modal onClose={() => setActiveModal(null)} title="Change Password">
+        <Modal onClose={() => setActiveModal(null)} title="Change Password" theme={themeObj}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <input type="password" value={passwordForm.current} onChange={e => setPasswordForm({ ...passwordForm, current: e.target.value })} placeholder="Current Password" style={STYLES.input} />
-            <input type="password" value={passwordForm.new} onChange={e => setPasswordForm({ ...passwordForm, new: e.target.value })} placeholder="New Password" style={STYLES.input} />
-            <input type="password" value={passwordForm.confirm} onChange={e => setPasswordForm({ ...passwordForm, confirm: e.target.value })} placeholder="Confirm Password" style={STYLES.input} />
-            <button onClick={handleChangePassword} style={STYLES.btnPrimary}>Update Password</button>
+            <input type="password" value={passwordForm.current} onChange={e => setPasswordForm({ ...passwordForm, current: e.target.value })} placeholder="Current Password" style={styles.input} />
+            <input type="password" value={passwordForm.new} onChange={e => setPasswordForm({ ...passwordForm, new: e.target.value })} placeholder="New Password" style={styles.input} />
+            <input type="password" value={passwordForm.confirm} onChange={e => setPasswordForm({ ...passwordForm, confirm: e.target.value })} placeholder="Confirm Password" style={styles.input} />
+            <button onClick={handleChangePassword} style={styles.btnPrimary}>Update Password</button>
           </div>
         </Modal>
       )}
 
-      {verifyParcel && (
-        <CollectionVerifier parcel={verifyParcel} onClose={() => setVerifyParcel(null)} onVerify={handleVerifiedCollect} onOpenScanner={openScannerForVerification} />
-      )}
-
-      {scannerOpen && (
-        <BarcodeScanner onScan={handleBarcodeScan} onClose={() => { setScannerOpen(false); setScannerCallback(null); }} />
-      )}
-
-      {picModalOpen && (
-        <ProfilePicUpload currentUser={user} onUpdate={handleUpdateProfilePic} onClose={() => setPicModalOpen(false)} />
-      )}
+      {verifyParcel && (<CollectionVerifier parcel={verifyParcel} onClose={() => setVerifyParcel(null)} onVerify={handleVerifiedCollect} onOpenScanner={openScannerForVerification} theme={themeObj} />)}
+      {scannerOpen && (<BarcodeScanner onScan={handleBarcodeScan} onClose={() => { setScannerOpen(false); setScannerCallback(null); }} theme={themeObj} />)}
+      {picModalOpen && (<ProfilePicUpload currentUser={user} onUpdate={handleUpdateProfilePic} onClose={() => setPicModalOpen(false)} theme={themeObj} />)}
 
       {selectedShelf && (
         <ShelfDetailModal
-          shelf={selectedShelf.shelf}
-          rackLetter={selectedShelf.rackLetter}
-          parcel={selectedShelf.parcel}
-          onClose={() => setSelectedShelf(null)}
-          isAdmin={isAdmin}
+          shelf={selectedShelf.shelf} rackLetter={selectedShelf.rackLetter} parcel={selectedShelf.parcel}
+          onClose={() => setSelectedShelf(null)} isAdmin={isAdmin} theme={themeObj}
           onToggleMaintenance={(rackLetter, shelfId) => {
             const reason = prompt(shelfId ? 'Enter maintenance reason (optional):' : 'Enter reason for entire rack (optional):');
             handleToggleMaintenance(rackLetter, shelfId, reason || '');
@@ -1282,22 +1379,10 @@ export default function ParcelManagementSystem() {
         if (!rack) return null;
         return (
           <RackMaintenanceModal
-            rackLetter={rack.letter}
-            shelves={rack.shelves}
-            parcels={parcels}
+            rackLetter={rack.letter} shelves={rack.shelves} parcels={parcels} theme={themeObj}
             onClose={() => setMaintenanceModal(null)}
-            onToggleShelf={(shelfId) => {
-              const reason = prompt('Enter maintenance reason (optional):');
-              handleToggleMaintenance(rack.letter, shelfId, reason || '');
-            }}
-            onToggleAll={(setMaintenance) => {
-              if (setMaintenance) {
-                const reason = prompt('Enter maintenance reason for entire rack (optional):');
-                handleToggleMaintenance(rack.letter, null, reason || '');
-              } else {
-                handleToggleMaintenance(rack.letter, null, '');
-              }
-            }}
+            onToggleShelf={(shelfId) => { const reason = prompt('Enter maintenance reason (optional):'); handleToggleMaintenance(rack.letter, shelfId, reason || ''); }}
+            onToggleAll={(setMaintenance) => { if (setMaintenance) { const reason = prompt('Enter maintenance reason for entire rack (optional):'); handleToggleMaintenance(rack.letter, null, reason || ''); } else { handleToggleMaintenance(rack.letter, null, ''); } }}
           />
         );
       })()}
@@ -1315,52 +1400,36 @@ export default function ParcelManagementSystem() {
   );
 }
 
-function RackManagementView({ racks, parcels, onToggleShelf, onToggleRack, onOpenDetail }) {
+function RackManagementView({ racks, parcels, onToggleShelf, onToggleRack, onOpenDetail, theme }) {
   const totalShelves = racks.reduce((sum, r) => sum + r.shelves.length, 0);
   const maintenanceShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.maintenance).length, 0);
   const availableShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status === 'empty' && !s.maintenance).length, 0);
   const occupiedShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status === 'occupied').length, 0);
+  const styles = createStyles(theme);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Header */}
-      <div style={{ ...STYLES.card, padding: '24px', background: 'linear-gradient(135deg, #92400e 0%, #d97706 100%)', color: 'white', border: 'none' }}>
+      <div style={{ ...styles.card, padding: '24px', background: 'linear-gradient(135deg, #92400e 0%, #d97706 100%)', color: 'white', border: 'none' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-          <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '12px' }}>
-            <Icons.Wrench width={32} height={32} />
-          </div>
+          <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '12px' }}><Icons.Wrench width={32} height={32} /></div>
           <div>
             <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>Rack Maintenance Management</h2>
             <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Admin Control • Toggle Availability • Track Status</p>
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
-          <div style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '12px', borderRadius: '8px' }}>
-            <p style={{ margin: 0, fontSize: '12px', opacity: 0.8 }}>Total Shelves</p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{totalShelves}</p>
-          </div>
-          <div style={{ backgroundColor: 'rgba(22,163,74,0.3)', padding: '12px', borderRadius: '8px' }}>
-            <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}> Available</p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{availableShelves}</p>
-          </div>
-          <div style={{ backgroundColor: 'rgba(220,38,38,0.3)', padding: '12px', borderRadius: '8px' }}>
-            <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔴 Occupied</p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{occupiedShelves}</p>
-          </div>
-          <div style={{ backgroundColor: 'rgba(217,119,6,0.3)', padding: '12px', borderRadius: '8px' }}>
-            <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🟠 Maintenance</p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{maintenanceShelves}</p>
-          </div>
+          <div style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.8 }}>Total Shelves</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{totalShelves}</p></div>
+          <div style={{ backgroundColor: 'rgba(22,163,74,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}> Available</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{availableShelves}</p></div>
+          <div style={{ backgroundColor: 'rgba(220,38,38,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔴 Occupied</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{occupiedShelves}</p></div>
+          <div style={{ backgroundColor: 'rgba(217,119,6,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🟠 Maintenance</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{maintenanceShelves}</p></div>
         </div>
       </div>
 
-      {/* Info Banner */}
-      <div style={{ ...STYLES.statCard, backgroundColor: '#fef3c7', border: '1px solid #fde68a', color: '#92400e', padding: '12px 16px', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ ...styles.statCard, backgroundColor: theme.maintenanceBg, border: `1px solid ${theme.maintenanceBorder}`, color: theme.maintenanceText, padding: '12px 16px', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '10px' }}>
         <Icons.AlertTriangle width={18} height={18} />
         <span><strong>Maintenance Mode:</strong> Shelves marked as maintenance cannot be assigned new parcels. Existing parcels remain until collected.</span>
       </div>
 
-      {/* Rack Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
         {racks.map((rack) => {
           const rackMaintenanceCount = rack.shelves.filter(s => s.maintenance).length;
@@ -1369,52 +1438,33 @@ function RackManagementView({ racks, parcels, onToggleShelf, onToggleRack, onOpe
           const isFullyMaintenance = rackMaintenanceCount === rack.shelves.length;
 
           return (
-            <div key={rack.id} style={{ ...STYLES.card, overflow: 'visible' }}>
+            <div key={rack.id} style={{ ...styles.card, overflow: 'visible' }}>
               <div style={{ padding: '16px', background: isFullyMaintenance ? 'linear-gradient(135deg, #92400e 0%, #d97706 100%)' : 'linear-gradient(135deg, #1e3a8a 0%, #312e81 100%)', color: 'white', borderRadius: '12px 12px 0 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ padding: '8px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '8px' }}>
-                      <Icons.Layers width={20} height={20} />
-                    </div>
-                    <div>
-                      <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700 }}>RACK {rack.letter}</h3>
-                      <p style={{ margin: '2px 0 0 0', fontSize: '11px', opacity: 0.9 }}>{rack.shelves.length} shelves total</p>
-                    </div>
+                    <div style={{ padding: '8px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '8px' }}><Icons.Layers width={20} height={20} /></div>
+                    <div><h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700 }}>RACK {rack.letter}</h3><p style={{ margin: '2px 0 0 0', fontSize: '11px', opacity: 0.9 }}>{rack.shelves.length} shelves total</p></div>
                   </div>
-                  {isFullyMaintenance && (
-                    <span style={{ fontSize: '10px', backgroundColor: 'rgba(255,255,255,0.25)', padding: '4px 10px', borderRadius: '9999px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Icons.Wrench width={10} height={10} />FULL MAINTENANCE
-                    </span>
-                  )}
+                  {isFullyMaintenance && (<span style={{ fontSize: '10px', backgroundColor: 'rgba(255,255,255,0.25)', padding: '4px 10px', borderRadius: '9999px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}><Icons.Wrench width={10} height={10} />FULL MAINTENANCE</span>)}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', fontSize: '11px' }}>
-                  <div style={{ backgroundColor: 'rgba(22,163,74,0.3)', padding: '6px 8px', borderRadius: '6px', textAlign: 'center' }}>
-                    <p style={{ margin: 0, opacity: 0.9 }}>Available</p>
-                    <p style={{ margin: '2px 0 0 0', fontSize: '16px', fontWeight: 700 }}>{rackAvailableCount}</p>
-                  </div>
-                  <div style={{ backgroundColor: 'rgba(220,38,38,0.3)', padding: '6px 8px', borderRadius: '6px', textAlign: 'center' }}>
-                    <p style={{ margin: 0, opacity: 0.9 }}>Occupied</p>
-                    <p style={{ margin: '2px 0 0 0', fontSize: '16px', fontWeight: 700 }}>{rackOccupiedCount}</p>
-                  </div>
-                  <div style={{ backgroundColor: 'rgba(217,119,6,0.3)', padding: '6px 8px', borderRadius: '6px', textAlign: 'center' }}>
-                    <p style={{ margin: 0, opacity: 0.9 }}>Maintenance</p>
-                    <p style={{ margin: '2px 0 0 0', fontSize: '16px', fontWeight: 700 }}>{rackMaintenanceCount}</p>
-                  </div>
+                  <div style={{ backgroundColor: 'rgba(22,163,74,0.3)', padding: '6px 8px', borderRadius: '6px', textAlign: 'center' }}><p style={{ margin: 0, opacity: 0.9 }}>Available</p><p style={{ margin: '2px 0 0 0', fontSize: '16px', fontWeight: 700 }}>{rackAvailableCount}</p></div>
+                  <div style={{ backgroundColor: 'rgba(220,38,38,0.3)', padding: '6px 8px', borderRadius: '6px', textAlign: 'center' }}><p style={{ margin: 0, opacity: 0.9 }}>Occupied</p><p style={{ margin: '2px 0 0 0', fontSize: '16px', fontWeight: 700 }}>{rackOccupiedCount}</p></div>
+                  <div style={{ backgroundColor: 'rgba(217,119,6,0.3)', padding: '6px 8px', borderRadius: '6px', textAlign: 'center' }}><p style={{ margin: 0, opacity: 0.9 }}>Maintenance</p><p style={{ margin: '2px 0 0 0', fontSize: '16px', fontWeight: 700 }}>{rackMaintenanceCount}</p></div>
                 </div>
               </div>
 
-              {/* Shelf List */}
-              <div style={{ padding: '12px', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '220px', overflowY: 'auto' }}>
+              <div style={{ padding: '12px', backgroundColor: styles.sectionBg, display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '220px', overflowY: 'auto' }}>
                 {rack.shelves.map(shelf => {
                   const parcel = parcels.find(p => p.id === shelf.parcelId);
                   return (
-                    <div key={shelf.id} style={{ padding: '8px 10px', backgroundColor: shelf.maintenance ? '#fef3c7' : shelf.status === 'occupied' ? '#fef2f2' : '#f0fdf4', border: `1px solid ${shelf.maintenance ? '#fde68a' : shelf.status === 'occupied' ? '#fecaca' : '#bbf7d0'}`, borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                    <div key={shelf.id} style={{ padding: '8px 10px', backgroundColor: shelf.maintenance ? theme.maintenanceBg : shelf.status === 'occupied' ? theme.occupiedBg : theme.availableBg, border: `1px solid ${shelf.maintenance ? theme.maintenanceBorder : shelf.status === 'occupied' ? theme.occupiedBorder : theme.availableBorder}`, borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: shelf.maintenance ? '#d97706' : shelf.status === 'occupied' ? '#dc2626' : '#16a34a' }} />
-                        <span style={{ fontWeight: 600, color: '#0f172a' }}>{shelf.id}</span>
-                        {parcel && <span style={{ fontSize: '10px', color: '#64748b' }}>({parcel.trackingNo})</span>}
+                        <span style={{ fontWeight: 600, color: theme.text }}>{shelf.id}</span>
+                        {parcel && <span style={{ fontSize: '10px', color: theme.textSecondary }}>({parcel.trackingNo})</span>}
                       </div>
-                      <span style={{ fontSize: '10px', fontWeight: 600, color: shelf.maintenance ? '#92400e' : shelf.status === 'occupied' ? '#991b1b' : '#166534', textTransform: 'uppercase' }}>
+                      <span style={{ fontSize: '10px', fontWeight: 600, color: shelf.maintenance ? theme.maintenanceText : shelf.status === 'occupied' ? theme.occupiedText : theme.availableText, textTransform: 'uppercase' }}>
                         {shelf.maintenance ? '🔧 Maint.' : shelf.status === 'occupied' ? '● Occ.' : '✓ Empty'}
                       </span>
                     </div>
@@ -1422,18 +1472,9 @@ function RackManagementView({ racks, parcels, onToggleShelf, onToggleRack, onOpe
                 })}
               </div>
 
-              {/* Actions */}
-              <div style={{ padding: '12px', borderTop: '1px solid #e2e8f0', backgroundColor: '#ffffff', borderRadius: '0 0 12px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <button
-                  onClick={() => onOpenDetail(rack.letter)}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#eef2ff', color: '#4f46e5', border: '1px solid #c7d2fe', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                >
-                  <Icons.Settings width={14} height={14} />Manage Shelves
-                </button>
-                <button
-                  onClick={() => onToggleRack(rack.letter)}
-                  style={{ width: '100%', padding: '8px', backgroundColor: isFullyMaintenance ? '#f0fdf4' : '#fef3c7', color: isFullyMaintenance ? '#166534' : '#92400e', border: `1px solid ${isFullyMaintenance ? '#bbf7d0' : '#fde68a'}`, borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                >
+              <div style={{ padding: '12px', borderTop: `1px solid ${theme.border}`, backgroundColor: styles.cardBg, borderRadius: '0 0 12px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button onClick={() => onOpenDetail(rack.letter)} style={{ width: '100%', padding: '8px', backgroundColor: theme.iconBg, color: theme.iconColor, border: `1px solid ${themeObj => theme === 'dark' ? '#4338ca' : '#c7d2fe'}`, borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Icons.Settings width={14} height={14} />Manage Shelves</button>
+                <button onClick={() => onToggleRack(rack.letter)} style={{ width: '100%', padding: '8px', backgroundColor: isFullyMaintenance ? theme.availableBg : theme.maintenanceBg, color: isFullyMaintenance ? theme.availableText : theme.maintenanceText, border: `1px solid ${isFullyMaintenance ? theme.availableBorder : theme.maintenanceBorder}`, borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                   {isFullyMaintenance ? <><Icons.Check width={14} height={14} />Mark All Available</> : <><Icons.Wrench width={14} height={14} />Set Entire Rack to Maintenance</>}
                 </button>
               </div>
@@ -1442,15 +1483,14 @@ function RackManagementView({ racks, parcels, onToggleShelf, onToggleRack, onOpe
         })}
       </div>
 
-      {/* Maintenance Log */}
-      <div style={STYLES.card}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={styles.card}>
+        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${theme.border}`, display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Icons.AlertTriangle width={20} height={20} style={{ color: '#d97706' }} />
-          <h3 style={{ fontWeight: 600, color: '#0f172a', margin: 0, fontSize: '16px' }}>Current Maintenance Status</h3>
+          <h3 style={{ fontWeight: 600, color: theme.text, margin: 0, fontSize: '16px' }}>Current Maintenance Status</h3>
         </div>
         <div style={{ padding: '20px 24px' }}>
           {maintenanceShelves === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
+            <div style={{ textAlign: 'center', padding: '24px', color: theme.textSecondary }}>
               <Icons.CheckCircle width={40} height={40} style={{ color: '#16a34a', marginBottom: '8px' }} />
               <p style={{ margin: 0, fontSize: '14px', fontWeight: 500 }}>All racks are operational. No maintenance required.</p>
             </div>
@@ -1459,20 +1499,12 @@ function RackManagementView({ racks, parcels, onToggleShelf, onToggleRack, onOpe
               {racks.flatMap(rack => rack.shelves.filter(s => s.maintenance).map(s => ({ ...s, rackLetter: rack.letter }))).map(shelf => {
                 const parcel = parcels.find(p => p.id === shelf.parcelId);
                 return (
-                  <div key={shelf.id} style={{ padding: '12px', backgroundColor: '#fef3c7', border: '1px solid #fde68a', borderRadius: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <span style={{ fontWeight: 700, fontSize: '13px', color: '#0f172a' }}>Rack {shelf.rackLetter} - {shelf.id}</span>
-                      <Icons.Wrench width={16} height={16} style={{ color: '#d97706' }} />
-                    </div>
-                    {shelf.maintenanceReason && <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: '#92400e', fontStyle: 'italic' }}>Reason: {shelf.maintenanceReason}</p>}
-                    {shelf.maintenanceDate && <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: '#92400e' }}>Since: {formatDate(shelf.maintenanceDate)}</p>}
-                    {parcel && <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#92400e', fontWeight: 600 }}>⚠ Contains parcel: {parcel.trackingNo}</p>}
-                    <button
-                      onClick={() => onToggleShelf(shelf.rackLetter, shelf.id)}
-                      style={{ marginTop: '8px', width: '100%', padding: '6px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
-                    >
-                      <Icons.Check width={12} height={12} />Clear Maintenance
-                    </button>
+                  <div key={shelf.id} style={{ padding: '12px', backgroundColor: theme.maintenanceBg, border: `1px solid ${theme.maintenanceBorder}`, borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}><span style={{ fontWeight: 700, fontSize: '13px', color: theme.text }}>Rack {shelf.rackLetter} - {shelf.id}</span><Icons.Wrench width={16} height={16} style={{ color: '#d97706' }} /></div>
+                    {shelf.maintenanceReason && <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: theme.maintenanceText, fontStyle: 'italic' }}>Reason: {shelf.maintenanceReason}</p>}
+                    {shelf.maintenanceDate && <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: theme.maintenanceText }}>Since: {formatDate(shelf.maintenanceDate)}</p>}
+                    {parcel && <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: theme.maintenanceText, fontWeight: 600 }}>⚠ Contains parcel: {parcel.trackingNo}</p>}
+                    <button onClick={() => onToggleShelf(shelf.rackLetter, shelf.id)} style={{ marginTop: '8px', width: '100%', padding: '6px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><Icons.Check width={12} height={12} />Clear Maintenance</button>
                   </div>
                 );
               })}
@@ -1484,75 +1516,78 @@ function RackManagementView({ racks, parcels, onToggleShelf, onToggleRack, onOpe
   );
 }
 
-function DetailRow({ label, value, valueColor }) {
+function DetailRow({ label, value, valueColor, theme }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9' }}>
-      <span style={{ color: '#64748b' }}>{label}</span>
-      <span style={{ fontWeight: 500, color: valueColor || '#1e293b' }}>{value}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: `1px solid ${theme.border}` }}>
+      <span style={{ color: theme.textSecondary }}>{label}</span>
+      <span style={{ fontWeight: 500, color: valueColor || theme.text }}>{value}</span>
     </div>
   );
 }
 
-function Modal({ title, children, onClose, large, xlarge }) {
+function Modal({ title, children, onClose, large, xlarge, theme }) {
+  const styles = createStyles(theme || THEMES.light);
   return (
-    <div style={STYLES.modal} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={xlarge ? STYLES.modalContentXLarge : large ? STYLES.modalContentLarge : STYLES.modalContent}>
-        <div style={STYLES.modalHeader}>
-          <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', margin: 0 }}>{title}</h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px', borderRadius: '6px' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
+    <div style={styles.modal} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={xlarge ? styles.modalContentXLarge : large ? styles.modalContentLarge : styles.modalContent}>
+        <div style={styles.modalHeader}>
+          <h3 style={{ fontSize: '18px', fontWeight: 600, color: theme?.text || '#0f172a', margin: 0 }}>{title}</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme?.textSecondary || '#64748b', padding: '4px', borderRadius: '6px' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.btnSecondaryBg; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
             <Icons.X width={20} height={20} />
           </button>
         </div>
-        <div style={STYLES.modalBody}>{children}</div>
+        <div style={styles.modalBody}>{children}</div>
       </div>
     </div>
   );
 }
 
-function AuthView({ onLogin, onSignUp, view, setView }) {
+function AuthView({ onLogin, onSignUp, view, setView, theme }) {
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #312e81 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: theme.authBg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
       <div style={{ marginBottom: '32px', textAlign: 'center' }}>
         <img src={IPGKPP_LOGO} alt="IPGKPP" style={{ width: '360px', height: 'auto', marginBottom: '16px', objectFit: 'contain' }} />
-        <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.025em' }}>Smart Parcel Locker & Rack System</h1>
+        <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.025em' }}>IPGKPP Smart Rack Parcel Management System</h1>
         <p style={{ color: '#c7d2fe', marginTop: '4px', fontSize: '13px' }}>Secure, efficient campus logistics tracking with IoT</p>
       </div>
-      <div style={{ width: '100%', maxWidth: '448px', backgroundColor: '#ffffff', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', borderBottom: '1px solid #f1f5f9' }}>
-          <button onClick={() => setView('login')} style={{ flex: 1, padding: '16px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', borderBottom: view === 'login' ? '2px solid #4f46e5' : 'none', backgroundColor: view === 'login' ? '#eef2ff' : 'transparent', color: view === 'login' ? '#4f46e5' : '#64748b', transition: 'all 0.15s' }}>Sign In</button>
-          <button onClick={() => setView('signup')} style={{ flex: 1, padding: '16px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', borderBottom: view === 'signup' ? '2px solid #4f46e5' : 'none', backgroundColor: view === 'signup' ? '#eef2ff' : 'transparent', color: view === 'signup' ? '#4f46e5' : '#64748b', transition: 'all 0.15s' }}>Create Account</button>
+      <div style={{ width: '100%', maxWidth: '448px', backgroundColor: theme.authCardBg, borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', borderBottom: `1px solid ${theme.authBorder}` }}>
+          <button onClick={() => setView('login')} style={{ flex: 1, padding: '16px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', borderBottom: view === 'login' ? '2px solid #4f46e5' : 'none', backgroundColor: view === 'login' ? theme.authTabActive : 'transparent', color: view === 'login' ? theme.authTabActiveText : theme.authTabInactiveText, transition: 'all 0.15s' }}>Sign In</button>
+          <button onClick={() => setView('signup')} style={{ flex: 1, padding: '16px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', borderBottom: view === 'signup' ? '2px solid #4f46e5' : 'none', backgroundColor: view === 'signup' ? theme.authTabActive : 'transparent', color: view === 'signup' ? theme.authTabActiveText : theme.authTabInactiveText, transition: 'all 0.15s' }}>Create Account</button>
         </div>
         <div style={{ padding: '32px' }}>
-          {view === 'login' ? <LoginForm onLogin={onLogin} /> : <SignUpForm onSignUp={onSignUp} />}
+          {view === 'login' ? <LoginForm onLogin={onLogin} theme={theme} /> : <SignUpForm onSignUp={onSignUp} theme={theme} />}
         </div>
       </div>
-      <footer style={{ marginTop: '32px', textAlign: 'center', color: '#94a3b8', fontSize: '12px' }}>© {new Date().getFullYear()} IPGKPP Campus Logistics. All rights reserved.</footer>
+      <footer style={{ marginTop: '32px', textAlign: 'center', color: theme.footerText, fontSize: '12px' }}>© {new Date().getFullYear()} IPGKPP Campus Logistics. All rights reserved.</footer>
     </div>
   );
 }
 
-function LoginForm({ onLogin }) {
+function LoginForm({ onLogin, theme }) {
   const [u, setU] = useState('');
   const [p, setP] = useState('');
+  const styles = createStyles(theme);
   return (
     <form onSubmit={e => { e.preventDefault(); onLogin(u, p); }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#334155', marginBottom: '4px' }}>Username</label>
-        <input value={u} onChange={e => setU(e.target.value)} style={{ ...STYLES.input, boxSizing: 'border-box' }} placeholder="e.g. student1, staff1, admin" required />
+        <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: theme.text, marginBottom: '4px' }}>Username</label>
+        <input value={u} onChange={e => setU(e.target.value)} style={{ ...styles.input, boxSizing: 'border-box' }} placeholder="e.g. student1, staff1, admin" required />
       </div>
       <div>
-        <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#334155', marginBottom: '4px' }}>Password</label>
-        <input type="password" value={p} onChange={e => setP(e.target.value)} style={{ ...STYLES.input, boxSizing: 'border-box' }} placeholder="••••••••" required />
+        <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: theme.text, marginBottom: '4px' }}>Password</label>
+        <input type="password" value={p} onChange={e => setP(e.target.value)} style={{ ...styles.input, boxSizing: 'border-box' }} placeholder={theme.placeholder} required />
       </div>
-      <button type="submit" style={STYLES.btnPrimary}>Access Dashboard</button>
-      <p style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'center', margin: 0 }}>Demo: student1/staff1/admin — Password: 123456</p>
+      <button type="submit" style={styles.btnPrimary}>Access Dashboard</button>
+      <p style={{ fontSize: '11px', color: theme.textMuted, textAlign: 'center', margin: 0 }}>Demo: student1/staff1/admin — Password: 123456</p>
     </form>
   );
 }
 
-function SignUpForm({ onSignUp }) {
+function SignUpForm({ onSignUp, theme }) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ username: '', email: '', password: '', name: '', idNo: '', phone: '', role: 'student' });
+  const styles = createStyles(theme);
   const next = () => setStep(s => s + 1);
   const prev = () => setStep(s => Math.max(1, s - 1));
   const handleChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -1560,45 +1595,46 @@ function SignUpForm({ onSignUp }) {
   return (
     <form onSubmit={step === 3 ? e => { e.preventDefault(); onSignUp(form); } : e => { e.preventDefault(); next(); }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-        {[1, 2, 3].map(s => <div key={s} style={{ height: '4px', flex: 1, borderRadius: '9999px', backgroundColor: s <= step ? '#4f46e5' : '#e2e8f0' }} />)}
+        {[1, 2, 3].map(s => <div key={s} style={{ height: '4px', flex: 1, borderRadius: '9999px', backgroundColor: s <= step ? '#4f46e5' : theme.border }} />)}
       </div>
       {step === 1 && <>
-        <input name="username" value={form.username} onChange={handleChange} style={STYLES.input} placeholder="Username" required />
-        <input name="email" value={form.email} onChange={handleChange} type="email" style={STYLES.input} placeholder="Email Address" required />
-        <input name="password" value={form.password} onChange={handleChange} type="password" style={STYLES.input} placeholder="Password" required />
-        <button type="button" onClick={next} style={STYLES.btnPrimary}>Continue</button>
+        <input name="username" value={form.username} onChange={handleChange} style={styles.input} placeholder="Username" required />
+        <input name="email" value={form.email} onChange={handleChange} type="email" style={styles.input} placeholder="Email Address" required />
+        <input name="password" value={form.password} onChange={handleChange} type="password" style={styles.input} placeholder="Password" required />
+        <button type="button" onClick={next} style={styles.btnPrimary}>Continue</button>
       </>}
       {step === 2 && <>
-        <input name="name" value={form.name} onChange={handleChange} style={STYLES.input} placeholder="Full Name" required />
-        <input name="idNo" value={form.idNo} onChange={handleChange} style={STYLES.input} placeholder="Matric / Staff ID" required />
-        <input name="phone" value={form.phone} onChange={handleChange} type="tel" style={STYLES.input} placeholder="Phone Number" required />
+        <input name="name" value={form.name} onChange={handleChange} style={styles.input} placeholder="Full Name" required />
+        <input name="idNo" value={form.idNo} onChange={handleChange} style={styles.input} placeholder="Matric / Staff ID" required />
+        <input name="phone" value={form.phone} onChange={handleChange} type="tel" style={styles.input} placeholder="Phone Number" required />
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button type="button" onClick={prev} style={{ ...STYLES.btnPrimary, backgroundColor: '#f1f5f9', color: '#334155' }}>Back</button>
-          <button type="button" onClick={next} style={STYLES.btnPrimary}>Next</button>
+          <button type="button" onClick={prev} style={{ ...styles.btnPrimary, backgroundColor: styles.btnSecondaryBg, color: styles.btnSecondaryText }}>Back</button>
+          <button type="button" onClick={next} style={styles.btnPrimary}>Next</button>
         </div>
       </>}
       {step === 3 && <>
-        <select name="role" value={form.role} onChange={handleChange} style={{ ...STYLES.input, backgroundColor: '#ffffff' }}>
+        <select name="role" value={form.role} onChange={handleChange} style={{ ...styles.input, backgroundColor: styles.inputBg }}>
           <option value="student">Student</option>
           <option value="staff">Staff</option>
           <option value="admin">Administrator</option>
         </select>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button type="button" onClick={prev} style={{ ...STYLES.btnPrimary, backgroundColor: '#f1f5f9', color: '#334155' }}>Back</button>
-          <button type="submit" style={{ ...STYLES.btnPrimary, backgroundColor: '#16a34a' }}>Complete Registration</button>
+          <button type="button" onClick={prev} style={{ ...styles.btnPrimary, backgroundColor: styles.btnSecondaryBg, color: styles.btnSecondaryText }}>Back</button>
+          <button type="submit" style={{ ...styles.btnPrimary, backgroundColor: '#16a34a' }}>Complete Registration</button>
         </div>
       </>}
     </form>
   );
 }
 
-function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParcel, onRequestCollect, stats, isAdmin, user, racks, onGoToRack, onGoToMaintenance }) {
+function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParcel, onRequestCollect, stats, isAdmin, user, racks, onGoToRack, onGoToMaintenance, theme }) {
   const cardGrid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' };
+  const styles = createStyles(theme);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {isAdmin && (
-        <div style={{ ...STYLES.statCard, backgroundColor: '#eef2ff', border: '1px solid #c7d2fe', color: '#3730a3', padding: '10px 16px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ ...styles.statCard, backgroundColor: theme.iconBg, border: `1px solid ${theme === 'dark' ? '#4338ca' : '#c7d2fe'}`, color: theme === 'dark' ? '#a5b4fc' : '#3730a3', padding: '10px 16px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Icons.Users width={16} height={16} />Administrator View: Showing all system parcels
         </div>
       )}
@@ -1616,57 +1652,51 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
       </div>
 
       {foundParcel && (
-        <div style={{ ...STYLES.card, border: '2px solid #bfdbfe' }}>
-          <div style={{ backgroundColor: '#eff6ff', padding: '16px 24px', borderBottom: '1px solid #bfdbfe', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Icons.CheckCircle width={20} height={20} style={{ color: '#2563eb' }} />
-              <h3 style={{ fontWeight: 700, color: '#1e40af', margin: 0, fontSize: '16px' }}>Parcel Found: {foundParcel.trackingNo}</h3>
-            </div>
-            <span style={STYLES.badge(foundParcel.status)}>{foundParcel.status}</span>
+        <div style={{ ...styles.card, border: '2px solid #bfdbfe' }}>
+          <div style={{ backgroundColor: theme.infoBg, padding: '16px 24px', borderBottom: `1px solid ${theme.infoBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Icons.CheckCircle width={20} height={20} style={{ color: '#2563eb' }} /><h3 style={{ fontWeight: 700, color: theme.infoText, margin: 0, fontSize: '16px' }}>Parcel Found: {foundParcel.trackingNo}</h3></div>
+            <span style={styles.badge(foundParcel.status)}>{foundParcel.status}</span>
           </div>
           <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <p style={{ margin: 0 }}><span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Sender</span><br /><span style={{ fontWeight: 500 }}>{foundParcel.sender}</span></p>
-              <p style={{ margin: 0 }}><span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Location</span><br /><span style={{ fontWeight: 500 }}>{foundParcel.location}</span></p>
-              <p style={{ margin: 0 }}><span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Date Received</span><br /><span style={{ fontWeight: 500 }}>{foundParcel.dateReceived}</span></p>
-              {foundParcel.rackLocation && <p style={{ margin: 0 }}><span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Rack Location</span><br /><span style={{ fontWeight: 600, color: '#4f46e5' }}>{foundParcel.rackLocation}</span></p>}
-              {foundParcel.weight && <p style={{ margin: 0 }}><span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Weight</span><br /><span style={{ fontWeight: 500 }}>{foundParcel.weight}</span></p>}
+              <p style={{ margin: 0, color: theme.text }}><span style={{ fontSize: '11px', color: theme.textSecondary, fontWeight: 700, textTransform: 'uppercase' }}>Sender</span><br /><span style={{ fontWeight: 500 }}>{foundParcel.sender}</span></p>
+              <p style={{ margin: 0, color: theme.text }}><span style={{ fontSize: '11px', color: theme.textSecondary, fontWeight: 700, textTransform: 'uppercase' }}>Location</span><br /><span style={{ fontWeight: 500 }}>{foundParcel.location}</span></p>
+              <p style={{ margin: 0, color: theme.text }}><span style={{ fontSize: '11px', color: theme.textSecondary, fontWeight: 700, textTransform: 'uppercase' }}>Date Received</span><br /><span style={{ fontWeight: 500 }}>{foundParcel.dateReceived}</span></p>
+              {foundParcel.rackLocation && <p style={{ margin: 0, color: theme.text }}><span style={{ fontSize: '11px', color: theme.textSecondary, fontWeight: 700, textTransform: 'uppercase' }}>Rack Location</span><br /><span style={{ fontWeight: 600, color: '#4f46e5' }}>{foundParcel.rackLocation}</span></p>}
+              {foundParcel.weight && <p style={{ margin: 0, color: theme.text }}><span style={{ fontSize: '11px', color: theme.textSecondary, fontWeight: 700, textTransform: 'uppercase' }}>Weight</span><br /><span style={{ fontWeight: 500 }}>{foundParcel.weight}</span></p>}
             </div>
-            <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Package Description</span>
-              <p style={{ marginTop: '8px', color: '#1e293b', fontWeight: 500, lineHeight: '1.6', margin: '8px 0 0 0' }}>{foundParcel.description || "No description provided"}</p>
+            <div style={{ backgroundColor: styles.sectionBg, padding: '16px', borderRadius: '8px', border: `1px solid ${styles.sectionBorder}` }}>
+              <span style={{ fontSize: '11px', color: theme.textSecondary, fontWeight: 700, textTransform: 'uppercase' }}>Package Description</span>
+              <p style={{ marginTop: '8px', color: theme.text, fontWeight: 500, lineHeight: '1.6', margin: '8px 0 0 0' }}>{foundParcel.description || "No description provided"}</p>
             </div>
           </div>
           {foundParcel.status === 'Arrived' && user?.role !== 'admin' && (
-            <div style={{ padding: '24px', backgroundColor: '#f0fdf4', borderTop: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-              <p style={{ margin: 0, fontWeight: 700, color: '#166534', fontSize: '16px' }}>Kod Pengambilan Anda</p>
+            <div style={{ padding: '24px', backgroundColor: theme.successBg, borderTop: `1px solid ${theme.successBorder}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+              <p style={{ margin: 0, fontWeight: 700, color: theme.successText, fontSize: '16px' }}>Kod Pengambilan Anda</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#166534', fontWeight: 600, textTransform: 'uppercase' }}>Kod OTP</p>
-                  <div style={{ backgroundColor: '#ffffff', padding: '12px 24px', borderRadius: '8px', border: '2px dashed #16a34a', fontFamily: 'monospace', fontSize: '32px', fontWeight: 700, color: '#16a34a', letterSpacing: '4px' }}>{foundParcel.otp || '------'}</div>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: theme.successText, fontWeight: 600, textTransform: 'uppercase' }}>Kod OTP</p>
+                  <div style={{ backgroundColor: styles.cardBg, padding: '12px 24px', borderRadius: '8px', border: '2px dashed #16a34a', fontFamily: 'monospace', fontSize: '32px', fontWeight: 700, color: '#16a34a', letterSpacing: '4px' }}>{foundParcel.otp || '------'}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#166534', fontWeight: 600, textTransform: 'uppercase' }}>Kod QR</p>
-                  <div style={{ backgroundColor: '#ffffff', padding: '8px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: theme.successText, fontWeight: 600, textTransform: 'uppercase' }}>Kod QR</p>
+                  <div style={{ backgroundColor: styles.cardBg, padding: '8px', borderRadius: '8px', border: `1px solid ${theme.successBorder}` }}>
                     <img src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(foundParcel.otp || '')}`} alt="QR Code" style={{ width: '120px', height: '120px', display: 'block' }} />
                   </div>
                 </div>
               </div>
-              <p style={{ margin: 0, fontSize: '13px', color: '#15803d', textAlign: 'center', maxWidth: '400px' }}>Tunjukkan kod ini kepada staf pos untuk pengesahan sebelum mengambil parcel.</p>
+              <p style={{ margin: 0, fontSize: '13px', color: theme.successText, textAlign: 'center', maxWidth: '400px' }}>Tunjukkan kod ini kepada staf pos untuk pengesahan sebelum mengambil parcel.</p>
             </div>
           )}
           {foundParcel.status === 'Arrived' && (
-            <div style={{ padding: '12px 24px', backgroundColor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
-              <button onClick={() => onRequestCollect(foundParcel)} style={{ padding: '8px 24px', backgroundColor: '#4f46e5', color: '#ffffff', borderRadius: '8px', fontWeight: 600, border: 'none', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Icons.Lock width={16} height={16} />Sahkan & Ambil (OTP/QR)
-              </button>
+            <div style={{ padding: '12px 24px', backgroundColor: styles.sectionBg, borderTop: `1px solid ${styles.sectionBorder}` }}>
+              <button onClick={() => onRequestCollect(foundParcel)} style={{ padding: '8px 24px', backgroundColor: '#4f46e5', color: '#ffffff', borderRadius: '8px', fontWeight: 600, border: 'none', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}><Icons.Lock width={16} height={16} />Sahkan & Ambil (OTP/QR)</button>
             </div>
           )}
         </div>
       )}
 
-      {/* Smart Rack Quick Stats */}
-      <div onClick={onGoToRack} style={{ ...STYLES.statCard, cursor: 'pointer', background: 'linear-gradient(135deg, #0f172a 0%, #312e81 100%)', color: 'white', border: 'none' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(15,23,42,0.3)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
+      <div onClick={onGoToRack} style={{ ...styles.statCard, cursor: 'pointer', background: 'linear-gradient(135deg, #0f172a 0%, #312e81 100%)', color: 'white', border: 'none' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(15,23,42,0.3)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px' }}><Icons.Layers width={24} height={24} /></div>
           <span style={{ fontSize: '12px', opacity: 0.9, fontWeight: 600 }}>SMART RACK (SMART SHELF)</span>
@@ -1679,10 +1709,10 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
       </div>
 
       {isAdmin && stats.racksMaintenance > 0 && (
-        <div onClick={onGoToMaintenance} style={{ ...STYLES.statCard, cursor: 'pointer', background: 'linear-gradient(135deg, #92400e 0%, #d97706 100%)', color: 'white', border: 'none' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(146,64,14,0.3)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
+        <div onClick={onGoToMaintenance} style={{ ...styles.statCard, cursor: 'pointer', background: 'linear-gradient(135deg, #92400e 0%, #d97706 100%)', color: 'white', border: 'none' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(146,64,14,0.3)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px' }}><Icons.Wrench width={24} height={24} /></div>
-            <span style={{ fontSize: '12px', opacity: 0.9, fontWeight: 600 }}>⚠ MAINTENANCE ALERT</span>
+            <span style={{ fontSize: '12px', opacity: 0.9, fontWeight: 600 }}> MAINTENANCE ALERT</span>
           </div>
           <p style={{ fontSize: '28px', fontWeight: 700, margin: '0 0 4px 0' }}>{stats.racksMaintenance}</p>
           <p style={{ fontSize: '13px', opacity: 0.9, margin: 0 }}>shelves under maintenance — Click to manage</p>
@@ -1696,20 +1726,19 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
           { l: 'Arrived', v: stats.arrived, i: Icons.Inbox, c: '#2563eb' },
           { l: 'Collected', v: stats.collected, i: Icons.CheckCircle, c: '#16a34a' }
         ].map((s, i) => (
-          <div key={i} style={STYLES.statCard}>
+          <div key={i} style={styles.statCard}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: s.c + '15' }}><s.i width={20} height={20} style={{ color: s.c }} /></div>
-              <span style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a' }}>{s.v}</span>
+              <span style={{ fontSize: '24px', fontWeight: 700, color: theme.text }}>{s.v}</span>
             </div>
-            <p style={{ fontSize: '14px', color: '#64748b', fontWeight: 500, margin: 0 }}>{s.l}</p>
+            <p style={{ fontSize: '14px', color: theme.textSecondary, fontWeight: 500, margin: 0 }}>{s.l}</p>
           </div>
         ))}
       </div>
 
-      {/* Benefits Section */}
-      <div style={STYLES.card}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0' }}>
-          <h3 style={{ fontWeight: 600, color: '#0f172a', margin: 0, fontSize: '16px' }}>Benefits of Smart Parcel System</h3>
+      <div style={styles.card}>
+        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${theme.border}` }}>
+          <h3 style={{ fontWeight: 600, color: theme.text, margin: 0, fontSize: '16px' }}>Benefits of Smart Parcel System</h3>
         </div>
         <div style={{ padding: '20px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
           {[
@@ -1720,52 +1749,42 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
             { icon: Icons.MapPin, title: 'Trackable', desc: 'Real-time tracking of every parcel, Location-based storage' },
             { icon: Icons.Wifi, title: 'Smart & Connected', desc: 'IoT based system, Integrated with website, Smart Campus' },
           ].map((b, idx) => (
-            <div key={idx} style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-              <div style={{ padding: '8px', backgroundColor: '#eef2ff', borderRadius: '8px', display: 'inline-block', marginBottom: '8px' }}>
-                <b.icon width={20} height={20} style={{ color: '#4f46e5' }} />
-              </div>
-              <p style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{b.title}</p>
-              <p style={{ margin: 0, fontSize: '12px', color: '#64748b', lineHeight: '1.5' }}>{b.desc}</p>
+            <div key={idx} style={{ padding: '16px', backgroundColor: styles.sectionBg, borderRadius: '10px', border: `1px solid ${styles.sectionBorder}` }}>
+              <div style={{ padding: '8px', backgroundColor: theme.iconBg, borderRadius: '8px', display: 'inline-block', marginBottom: '8px' }}><b.icon width={20} height={20} style={{ color: theme.iconColor }} /></div>
+              <p style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: 700, color: theme.text }}>{b.title}</p>
+              <p style={{ margin: 0, fontSize: '12px', color: theme.textSecondary, lineHeight: '1.5' }}>{b.desc}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div style={STYLES.card}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0' }}>
-          <h3 style={{ fontWeight: 600, color: '#0f172a', margin: 0, fontSize: '16px' }}>{isAdmin ? 'All System Parcels' : 'Active Parcels'}</h3>
+      <div style={styles.card}>
+        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${theme.border}` }}>
+          <h3 style={{ fontWeight: 600, color: theme.text, margin: 0, fontSize: '16px' }}>{isAdmin ? 'All System Parcels' : 'Active Parcels'}</h3>
         </div>
         <div style={{ overflowX: 'auto' }}>
-          <table style={STYLES.table}>
+          <table style={styles.table}>
             <thead>
               <tr>
-                <th style={STYLES.th}>Tracking</th>
-                <th style={STYLES.th}>Sender</th>
-                <th style={STYLES.th}>Recipient</th>
-                <th style={STYLES.th}>Rack</th>
-                <th style={STYLES.th}>Status</th>
-                <th style={STYLES.th}>Date</th>
-                <th style={STYLES.th}>Action</th>
+                <th style={styles.th}>Tracking</th>
+                <th style={styles.th}>Sender</th>
+                <th style={styles.th}>Recipient</th>
+                <th style={styles.th}>Rack</th>
+                <th style={styles.th}>Status</th>
+                <th style={styles.th}>Date</th>
+                <th style={styles.th}>Action</th>
               </tr>
             </thead>
             <tbody>
-              {parcels.length === 0 ? (
-                <tr><td colSpan="7" style={{ ...STYLES.td, textAlign: 'center', padding: '32px', color: '#64748b' }}>No parcels found</td></tr>
-              ) : parcels.map(p => (
-                <tr key={p.id} style={{ transition: 'background-color 0.15s' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
-                  <td style={STYLES.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.trackingNo}</span></td>
-                  <td style={STYLES.td}>{p.sender}</td>
-                  <td style={STYLES.td}>{p.recipient}</td>
-                  <td style={STYLES.td}>{p.rackLocation ? <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</span> : <span style={{ color: '#94a3b8' }}>—</span>}</td>
-                  <td style={STYLES.td}><span style={STYLES.badge(p.status)}>{p.status}</span></td>
-                  <td style={STYLES.td}>{p.dateReceived}</td>
-                  <td style={STYLES.td}>
-                    {p.status === 'Arrived' && (
-                      <button onClick={() => onRequestCollect(p)} style={{ padding: '4px 12px', backgroundColor: '#eef2ff', color: '#4f46e5', fontSize: '12px', fontWeight: 600, borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Icons.Lock width={14} height={14} />Verify
-                      </button>
-                    )}
-                  </td>
+              {parcels.length === 0 ? (<tr><td colSpan="7" style={{ ...styles.td, textAlign: 'center', padding: '32px', color: theme.textSecondary }}>No parcels found</td></tr>) : parcels.map(p => (
+                <tr key={p.id} style={{ transition: 'background-color 0.15s' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.tableRowHover; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
+                  <td style={styles.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.trackingNo}</span></td>
+                  <td style={styles.td}>{p.sender}</td>
+                  <td style={styles.td}>{p.recipient}</td>
+                  <td style={styles.td}>{p.rackLocation ? <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</span> : <span style={{ color: theme.textMuted }}>{theme.bullet}</span>}</td>
+                  <td style={styles.td}><span style={styles.badge(p.status)}>{p.status}</span></td>
+                  <td style={styles.td}>{p.dateReceived}</td>
+                  <td style={styles.td}>{p.status === 'Arrived' && (<button onClick={() => onRequestCollect(p)} style={{ padding: '4px 12px', backgroundColor: theme.iconBg, color: theme.iconColor, fontSize: '12px', fontWeight: 600, borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><Icons.Lock width={14} height={14} />Verify</button>)}</td>
                 </tr>
               ))}
             </tbody>
@@ -1776,66 +1795,45 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
   );
 }
 
-function MyParcelsView({ parcels, user }) {
+function MyParcelsView({ parcels, user, theme }) {
+  const styles = createStyles(theme);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {parcels.map(p => (
-        <div key={p.id} style={{ ...STYLES.card, padding: '0' }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '16px', color: '#0f172a' }}>{p.trackingNo}</span>
-              <span style={{ marginLeft: '12px' }}><span style={STYLES.badge(p.status)}>{p.status}</span></span>
-            </div>
-            <span style={{ fontSize: '14px', color: '#64748b' }}>{p.dateReceived}</span>
+        <div key={p.id} style={{ ...styles.card, padding: '0' }}>
+          <div style={{ padding: '16px 20px', borderBottom: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '16px', color: theme.text }}>{p.trackingNo}</span><span style={{ marginLeft: '12px' }}><span style={styles.badge(p.status)}>{p.status}</span></span></div>
+            <span style={{ fontSize: '14px', color: theme.textSecondary }}>{p.dateReceived}</span>
           </div>
           <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Penghantar</p>
-              <p style={{ margin: 0, fontSize: '14px', fontWeight: 500 }}>{p.sender}</p>
-            </div>
-            <div>
-              <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Lokasi</p>
-              <p style={{ margin: 0, fontSize: '14px', fontWeight: 500 }}>{p.location}</p>
-            </div>
-            {p.rackLocation && (
-              <div>
-                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Rak</p>
-                <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</p>
-              </div>
-            )}
-            {p.weight && (
-              <div>
-                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Berat</p>
-                <p style={{ margin: 0, fontSize: '14px', fontWeight: 500 }}>{p.weight}</p>
-              </div>
-            )}
-            <div style={{ gridColumn: '1 / -1' }}>
-              <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Deskripsi</p>
-              <p style={{ margin: 0, fontSize: '14px', color: '#334155' }}>{p.description || '-'}</p>
-            </div>
+            <div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Penghantar</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: theme.text }}>{p.sender}</p></div>
+            <div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Lokasi</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: theme.text }}>{p.location}</p></div>
+            {p.rackLocation && (<div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Rak</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</p></div>)}
+            {p.weight && (<div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Berat</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: theme.text }}>{p.weight}</p></div>)}
+            <div style={{ gridColumn: '1 / -1' }}><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Deskripsi</p><p style={{ margin: 0, fontSize: '14px', color: theme.text }}>{p.description || '-'}</p></div>
           </div>
           {p.status === 'Arrived' && user?.role !== 'admin' && (
-            <div style={{ padding: '20px', backgroundColor: '#f0fdf4', borderTop: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-              <p style={{ margin: 0, fontWeight: 700, color: '#166534', fontSize: '15px' }}>Kod Pengambilan Anda</p>
+            <div style={{ padding: '20px', backgroundColor: theme.successBg, borderTop: `1px solid ${theme.successBorder}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+              <p style={{ margin: 0, fontWeight: 700, color: theme.successText, fontSize: '15px' }}>Kod Pengambilan Anda</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#166534', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Kod OTP</p>
-                  <div style={{ backgroundColor: '#ffffff', padding: '10px 20px', borderRadius: '8px', border: '2px dashed #16a34a', fontFamily: 'monospace', fontSize: '28px', fontWeight: 800, color: '#16a34a', letterSpacing: '4px' }}>{p.otp || '------'}</div>
+                  <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: theme.successText, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Kod OTP</p>
+                  <div style={{ backgroundColor: styles.cardBg, padding: '10px 20px', borderRadius: '8px', border: '2px dashed #16a34a', fontFamily: 'monospace', fontSize: '28px', fontWeight: 800, color: '#16a34a', letterSpacing: '4px' }}>{p.otp || '------'}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#166534', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Kod QR</p>
-                  <div style={{ backgroundColor: '#ffffff', padding: '6px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                  <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: theme.successText, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Kod QR</p>
+                  <div style={{ backgroundColor: styles.cardBg, padding: '6px', borderRadius: '8px', border: `1px solid ${theme.successBorder}` }}>
                     <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(p.otp || '')}`} alt="QR Code" style={{ width: '100px', height: '100px', display: 'block' }} />
                   </div>
                 </div>
               </div>
-              <p style={{ margin: 0, fontSize: '12px', color: '#15803d', textAlign: 'center', maxWidth: '350px', lineHeight: '1.4' }}>Tunjukkan kod ini kepada staf pos untuk pengesahan sebelum mengambil parcel.</p>
+              <p style={{ margin: 0, fontSize: '12px', color: theme.successText, textAlign: 'center', maxWidth: '350px', lineHeight: '1.4' }}>Tunjukkan kod ini kepada staf pos untuk pengesahan sebelum mengambil parcel.</p>
             </div>
           )}
         </div>
       ))}
       {parcels.length === 0 && (
-        <div style={{ ...STYLES.card, padding: '40px', textAlign: 'center', color: '#64748b' }}>
+        <div style={{ ...styles.card, padding: '40px', textAlign: 'center', color: theme.textSecondary }}>
           <Icons.Inbox width={48} height={48} style={{ marginBottom: '12px', opacity: 0.3 }} />
           <p style={{ margin: 0, fontSize: '15px' }}>Tiada rekod parcel aktif.</p>
         </div>
@@ -1844,71 +1842,55 @@ function MyParcelsView({ parcels, user }) {
   );
 }
 
-function AdminView({ parcels, form, setForm, onAdd, onRequestCollect, onDelete, onOpenScanner, scannedTracking, racks }) {
-  const up = (k) => (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setForm(prev => ({ ...prev, [k]: value }));
-  };
-
+function AdminView({ parcels, form, setForm, onAdd, onRequestCollect, onDelete, onOpenScanner, scannedTracking, racks, theme }) {
+  const styles = createStyles(theme);
+  const up = (k) => (e) => { const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value; setForm(prev => ({ ...prev, [k]: value })); };
   const isOthers = form.sender === 'Others';
   const emptyShelves = racks.flatMap(r => r.shelves.filter(s => s.status === 'empty' && !s.maintenance).map(s => ({ ...s, rackLetter: r.letter })));
   const maintenanceShelves = racks.flatMap(r => r.shelves.filter(s => s.maintenance).map(s => ({ ...s, rackLetter: r.letter })));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div style={STYLES.card}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontWeight: 600, color: '#0f172a', margin: 0, fontSize: '16px' }}>Register Incoming Parcel</h3>
-          <button type="button" onClick={onOpenScanner} style={STYLES.btnSecondary} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#e2e8f0'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; }}>
-            <Icons.Barcode width={18} height={18} />Scan Barcode
-          </button>
+      <div style={styles.card}>
+        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ fontWeight: 600, color: theme.text, margin: 0, fontSize: '16px' }}>Register Incoming Parcel</h3>
+          <button type="button" onClick={onOpenScanner} style={styles.btnSecondary} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.btnSecondaryHover; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = styles.btnSecondaryBg; }}><Icons.Barcode width={18} height={18} />Scan Barcode</button>
         </div>
         <form onSubmit={onAdd} style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div style={{ gridColumn: '1 / -1' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Tracking Number {scannedTracking && <span style={{ color: '#16a34a', fontWeight: 400, textTransform: 'none', letterSpacing: 'normal' }}>✓ Scanned from barcode</span>}
-            </label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: theme.textSecondary, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tracking Number {scannedTracking && <span style={{ color: '#16a34a', fontWeight: 400, textTransform: 'none', letterSpacing: 'normal' }}>✓ Scanned from barcode</span>}</label>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <input value={form.trackingNo} onChange={up('trackingNo')} placeholder="Tracking Number (or scan barcode)" style={{ ...STYLES.input, flex: 1, borderColor: scannedTracking ? '#86efac' : '#cbd5e1' }} required />
-              <button type="button" onClick={onOpenScanner} style={{ ...STYLES.btnSecondary, flexShrink: 0, padding: '10px 14px' }} title="Scan barcode">
-                <Icons.Camera width={18} height={18} />
-              </button>
+              <input value={form.trackingNo} onChange={up('trackingNo')} placeholder="Tracking Number (or scan barcode)" style={{ ...styles.input, flex: 1, borderColor: scannedTracking ? '#86efac' : styles.inputBorder }} required />
+              <button type="button" onClick={onOpenScanner} style={{ ...styles.btnSecondary, flexShrink: 0, padding: '10px 14px' }} title="Scan barcode"><Icons.Camera width={18} height={18} /></button>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <select value={form.sender} onChange={up('sender')} style={{ ...STYLES.input, backgroundColor: '#ffffff' }} required>
+            <select value={form.sender} onChange={up('sender')} style={{ ...styles.input, backgroundColor: styles.inputBg }} required>
               <option value="" disabled>Select Courier</option>
               {COURIERS.map((c) => (<option key={c.value} value={c.value}>{c.label}</option>))}
             </select>
-            {isOthers && <input value={form.senderOther} onChange={up('senderOther')} placeholder="Enter courier name" style={STYLES.input} required={isOthers} />}
+            {isOthers && <input value={form.senderOther} onChange={up('senderOther')} placeholder="Enter courier name" style={styles.input} required={isOthers} />}
           </div>
-          <input value={form.recipient} onChange={up('recipient')} placeholder="Recipient Username" style={STYLES.input} required />
-          <select value={form.status} onChange={up('status')} style={{ ...STYLES.input, backgroundColor: '#ffffff' }}>
-            <option>Pending</option>
-            <option>Arrived</option>
-            <option>Overdue</option>
+          <input value={form.recipient} onChange={up('recipient')} placeholder="Recipient Username" style={styles.input} required />
+          <select value={form.status} onChange={up('status')} style={{ ...styles.input, backgroundColor: styles.inputBg }}>
+            <option>Pending</option><option>Arrived</option><option>Overdue</option>
           </select>
-          <input value={form.location} onChange={up('location')} placeholder="Storage Location" style={{ ...STYLES.input, gridColumn: '1 / -1' }} required />
-          <input value={form.description} onChange={up('description')} placeholder="Package Description (Visible to User)" style={{ ...STYLES.input, gridColumn: '1 / -1' }} />
+          <input value={form.location} onChange={up('location')} placeholder="Storage Location" style={{ ...styles.input, gridColumn: '1 / -1' }} required />
+          <input value={form.description} onChange={up('description')} placeholder="Package Description (Visible to User)" style={{ ...styles.input, gridColumn: '1 / -1' }} />
 
-          {/* Smart Rack Assignment Section */}
-          <div style={{ gridColumn: '1 / -1', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Icons.Zap width={18} height={18} style={{ color: '#4f46e5' }} />Smart Rack Assignment (IoT Integration)
-            </h4>
+          <div style={{ gridColumn: '1 / -1', padding: '16px', backgroundColor: styles.sectionBg, borderRadius: '10px', border: `1px solid ${styles.sectionBorder}` }}>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 700, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}><Icons.Zap width={18} height={18} style={{ color: '#4f46e5' }} />Smart Rack Assignment (IoT Integration)</h4>
             {maintenanceShelves.length > 0 && (
-              <div style={{ marginBottom: '12px', padding: '8px 12px', backgroundColor: '#fef3c7', border: '1px solid #fde68a', borderRadius: '6px', fontSize: '12px', color: '#92400e', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Icons.AlertTriangle width={14} height={14} />
-                <span><strong>{maintenanceShelves.length} shelf{maintenanceShelves.length > 1 ? 's' : ''} under maintenance</strong> — excluded from auto-assignment</span>
+              <div style={{ marginBottom: '12px', padding: '8px 12px', backgroundColor: theme.maintenanceBg, border: `1px solid ${theme.maintenanceBorder}`, borderRadius: '6px', fontSize: '12px', color: theme.maintenanceText, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Icons.AlertTriangle width={14} height={14} /><span><strong>{maintenanceShelves.length} shelf{maintenanceShelves.length > 1 ? 's' : ''} under maintenance</strong> — excluded from auto-assignment</span>
               </div>
             )}
             <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '8px', cursor: 'pointer' }}>
-                <input type="checkbox" checked={form.assignRack || false} onChange={up('assignRack')} style={{ width: '16px', height: '16px' }} />
-                Assign to Smart Rack Shelf
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600, color: theme.text, marginBottom: '8px', cursor: 'pointer' }}>
+                <input type="checkbox" checked={form.assignRack || false} onChange={up('assignRack')} style={{ width: '16px', height: '16px' }} />Assign to Smart Rack Shelf
               </label>
               {form.assignRack && (
-                <select value={form.selectedRackShelf || ''} onChange={up('selectedRackShelf')} style={{ ...STYLES.input, backgroundColor: '#ffffff', fontSize: '13px' }}>
+                <select value={form.selectedRackShelf || ''} onChange={up('selectedRackShelf')} style={{ ...styles.input, backgroundColor: styles.inputBg, fontSize: '13px' }}>
                   <option value="">Auto-find empty shelf (excludes maintenance)</option>
                   {emptyShelves.map(s => (<option key={s.id} value={s.id}>Rack {s.rackLetter} - Shelf {s.id} (Empty)</option>))}
                 </select>
@@ -1916,44 +1898,38 @@ function AdminView({ parcels, form, setForm, onAdd, onRequestCollect, onDelete, 
             </div>
           </div>
 
-          <button type="submit" style={{ ...STYLES.btnPrimary, gridColumn: '1 / -1' }}>Register Parcel</button>
+          <button type="submit" style={{ ...styles.btnPrimary, gridColumn: '1 / -1' }}>Register Parcel</button>
         </form>
       </div>
 
-      <div style={STYLES.card}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0' }}>
-          <h3 style={{ fontWeight: 600, color: '#0f172a', margin: 0, fontSize: '16px' }}>System Parcel Management (All Records)</h3>
+      <div style={styles.card}>
+        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${theme.border}` }}>
+          <h3 style={{ fontWeight: 600, color: theme.text, margin: 0, fontSize: '16px' }}>System Parcel Management (All Records)</h3>
         </div>
         <div style={{ overflowX: 'auto' }}>
-          <table style={STYLES.table}>
+          <table style={styles.table}>
             <thead>
               <tr>
-                <th style={STYLES.th}>Tracking</th>
-                <th style={STYLES.th}>Recipient</th>
-                <th style={STYLES.th}>Rack</th>
-                <th style={STYLES.th}>Description</th>
-                <th style={STYLES.th}>Status</th>
-                <th style={STYLES.th}>Actions</th>
+                <th style={styles.th}>Tracking</th>
+                <th style={styles.th}>Recipient</th>
+                <th style={styles.th}>Rack</th>
+                <th style={styles.th}>Description</th>
+                <th style={styles.th}>Status</th>
+                <th style={styles.th}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {parcels.map(p => (
-                <tr key={p.id} style={{ transition: 'background-color 0.15s' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
-                  <td style={STYLES.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.trackingNo}</span></td>
-                  <td style={STYLES.td}>{p.recipient}</td>
-                  <td style={STYLES.td}>{p.rackLocation ? <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</span> : <span style={{ color: '#94a3b8' }}>—</span>}</td>
-                  <td style={{ ...STYLES.td, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description || '-'}</td>
-                  <td style={STYLES.td}><span style={STYLES.badge(p.status)}>{p.status}</span></td>
-                  <td style={STYLES.td}>
+                <tr key={p.id} style={{ transition: 'background-color 0.15s' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.tableRowHover; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
+                  <td style={styles.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.trackingNo}</span></td>
+                  <td style={styles.td}>{p.recipient}</td>
+                  <td style={styles.td}>{p.rackLocation ? <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</span> : <span style={{ color: theme.textMuted }}>{theme.bullet}</span>}</td>
+                  <td style={{ ...styles.td, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description || '-'}</td>
+                  <td style={styles.td}><span style={styles.badge(p.status)}>{p.status}</span></td>
+                  <td style={styles.td}>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      {p.status === 'Arrived' && (
-                        <button onClick={() => onRequestCollect(p)} style={{ padding: '6px 12px', backgroundColor: '#4f46e5', color: '#ffffff', fontSize: '12px', fontWeight: 600, borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Icons.Lock width={14} height={14} />Verify
-                        </button>
-                      )}
-                      <button onClick={() => onDelete(p.id)} style={STYLES.btnDanger}>
-                        <Icons.Trash2 width={18} height={18} />
-                      </button>
+                      {p.status === 'Arrived' && (<button onClick={() => onRequestCollect(p)} style={{ padding: '6px 12px', backgroundColor: '#4f46e5', color: '#ffffff', fontSize: '12px', fontWeight: 600, borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><Icons.Lock width={14} height={14} />Verify</button>)}
+                      <button onClick={() => onDelete(p.id)} style={styles.btnDanger}><Icons.Trash2 width={18} height={18} /></button>
                     </div>
                   </td>
                 </tr>
