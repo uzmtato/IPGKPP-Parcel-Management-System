@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, createContext, useContext } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const IPGKPP_LOGO = 'https://image.qwenlm.ai/public_source/a5365ccb-778a-4d10-aedb-64b519a3dff3/10c2878d5-8e35-49f7-9978-d6f399874b81.png';
 const IPGKPP_BG = 'https://image.qwenlm.ai/public_source/a5365ccb-778a-4d10-aedb-64b519a3dff3/1ee67feb7-707c-4c46-8395-a946662c0e1d.png';
@@ -44,7 +44,10 @@ const Icons = {
   RefreshCw: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>,
   Sun: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>,
   Moon: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
-  Palette: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>,
+  FileImage: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><circle cx="10" cy="13" r="2"/><path d="m20 17-1.09-1.09a2 2 0 0 0-2.82 0L10 22"/></svg>,
+  Keyboard: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01"/><path d="M10 8h.01"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M8 12h.01"/><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="M7 16h10"/></svg>,
+  Clipboard: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>,
+  ZapOff: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12.41 6.75L5 22l2.43-5.12 10.47-5.24"/><path d="M18.57 12.91 21 10h-5.34"/><path d="m8 3 4 9"/></svg>,
 };
 
 const COURIERS = [
@@ -106,207 +109,63 @@ const DEFAULT_RACKS = ['A', 'B', 'C'].map(rackLetter => ({
   })),
 }));
 
-// ===== THEME DEFINITIONS =====
 const THEMES = {
   light: {
     name: 'light',
-    bg: '#f8fafc',
-    surface: '#ffffff',
-    surfaceHover: '#f1f5f9',
-    border: '#e2e8f0',
-    borderStrong: '#cbd5e1',
-    text: '#1e293b',
-    textSecondary: '#64748b',
-    textMuted: '#94a3b8',
-    inputBg: '#ffffff',
-    inputBorder: '#cbd5e1',
-    inputFocus: '#4f46e5',
-    navActive: '#eef2ff',
-    navActiveText: '#4f46e5',
-    navInactive: 'transparent',
-    navInactiveText: '#475569',
-    headerBg: '#ffffff',
-    sidebarBg: '#ffffff',
-    modalBg: '#ffffff',
-    modalOverlay: 'rgba(0,0,0,0.5)',
-    tableHeaderBg: '#f8fafc',
-    tableRowHover: '#f8fafc',
-    tableBorder: '#f1f5f9',
-    cardBg: '#ffffff',
-    cardBorder: '#e2e8f0',
-    statCardBg: '#ffffff',
+    bg: '#f8fafc', surface: '#ffffff', surfaceHover: '#f1f5f9',
+    border: '#e2e8f0', borderStrong: '#cbd5e1',
+    text: '#1e293b', textSecondary: '#64748b', textMuted: '#94a3b8',
+    inputBg: '#ffffff', inputBorder: '#cbd5e1',
+    navActive: '#eef2ff', navActiveText: '#4f46e5', navInactive: 'transparent', navInactiveText: '#475569',
+    headerBg: '#ffffff', sidebarBg: '#ffffff',
+    modalBg: '#ffffff', modalOverlay: 'rgba(0,0,0,0.5)',
+    tableHeaderBg: '#f8fafc', tableRowHover: '#f8fafc', tableBorder: '#f1f5f9',
+    cardBg: '#ffffff', cardBorder: '#e2e8f0', statCardBg: '#ffffff',
     bannerBg: 'rgba(255,255,255,0.92)',
-    dropdownBg: '#ffffff',
-    dropdownHover: '#eef2ff',
-    dropdownHoverText: '#4f46e5',
-    btnSecondaryBg: '#f1f5f9',
-    btnSecondaryBorder: '#e2e8f0',
-    btnSecondaryText: '#334155',
-    btnSecondaryHover: '#e2e8f0',
-    badgeBg: '#f1f5f9',
+    dropdownBg: '#ffffff', dropdownHover: '#eef2ff', dropdownHoverText: '#4f46e5',
+    btnSecondaryBg: '#f1f5f9', btnSecondaryBorder: '#e2e8f0', btnSecondaryText: '#334155', btnSecondaryHover: '#e2e8f0',
     contentBgOpacity: 0.25,
-    sectionBg: '#f8fafc',
-    sectionBorder: '#e2e8f0',
-    divider: '#e2e8f0',
-    shadow: '0 1px 3px rgba(0,0,0,0.05)',
-    shadowLg: '0 10px 25px rgba(0,0,0,0.08)',
-    iconBg: '#eef2ff',
-    iconColor: '#4f46e5',
-    authBg: 'linear-gradient(135deg, #0f172a 0%, #312e81 100%)',
-    authCardBg: '#ffffff',
-    authText: '#1e293b',
-    authTextSecondary: '#64748b',
-    authBorder: '#f1f5f9',
-    authTabActive: '#eef2ff',
-    authTabActiveText: '#4f46e5',
-    authTabInactiveText: '#64748b',
-    footerText: '#94a3b8',
-    placeholder: '••••••••',
-    bullet: '—',
-    checkMark: '✓',
-    dot: '●',
-    maintenanceBg: '#fef3c7',
-    maintenanceBorder: '#fde68a',
-    maintenanceText: '#92400e',
-    availableBg: '#f0fdf4',
-    availableBorder: '#bbf7d0',
-    availableText: '#166534',
-    occupiedBg: '#fef2f2',
-    occupiedBorder: '#fecaca',
-    occupiedText: '#991b1b',
-    infoBg: '#eff6ff',
-    infoBorder: '#bfdbfe',
-    infoText: '#1e40af',
-    successBg: '#f0fdf4',
-    successBorder: '#bbf7d0',
-    successText: '#166534',
-    warningBg: '#fef3c7',
-    warningBorder: '#fde68a',
-    warningText: '#92400e',
-    themeToggleBg: '#f1f5f9',
-    themeToggleBorder: '#e2e8f0',
-    themeToggleHover: '#e2e8f0',
-    themeToggleText: '#475569',
-    themeToggleActiveBg: '#eef2ff',
-    themeToggleActiveBorder: '#c7d2fe',
-    themeToggleActiveText: '#4f46e5',
-    scanContainerBg: '#000',
-    scanSuccessBg: '#d1fae5',
-    scanSuccessBorder: '#a7f3d0',
-    scanSuccessText: '#065f46',
-    profilePicPlaceholderBg: '#e2e8f0',
-    profilePicPlaceholderBorder: '#cbd5e1',
-    profilePicPlaceholderText: '#94a3b8',
-    uploadBtnBg: '#ffffff',
-    uploadBtnText: '#4f46e5',
-    uploadBtnBorder: '#4f46e5',
-    removeBtnBg: '#fef2f2',
-    removeBtnText: '#dc2626',
-    removeBtnBorder: '#fecaca',
-    bannerTitle: '#1e3a8a',
-    bannerSubtitle: '#64748b',
+    sectionBg: '#f8fafc', sectionBorder: '#e2e8f0', divider: '#e2e8f0',
+    iconBg: '#eef2ff', iconColor: '#4f46e5',
+    maintenanceBg: '#fef3c7', maintenanceBorder: '#fde68a', maintenanceText: '#92400e',
+    availableBg: '#f0fdf4', availableBorder: '#bbf7d0', availableText: '#166534',
+    occupiedBg: '#fef2f2', occupiedBorder: '#fecaca', occupiedText: '#991b1b',
+    infoBg: '#eff6ff', infoBorder: '#bfdbfe', infoText: '#1e40af',
+    successBg: '#f0fdf4', successBorder: '#bbf7d0', successText: '#166534',
+    warningBg: '#fef3c7', warningBorder: '#fde68a', warningText: '#92400e',
+    bannerTitle: '#1e3a8a', bannerSubtitle: '#64748b',
+    tabActiveBg: '#4f46e5', tabActiveText: '#ffffff', tabInactiveBg: '#f1f5f9', tabInactiveText: '#475569',
+    tabInactiveHover: '#e2e8f0',
   },
   dark: {
     name: 'dark',
-    bg: '#0f172a',
-    surface: '#1e293b',
-    surfaceHover: '#334155',
-    border: '#334155',
-    borderStrong: '#475569',
-    text: '#f1f5f9',
-    textSecondary: '#94a3b8',
-    textMuted: '#64748b',
-    inputBg: '#1e293b',
-    inputBorder: '#475569',
-    inputFocus: '#818cf8',
-    navActive: '#1e1b4b',
-    navActiveText: '#a5b4fc',
-    navInactive: 'transparent',
-    navInactiveText: '#cbd5e1',
-    headerBg: '#1e293b',
-    sidebarBg: '#1e293b',
-    modalBg: '#1e293b',
-    modalOverlay: 'rgba(0,0,0,0.75)',
-    tableHeaderBg: '#1e293b',
-    tableRowHover: '#334155',
-    tableBorder: '#334155',
-    cardBg: '#1e293b',
-    cardBorder: '#334155',
-    statCardBg: '#1e293b',
+    bg: '#0f172a', surface: '#1e293b', surfaceHover: '#334155',
+    border: '#334155', borderStrong: '#475569',
+    text: '#f1f5f9', textSecondary: '#94a3b8', textMuted: '#64748b',
+    inputBg: '#1e293b', inputBorder: '#475569',
+    navActive: '#1e1b4b', navActiveText: '#a5b4fc', navInactive: 'transparent', navInactiveText: '#cbd5e1',
+    headerBg: '#1e293b', sidebarBg: '#1e293b',
+    modalBg: '#1e293b', modalOverlay: 'rgba(0,0,0,0.75)',
+    tableHeaderBg: '#1e293b', tableRowHover: '#334155', tableBorder: '#334155',
+    cardBg: '#1e293b', cardBorder: '#334155', statCardBg: '#1e293b',
     bannerBg: 'rgba(30,41,59,0.92)',
-    dropdownBg: '#1e293b',
-    dropdownHover: '#1e1b4b',
-    dropdownHoverText: '#a5b4fc',
-    btnSecondaryBg: '#334155',
-    btnSecondaryBorder: '#475569',
-    btnSecondaryText: '#e2e8f0',
-    btnSecondaryHover: '#475569',
-    badgeBg: '#334155',
+    dropdownBg: '#1e293b', dropdownHover: '#1e1b4b', dropdownHoverText: '#a5b4fc',
+    btnSecondaryBg: '#334155', btnSecondaryBorder: '#475569', btnSecondaryText: '#e2e8f0', btnSecondaryHover: '#475569',
     contentBgOpacity: 0.08,
-    sectionBg: '#1e293b',
-    sectionBorder: '#334155',
-    divider: '#334155',
-    shadow: '0 1px 3px rgba(0,0,0,0.3)',
-    shadowLg: '0 10px 25px rgba(0,0,0,0.5)',
-    iconBg: '#1e1b4b',
-    iconColor: '#a5b4fc',
-    authBg: 'linear-gradient(135deg, #020617 0%, #1e1b4b 100%)',
-    authCardBg: '#1e293b',
-    authText: '#f1f5f9',
-    authTextSecondary: '#94a3b8',
-    authBorder: '#334155',
-    authTabActive: '#1e1b4b',
-    authTabActiveText: '#a5b4fc',
-    authTabInactiveText: '#94a3b8',
-    footerText: '#64748b',
-    placeholder: '••••••••',
-    bullet: '—',
-    checkMark: '✓',
-    dot: '●',
-    maintenanceBg: '#451a03',
-    maintenanceBorder: '#78350f',
-    maintenanceText: '#fbbf24',
-    availableBg: '#052e16',
-    availableBorder: '#14532d',
-    availableText: '#4ade80',
-    occupiedBg: '#450a0a',
-    occupiedBorder: '#7f1d1d',
-    occupiedText: '#fca5a5',
-    infoBg: '#1e1b4b',
-    infoBorder: '#312e81',
-    infoText: '#a5b4fc',
-    successBg: '#052e16',
-    successBorder: '#14532d',
-    successText: '#4ade80',
-    warningBg: '#451a03',
-    warningBorder: '#78350f',
-    warningText: '#fbbf24',
-    themeToggleBg: '#334155',
-    themeToggleBorder: '#475569',
-    themeToggleHover: '#475569',
-    themeToggleText: '#e2e8f0',
-    themeToggleActiveBg: '#1e1b4b',
-    themeToggleActiveBorder: '#4338ca',
-    themeToggleActiveText: '#a5b4fc',
-    scanContainerBg: '#000',
-    scanSuccessBg: '#064e3b',
-    scanSuccessBorder: '#065f46',
-    scanSuccessText: '#6ee7b7',
-    profilePicPlaceholderBg: '#334155',
-    profilePicPlaceholderBorder: '#475569',
-    profilePicPlaceholderText: '#94a3b8',
-    uploadBtnBg: '#1e293b',
-    uploadBtnText: '#a5b4fc',
-    uploadBtnBorder: '#818cf8',
-    removeBtnBg: '#450a0a',
-    removeBtnText: '#fca5a5',
-    removeBtnBorder: '#7f1d1d',
-    bannerTitle: '#a5b4fc',
-    bannerSubtitle: '#94a3b8',
+    sectionBg: '#1e293b', sectionBorder: '#334155', divider: '#334155',
+    iconBg: '#1e1b4b', iconColor: '#a5b4fc',
+    maintenanceBg: '#451a03', maintenanceBorder: '#78350f', maintenanceText: '#fbbf24',
+    availableBg: '#052e16', availableBorder: '#14532d', availableText: '#4ade80',
+    occupiedBg: '#450a0a', occupiedBorder: '#7f1d1d', occupiedText: '#fca5a5',
+    infoBg: '#1e1b4b', infoBorder: '#312e81', infoText: '#a5b4fc',
+    successBg: '#052e16', successBorder: '#14532d', successText: '#4ade80',
+    warningBg: '#451a03', warningBorder: '#78350f', warningText: '#fbbf24',
+    bannerTitle: '#a5b4fc', bannerSubtitle: '#94a3b8',
+    tabActiveBg: '#4f46e5', tabActiveText: '#ffffff', tabInactiveBg: '#334155', tabInactiveText: '#cbd5e1',
+    tabInactiveHover: '#475569',
   }
 };
 
-// ===== STYLES FACTORY =====
 const createStyles = (theme) => ({
   app: { display: 'flex', minHeight: '100vh', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", color: theme.text, backgroundColor: theme.bg, transition: 'background-color 0.3s ease, color 0.3s ease' },
   sidebar: { width: '260px', backgroundColor: theme.sidebarBg, borderRight: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 100, transition: 'transform 0.2s ease, background-color 0.3s ease' },
@@ -367,17 +226,17 @@ const createStyles = (theme) => ({
   bannerText: { display: 'flex', flexDirection: 'column' },
   bannerTitle: { fontSize: '14px', fontWeight: 700, color: theme.bannerTitle, margin: 0, letterSpacing: '0.025em' },
   bannerSubtitle: { fontSize: '10px', color: theme.bannerSubtitle, margin: 0, marginTop: '2px' },
-  scannerContainer: { width: '100%', maxWidth: '400px', margin: '0 auto', borderRadius: '12px', overflow: 'hidden', backgroundColor: theme.scanContainerBg, position: 'relative' },
+  scannerContainer: { width: '100%', maxWidth: '400px', margin: '0 auto', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#000', position: 'relative' },
   scannerOverlay: { position: 'absolute', inset: 0, border: '3px solid #4f46e5', borderRadius: '12px', pointerEvents: 'none' },
   scannerLine: { position: 'absolute', left: '10%', right: '10%', height: '2px', backgroundColor: '#4f46e5', boxShadow: '0 0 10px #4f46e5', animation: 'scanline 2s ease-in-out infinite' },
-  scanSuccess: { display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', backgroundColor: theme.scanSuccessBg, border: `1px solid ${theme.scanSuccessBorder}`, borderRadius: '8px', color: theme.scanSuccessText, fontSize: '14px', fontWeight: 500, marginTop: '12px' },
+  scanSuccess: { display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', backgroundColor: theme.successBg, border: `1px solid ${theme.successBorder}`, borderRadius: '8px', color: theme.successText, fontSize: '14px', fontWeight: 500, marginTop: '12px' },
   profilePicUpload: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '20px' },
   profilePicPreview: { width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', backgroundColor: theme.border, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: `3px solid ${theme.border}`, transition: 'border-color 0.2s' },
-  profilePicPlaceholder: { width: '100px', height: '100px', borderRadius: '50%', backgroundColor: theme.profilePicPlaceholderBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.profilePicPlaceholderText, border: `3px dashed ${theme.profilePicPlaceholderBorder}` },
-  uploadBtn: { padding: '8px 20px', backgroundColor: theme.uploadBtnBg, color: theme.uploadBtnText, border: `1px solid ${theme.uploadBtnBorder}`, borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '6px' },
-  removePicBtn: { padding: '6px 12px', backgroundColor: theme.removeBtnBg, color: theme.removeBtnText, border: `1px solid ${theme.removeBtnBorder}`, borderRadius: '6px', fontSize: '12px', cursor: 'pointer', transition: 'all 0.15s' },
-  themeToggle: { padding: '8px', border: `1px solid ${theme.themeToggleBorder}`, borderRadius: '8px', backgroundColor: theme.themeToggleBg, cursor: 'pointer', color: theme.themeToggleText, transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  themeToggleHover: { backgroundColor: theme.themeToggleHover },
+  profilePicPlaceholder: { width: '100px', height: '100px', borderRadius: '50%', backgroundColor: theme.border, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.textMuted, border: `3px dashed ${theme.borderStrong}` },
+  uploadBtn: { padding: '8px 20px', backgroundColor: theme.inputBg, color: '#4f46e5', border: `1px solid #4f46e5`, borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '6px' },
+  removePicBtn: { padding: '6px 12px', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', transition: 'all 0.15s' },
+  themeToggle: { padding: '8px', border: `1px solid ${theme.border}`, borderRadius: '8px', backgroundColor: theme.btnSecondaryBg, cursor: 'pointer', color: theme.textSecondary, transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  themeToggleHover: { backgroundColor: theme.btnSecondaryHover },
 });
 
 function formatDate(dateString) {
@@ -400,28 +259,94 @@ function getTimeAgo(dateString) {
   return 'Today';
 }
 
-function BarcodeScanner({ onScan, onClose, theme }) {
+// ===== UNIVERSAL BARCODE/QR SCANNER - WORKS WITHOUT HTTPS =====
+// Supports 4 modes: Live Camera (HTTPS/localhost), Image Upload, Manual Input, Clipboard Paste
+function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }) {
   const scannerRef = useRef(null);
   const qrInstanceRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const manualInputRef = useRef(null);
+
+  const [activeMode, setActiveMode] = useState('auto'); // auto, camera, image, manual, clipboard
   const [isScanning, setIsScanning] = useState(false);
   const [lastScanned, setLastScanned] = useState('');
   const [error, setError] = useState('');
   const [isLibraryLoaded, setIsLibraryLoaded] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
-  const [hasPermission, setHasPermission] = useState(null);
+  const [hasCamera, setHasCamera] = useState(null); // null = checking, true, false
+  const [manualInput, setManualInput] = useState('');
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [clipboardSupported, setClipboardSupported] = useState(false);
+  const [pasteSuccess, setPasteSuccess] = useState('');
+
   const scanTimeoutRef = useRef(null);
   const isUnmountingRef = useRef(false);
-  const styles = createStyles(theme);
 
+  const styles = createStyles(theme);
+  const isSecureContext = typeof window !== 'undefined' && window.isSecureContext;
+  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '');
+
+  // Check if camera is available
+  const checkCameraAvailability = async () => {
+    if (!isSecureContext && !isLocalhost) {
+      setHasCamera(false);
+      return false;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+      setHasCamera(false);
+      return false;
+    }
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cameras = devices.filter(d => d.kind === 'videoinput');
+      setHasCamera(cameras.length > 0);
+      return cameras.length > 0;
+    } catch (err) {
+      setHasCamera(false);
+      return false;
+    }
+  };
+
+  // Check clipboard support
   useEffect(() => {
-    if (window.Html5Qrcode) { setIsLibraryLoaded(true); return; }
+    setClipboardSupported(!!navigator.clipboard && !!navigator.clipboard.readText);
+  }, []);
+
+  // Load html5-qrcode library
+  useEffect(() => {
+    if (window.Html5Qrcode) { setIsLibraryLoaded(true); checkCameraAvailability(); return; }
     const script = document.createElement('script');
     script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
     script.async = true;
-    script.onload = () => setIsLibraryLoaded(true);
-    script.onerror = () => setError('Failed to load barcode scanner library. Please check your internet connection.');
+    script.onload = () => { setIsLibraryLoaded(true); checkCameraAvailability(); };
+    script.onerror = () => setError('Failed to load scanner library. Please check your internet connection.');
     document.head.appendChild(script);
     return () => { if (document.head.contains(script)) document.head.removeChild(script); };
+  }, []);
+
+  // Auto-detect best mode on mount
+  useEffect(() => {
+    if (initialMode === 'auto') {
+      if (isSecureContext || isLocalhost) {
+        checkCameraAvailability().then(hasCam => {
+          if (hasCam) setActiveMode('camera');
+          else setActiveMode('manual');
+        });
+      } else {
+        setActiveMode('manual');
+      }
+    } else {
+      setActiveMode(initialMode);
+    }
+  }, [initialMode, isSecureContext, isLocalhost]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isUnmountingRef.current = true;
+      if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+      safeStopScanner();
+    };
   }, []);
 
   const safeStopScanner = async () => {
@@ -437,33 +362,16 @@ function BarcodeScanner({ onScan, onClose, theme }) {
     finally { setIsStarting(false); setIsScanning(false); }
   };
 
-  useEffect(() => {
-    return () => {
-      isUnmountingRef.current = true;
-      if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
-      safeStopScanner();
-    };
-  }, []);
-
-  const startScanner = async () => {
+  const startCameraScanner = async () => {
     if (!scannerRef.current || !isLibraryLoaded) return;
     if (isStarting) return;
+
     setError('');
     setIsStarting(true);
     setLastScanned('');
     await safeStopScanner();
+
     try {
-      if (navigator.permissions && navigator.permissions.query) {
-        try {
-          const permResult = await navigator.permissions.query({ name: 'camera' });
-          setHasPermission(permResult.state === 'granted');
-          if (permResult.state === 'denied') {
-            setError('Camera permission denied. Please enable camera access in your browser settings.');
-            setIsStarting(false);
-            return;
-          }
-        } catch (permErr) {}
-      }
       const instance = new window.Html5Qrcode(`barcode-scanner-container-${Date.now()}`);
       qrInstanceRef.current = instance;
       const config = { fps: 10, qrbox: { width: 250, height: 150 }, aspectRatio: 1.0, disableFlip: false };
@@ -478,58 +386,313 @@ function BarcodeScanner({ onScan, onClose, theme }) {
         });
       }, () => {});
       setIsScanning(true);
-      setHasPermission(true);
     } catch (err) {
       console.error('Scanner start error:', err);
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') { setError('Camera permission denied. Please allow camera access in your browser settings and try again.'); setHasPermission(false); }
-      else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') setError('No camera found on this device.');
-      else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') setError('Camera is already in use by another application. Please close other apps using the camera.');
-      else if (err.name === 'OverconstrainedError') setError('Camera constraints not satisfied. Try using a different browser.');
-      else setError(`Camera error: ${err.message || 'Unknown error'}. Try refreshing the page.`);
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setError('Camera permission denied. Please allow camera access in your browser settings.');
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        setError('No camera found on this device.');
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        setError('Camera is already in use by another application.');
+      } else {
+        setError(`Camera error: ${err.message || 'Unknown error'}. Try another scan mode.`);
+      }
       setIsScanning(false);
     } finally { setIsStarting(false); }
   };
 
-  const stopScanner = async () => { await safeStopScanner(); };
+  const stopCameraScanner = async () => { await safeStopScanner(); };
+
+  // Scan from uploaded image file
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setError('Please select an image file (JPG, PNG, GIF)'); return; }
+    if (file.size > 5 * 1024 * 1024) { setError('Image size must be less than 5MB'); return; }
+
+    setIsProcessingImage(true);
+    setError('');
+    setLastScanned('');
+
+    try {
+      if (!window.Html5Qrcode) {
+        setError('Scanner library not loaded. Please wait or refresh.');
+        setIsProcessingImage(false);
+        return;
+      }
+
+      const tempInstance = new window.Html5Qrcode(`image-scanner-${Date.now()}`, { verbose: false });
+      const decodedText = await tempInstance.scanFile(file, true);
+      
+      if (decodedText) {
+        setLastScanned(decodedText);
+        scanTimeoutRef.current = setTimeout(() => { onScan(decodedText); }, 800);
+      } else {
+        setError('No barcode/QR code detected in this image. Please try a clearer image.');
+      }
+    } catch (err) {
+      console.error('Image scan error:', err);
+      setError('Failed to scan image. Make sure it contains a clear barcode or QR code.');
+    } finally {
+      setIsProcessingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Handle manual input submission
+  const handleManualSubmit = (e) => {
+    if (e) e.preventDefault();
+    const trimmed = manualInput.trim();
+    if (!trimmed) { setError('Please enter a tracking number'); return; }
+    setLastScanned(trimmed);
+    setError('');
+    scanTimeoutRef.current = setTimeout(() => { onScan(trimmed); }, 300);
+  };
+
+  // Handle clipboard paste
+  const handlePasteFromClipboard = async () => {
+    setError('');
+    try {
+      if (!navigator.clipboard || !navigator.clipboard.readText) {
+        setError('Clipboard access not supported in this browser.');
+        return;
+      }
+      const text = await navigator.clipboard.readText();
+      if (text && text.trim()) {
+        const trimmed = text.trim();
+        setManualInput(trimmed);
+        setLastScanned(trimmed);
+        setPasteSuccess(`Pasted: "${trimmed}"`);
+        setError('');
+        scanTimeoutRef.current = setTimeout(() => { onScan(trimmed); }, 500);
+      } else {
+        setError('Clipboard is empty or does not contain text.');
+      }
+    } catch (err) {
+      console.error('Clipboard error:', err);
+      setError('Failed to read clipboard. Please allow clipboard access or use manual input.');
+    }
+  };
+
+  const modes = [
+    { id: 'camera', label: 'Live Camera', icon: Icons.Camera, available: (isSecureContext || isLocalhost) && hasCamera !== false },
+    { id: 'image', label: 'Upload Image', icon: Icons.FileImage, available: true },
+    { id: 'manual', label: 'Manual Input', icon: Icons.Keyboard, available: true },
+    { id: 'clipboard', label: 'Paste', icon: Icons.Clipboard, available: clipboardSupported },
+  ];
+
+  const availableModes = modes.filter(m => m.available);
 
   return (
-    <Modal title="Imbas Kod Barcode / QR" onClose={onClose} large theme={theme}>
+    <Modal title="Scan Barcode / QR Code" onClose={onClose} large theme={theme}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <p style={{ fontSize: '13px', color: theme.textSecondary, margin: 0, textAlign: 'center' }}>Point your camera at the parcel barcode or student QR code</p>
-        {!isLibraryLoaded ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: theme.textSecondary }}>
-            <div style={{ width: '40px', height: '40px', border: `3px solid ${theme.border}`, borderTop: '3px solid #4f46e5', borderRadius: '50%', margin: '0 auto 12px', animation: 'spin 1s linear infinite' }}></div>
-            <p style={{ margin: 0, fontSize: '14px' }}>Loading barcode scanner...</p>
-          </div>
-        ) : error ? (
-          <div style={{ textAlign: 'center', padding: '30px' }}>
-            <Icons.AlertTriangle width={48} height={48} style={{ color: '#dc2626', marginBottom: '12px' }} />
-            <p style={{ color: '#dc2626', fontSize: '14px', margin: '0 0 8px 0', fontWeight: 600 }}>{error}</p>
-            <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 16px 0' }}>{hasPermission === false ? 'Go to your browser settings → Site Settings → Camera → Allow access for this site.' : 'Make sure you are using HTTPS or localhost, and that your device has a camera.'}</p>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button onClick={startScanner} style={{ ...styles.btnPrimary, maxWidth: '200px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Icons.RefreshCw width={16} height={16} />Try Again</button>
-              <button onClick={onClose} style={{ ...styles.btnPrimary, maxWidth: '200px', backgroundColor: styles.btnSecondaryBg, color: styles.btnSecondaryText, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>Close</button>
+        {/* Security notice */}
+        {!isSecureContext && !isLocalhost && (
+          <div style={{ padding: '12px 16px', backgroundColor: theme.warningBg, border: `1px solid ${theme.warningBorder}`, borderRadius: '8px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+            <Icons.AlertTriangle width={20} height={20} style={{ color: '#d97706', flexShrink: 0, marginTop: '2px' }} />
+            <div style={{ fontSize: '13px', color: theme.warningText }}>
+              <p style={{ margin: 0, fontWeight: 600 }}>Non-HTTPS Connection Detected</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>Live camera requires HTTPS. Use <strong>Image Upload</strong>, <strong>Manual Input</strong>, or <strong>Paste</strong> mode instead. All modes work without HTTPS!</p>
             </div>
           </div>
-        ) : (
-          <>
-            <div style={styles.scannerContainer}>
-              <div id={`barcode-scanner-container-${Date.now()}`} ref={scannerRef} style={{ width: '100%', minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.textSecondary, fontSize: '13px' }}>
-                {!isScanning && !isStarting && 'Camera preview will appear here'}
-              </div>
-              {isScanning && (<><div style={styles.scannerOverlay}></div><div style={styles.scannerLine}></div></>)}
-            </div>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              {!isScanning && !isStarting && (<button onClick={startScanner} style={{ ...styles.btnPrimary, maxWidth: '220px', backgroundColor: '#16a34a', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><Icons.Play width={16} height={16} />Start Camera</button>)}
-              {isScanning && (<button onClick={stopScanner} style={{ ...styles.btnPrimary, maxWidth: '220px', backgroundColor: '#dc2626', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><Icons.Stop width={16} height={16} />Stop Camera</button>)}
-              {isStarting && (<div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', color: theme.textSecondary, fontSize: '13px' }}><div style={{ width: '16px', height: '16px', border: `2px solid ${theme.border}`, borderTop: '2px solid #4f46e5', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div><span>Initializing camera...</span></div>)}
-            </div>
-            {lastScanned && (<div style={styles.scanSuccess}><Icons.CheckCircle width={20} height={20} /><span>Kod dikesan: <strong>{lastScanned}</strong></span></div>)}
-            {isScanning && (<div style={{ textAlign: 'center', padding: '12px', backgroundColor: theme.infoBg, borderRadius: '8px', border: `1px solid ${theme.infoBorder}` }}><p style={{ margin: 0, fontSize: '13px', color: theme.infoText, fontWeight: 500 }}>📷 Camera active — Point at barcode/QR code</p><p style={{ margin: '4px 0 0 0', fontSize: '11px', color: theme.textSecondary }}>Tap "Stop Camera" when done or wait for auto-detection</p></div>)}
-          </>
         )}
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={onClose} style={{ ...styles.btnPrimary, backgroundColor: styles.btnSecondaryBg, color: styles.btnSecondaryText }}>Tutup Pengimbas</button>
+
+        {/* Mode Tabs */}
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', borderBottom: `1px solid ${theme.border}`, paddingBottom: '12px' }}>
+          {availableModes.map(mode => {
+            const Icon = mode.icon;
+            const isActive = activeMode === mode.id;
+            return (
+              <button
+                key={mode.id}
+                onClick={() => { setActiveMode(mode.id); setError(''); if (mode.id !== 'camera') safeStopScanner(); }}
+                style={{
+                  flex: '1 1 auto',
+                  minWidth: '100px',
+                  padding: '10px 12px',
+                  backgroundColor: isActive ? theme.tabActiveBg : theme.tabInactiveBg,
+                  color: isActive ? theme.tabActiveText : theme.tabInactiveText,
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  transition: 'all 0.15s',
+                }}
+                onMouseOver={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = theme.tabInactiveHover; }}
+                onMouseOut={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = theme.tabInactiveBg; }}
+              >
+                <Icon width={16} height={16} />
+                {mode.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* CAMERA MODE */}
+        {activeMode === 'camera' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {hasCamera === false ? (
+              <div style={{ textAlign: 'center', padding: '30px', color: theme.textSecondary }}>
+                <Icons.Camera width={48} height={48} style={{ marginBottom: '12px', opacity: 0.4 }} />
+                <p style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: 600 }}>No Camera Available</p>
+                <p style={{ margin: 0, fontSize: '12px' }}>Your device doesn't have a camera or camera access is blocked.</p>
+                <button onClick={() => setActiveMode('image')} style={{ ...styles.btnPrimary, maxWidth: '220px', margin: '16px auto 0', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <Icons.FileImage width={16} height={16} />Try Image Upload Instead
+                </button>
+              </div>
+            ) : !isLibraryLoaded ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: theme.textSecondary }}>
+                <div style={{ width: '40px', height: '40px', border: `3px solid ${theme.border}`, borderTop: '3px solid #4f46e5', borderRadius: '50%', margin: '0 auto 12px', animation: 'spin 1s linear infinite' }}></div>
+                <p style={{ margin: 0, fontSize: '14px' }}>Loading scanner library...</p>
+              </div>
+            ) : error ? (
+              <div style={{ textAlign: 'center', padding: '30px' }}>
+                <Icons.AlertTriangle width={48} height={48} style={{ color: '#dc2626', marginBottom: '12px' }} />
+                <p style={{ color: '#dc2626', fontSize: '14px', margin: '0 0 8px 0', fontWeight: 600 }}>{error}</p>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap', marginTop: '12px' }}>
+                  <button onClick={startCameraScanner} style={{ ...styles.btnPrimary, maxWidth: '180px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Icons.RefreshCw width={16} height={16} />Retry Camera</button>
+                  <button onClick={() => setActiveMode('image')} style={{ ...styles.btnPrimary, maxWidth: '200px', backgroundColor: styles.btnSecondaryBg, color: styles.btnSecondaryText, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Icons.FileImage width={16} height={16} />Use Image Upload</button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div style={styles.scannerContainer}>
+                  <div id={`barcode-scanner-container-${Date.now()}`} ref={scannerRef} style={{ width: '100%', minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.textSecondary, fontSize: '13px' }}>
+                    {!isScanning && !isStarting && 'Camera preview will appear here'}
+                  </div>
+                  {isScanning && (<><div style={styles.scannerOverlay}></div><div style={styles.scannerLine}></div></>)}
+                </div>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {!isScanning && !isStarting && (<button onClick={startCameraScanner} style={{ ...styles.btnPrimary, maxWidth: '220px', backgroundColor: '#16a34a', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><Icons.Play width={16} height={16} />Start Camera</button>)}
+                  {isScanning && (<button onClick={stopCameraScanner} style={{ ...styles.btnPrimary, maxWidth: '220px', backgroundColor: '#dc2626', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><Icons.Stop width={16} height={16} />Stop Camera</button>)}
+                  {isStarting && (<div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', color: theme.textSecondary, fontSize: '13px' }}><div style={{ width: '16px', height: '16px', border: `2px solid ${theme.border}`, borderTop: '2px solid #4f46e5', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div><span>Initializing camera...</span></div>)}
+                </div>
+                {isScanning && (<div style={{ textAlign: 'center', padding: '12px', backgroundColor: theme.infoBg, borderRadius: '8px', border: `1px solid ${theme.infoBorder}` }}><p style={{ margin: 0, fontSize: '13px', color: theme.infoText, fontWeight: 500 }}> Camera active — Point at barcode/QR code</p><p style={{ margin: '4px 0 0 0', fontSize: '11px', color: theme.textSecondary }}>System will auto-detect and process</p></div>)}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* IMAGE UPLOAD MODE */}
+        {activeMode === 'image' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ textAlign: 'center', padding: '8px', color: theme.textSecondary, fontSize: '13px' }}>
+              <p style={{ margin: 0 }}>Upload a photo of the barcode or QR code from your device gallery</p>
+            </div>
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                padding: '32px 20px',
+                border: `2px dashed ${theme.borderStrong}`,
+                borderRadius: '12px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                backgroundColor: theme.sectionBg,
+                transition: 'all 0.2s',
+              }}
+              onMouseOver={(e) => { e.currentTarget.style.borderColor = '#4f46e5'; e.currentTarget.style.backgroundColor = theme.iconBg; }}
+              onMouseOut={(e) => { e.currentTarget.style.borderColor = theme.borderStrong; e.currentTarget.style.backgroundColor = theme.sectionBg; }}
+            >
+              {isProcessingImage ? (
+                <div>
+                  <div style={{ width: '48px', height: '48px', border: `3px solid ${theme.border}`, borderTop: '3px solid #4f46e5', borderRadius: '50%', margin: '0 auto 12px', animation: 'spin 1s linear infinite' }}></div>
+                  <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: theme.text }}>Scanning image...</p>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: theme.textSecondary }}>Detecting barcode/QR code</p>
+                </div>
+              ) : (
+                <div>
+                  <Icons.FileImage width={48} height={48} style={{ color: '#4f46e5', marginBottom: '12px' }} />
+                  <p style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: theme.text }}>Click to upload image</p>
+                  <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: theme.textSecondary }}>Supports JPG, PNG, GIF • Max 5MB</p>
+                  <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: theme.textMuted }}>💡 Works on any connection — no HTTPS required!</p>
+                </div>
+              )}
+            </div>
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+            {error && <div style={{ padding: '10px 14px', backgroundColor: '#fee2e2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}><Icons.AlertTriangle width={16} height={16} />{error}</div>}
+            {lastScanned && (<div style={styles.scanSuccess}><Icons.CheckCircle width={20} height={20} /><span>Code detected: <strong>{lastScanned}</strong> — Processing...</span></div>)}
+          </div>
+        )}
+
+        {/* MANUAL INPUT MODE */}
+        {activeMode === 'manual' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ textAlign: 'center', padding: '8px', color: theme.textSecondary, fontSize: '13px' }}>
+              <p style={{ margin: 0 }}>Type or paste the tracking number directly</p>
+            </div>
+            <form onSubmit={handleManualSubmit}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  ref={manualInputRef}
+                  value={manualInput}
+                  onChange={(e) => { setManualInput(e.target.value); setError(''); }}
+                  placeholder="Enter tracking number (e.g. PKG-8821X)"
+                  style={{ ...styles.input, fontFamily: 'monospace', fontSize: '16px', fontWeight: 600, letterSpacing: '0.5px' }}
+                  autoFocus
+                />
+                <button type="submit" style={{ ...styles.btnPrimary, width: 'auto', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                  <Icons.Check width={16} height={16} />Submit
+                </button>
+              </div>
+            </form>
+            {error && <div style={{ padding: '10px 14px', backgroundColor: '#fee2e2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}><Icons.AlertTriangle width={16} height={16} />{error}</div>}
+            <div style={{ padding: '12px', backgroundColor: theme.infoBg, borderRadius: '8px', border: `1px solid ${theme.infoBorder}`, fontSize: '12px', color: theme.infoText }}>
+              <p style={{ margin: 0, fontWeight: 600 }}>💡 Quick Tips:</p>
+              <ul style={{ margin: '6px 0 0 0', paddingLeft: '20px', lineHeight: '1.6' }}>
+                <li>Works on any connection (HTTP/HTTPS)</li>
+                <li>Supports all barcode formats</li>
+                <li>Press Enter to submit quickly</li>
+              </ul>
+            </div>
+            {lastScanned && (<div style={styles.scanSuccess}><Icons.CheckCircle width={20} height={20} /><span>Submitted: <strong>{lastScanned}</strong> — Processing...</span></div>)}
+          </div>
+        )}
+
+        {/* CLIPBOARD PASTE MODE */}
+        {activeMode === 'clipboard' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ textAlign: 'center', padding: '8px', color: theme.textSecondary, fontSize: '13px' }}>
+              <p style={{ margin: 0 }}>Paste tracking number from your clipboard</p>
+            </div>
+            <button onClick={handlePasteFromClipboard} style={{ ...styles.btnPrimary, padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontSize: '15px' }}>
+              <Icons.Clipboard width={20} height={20} />
+              Paste from Clipboard
+            </button>
+            {pasteSuccess && (<div style={styles.scanSuccess}><Icons.CheckCircle width={20} height={20} /><span>{pasteSuccess} — Processing...</span></div>)}
+            {error && <div style={{ padding: '10px 14px', backgroundColor: '#fee2e2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}><Icons.AlertTriangle width={16} height={16} />{error}</div>}
+            <div style={{ padding: '12px', backgroundColor: theme.infoBg, borderRadius: '8px', border: `1px solid ${theme.infoBorder}`, fontSize: '12px', color: theme.infoText }}>
+              <p style={{ margin: 0, fontWeight: 600 }}>📋 How to use:</p>
+              <ol style={{ margin: '6px 0 0 0', paddingLeft: '20px', lineHeight: '1.6' }}>
+                <li>Copy tracking number from any source</li>
+                <li>Click the button above</li>
+                <li>Allow clipboard access if prompted</li>
+                <li>System will auto-process the code</li>
+              </ol>
+            </div>
+            <div style={{ textAlign: 'center', color: theme.textMuted, fontSize: '12px' }}>
+              <p style={{ margin: 0 }}>Or type manually: <button onClick={() => setActiveMode('manual')} style={{ background: 'none', border: 'none', color: '#4f46e5', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}>Switch to Manual Input</button></p>
+            </div>
+          </div>
+        )}
+
+        {/* Last scanned result */}
+        {lastScanned && activeMode !== 'manual' && activeMode !== 'clipboard' && (
+          <div style={{ padding: '12px', backgroundColor: theme.successBg, borderRadius: '8px', border: `1px solid ${theme.successBorder}`, display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Icons.CheckCircle width={20} height={20} style={{ color: '#16a34a' }} />
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontSize: '12px', color: theme.successText, fontWeight: 600 }}>Successfully scanned:</p>
+              <p style={{ margin: '2px 0 0 0', fontSize: '16px', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace' }}>{lastScanned}</p>
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+          <button onClick={onClose} style={{ ...styles.btnPrimary, backgroundColor: styles.btnSecondaryBg, color: styles.btnSecondaryText }}>Close Scanner</button>
         </div>
       </div>
     </Modal>
@@ -653,7 +816,7 @@ function SmartRackView({ racks, parcels, onShelfClick, isAdmin, onToggleMaintena
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
           <div style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.8 }}>Total Shelves</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{totalShelves}</p></div>
-          <div style={{ backgroundColor: 'rgba(22,163,74,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}> Empty</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{emptyShelves}</p></div>
+          <div style={{ backgroundColor: 'rgba(22,163,74,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🟢 Empty</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{emptyShelves}</p></div>
           <div style={{ backgroundColor: 'rgba(220,38,38,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔴 Occupied</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{occupiedShelves}</p></div>
           <div style={{ backgroundColor: 'rgba(37,99,235,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔵 Ready</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{readyShelves}</p></div>
           {maintenanceShelves > 0 && (<div style={{ backgroundColor: 'rgba(217,119,6,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🟠 Maintenance</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{maintenanceShelves}</p></div>)}
@@ -772,7 +935,7 @@ function ShelfDetailModal({ shelf, rackLetter, parcel, onClose, isAdmin, onToggl
           </div>
           <div style={{ padding: '12px', backgroundColor: styles.sectionBg, borderRadius: '8px' }}>
             <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Occupancy Sensor</p>
-            <p style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: shelf.maintenance ? '#d97706' : shelf.status === 'empty' ? '#16a34a' : '#dc2626' }}>{shelf.maintenance ? '🔧 Maint.' : shelf.status === 'empty' ? '✓ Clear' : '● Detected'}</p>
+            <p style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: shelf.maintenance ? '#d97706' : shelf.status === 'empty' ? '#16a34a' : '#dc2626' }}>{shelf.maintenance ? ' Maint.' : shelf.status === 'empty' ? '✓ Clear' : '● Detected'}</p>
             <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: theme.textMuted }}>Real-time monitoring</p>
           </div>
         </div>
@@ -882,7 +1045,6 @@ export default function ParcelManagementSystem() {
   const [selectedShelf, setSelectedShelf] = useState(null);
   const [maintenanceModal, setMaintenanceModal] = useState(null);
 
-  // ===== THEME STATE =====
   const [theme, setTheme] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.THEME);
@@ -1114,9 +1276,20 @@ export default function ParcelManagementSystem() {
     setMockUsers(prev => prev.map(u => u.username === updatedUser.username ? updatedUser : u));
   };
 
-  const handleBarcodeScan = (decodedText) => {
-    if (scannerCallback) { scannerCallback(decodedText); setScannerCallback(null); }
-    else { const cleanText = decodedText.trim().toUpperCase(); setScannedTracking(cleanText); setAdminForm(prev => ({ ...prev, trackingNo: cleanText })); }
+  // ===== UNIVERSAL SCAN HANDLER - Works with all scan modes =====
+  const handleUniversalScan = (decodedText) => {
+    const cleanText = decodedText.trim();
+    if (!cleanText) return;
+    
+    if (scannerCallback) {
+      scannerCallback(cleanText);
+      setScannerCallback(null);
+    } else {
+      const upperText = cleanText.toUpperCase();
+      setScannedTracking(upperText);
+      setAdminForm(prev => ({ ...prev, trackingNo: upperText }));
+      showNotification(`✅ Barcode/QR scanned: "${upperText}" — Auto-filled into tracking field`);
+    }
     setScannerOpen(false);
   };
 
@@ -1198,14 +1371,7 @@ export default function ParcelManagementSystem() {
             <img src={IPGKPP_LOGO} alt="IPGKPP" style={styles.headerInstitutionLogo} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* ===== THEME TOGGLE BUTTON ===== */}
-            <button
-              onClick={toggleTheme}
-              title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
-              style={styles.themeToggle}
-              onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.themeToggleHover; }}
-              onMouseOut={(e) => { e.currentTarget.style.backgroundColor = styles.themeToggleBg; }}
-            >
+            <button onClick={toggleTheme} title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`} style={styles.themeToggle} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.themeToggleHover; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = styles.btnSecondaryBg; }}>
               {theme === 'light' ? <Icons.Moon width={18} height={18} /> : <Icons.Sun width={18} height={18} />}
             </button>
 
@@ -1223,7 +1389,6 @@ export default function ParcelManagementSystem() {
                       <p style={{ fontSize: '12px', color: themeObj.textSecondary, margin: '2px 0 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</p>
                     </div>
                   </div>
-                  {/* ===== THEME TOGGLE IN DROPDOWN ===== */}
                   <button onClick={() => { toggleTheme(); }} style={styles.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.dropdownHover; e.currentTarget.style.color = styles.dropdownHoverText; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = themeObj.text; }}>
                     {theme === 'light' ? <Icons.Moon width={18} height={18} /> : <Icons.Sun width={18} height={18} />}
                     {theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
@@ -1359,7 +1524,10 @@ export default function ParcelManagementSystem() {
       )}
 
       {verifyParcel && (<CollectionVerifier parcel={verifyParcel} onClose={() => setVerifyParcel(null)} onVerify={handleVerifiedCollect} onOpenScanner={openScannerForVerification} theme={themeObj} />)}
-      {scannerOpen && (<BarcodeScanner onScan={handleBarcodeScan} onClose={() => { setScannerOpen(false); setScannerCallback(null); }} theme={themeObj} />)}
+      
+      {/* UNIVERSAL SCANNER - Works with or without HTTPS */}
+      {scannerOpen && (<UniversalScanner onScan={handleUniversalScan} onClose={() => { setScannerOpen(false); setScannerCallback(null); }} theme={themeObj} />)}
+      
       {picModalOpen && (<ProfilePicUpload currentUser={user} onUpdate={handleUpdateProfilePic} onClose={() => setPicModalOpen(false)} theme={themeObj} />)}
 
       {selectedShelf && (
@@ -1419,7 +1587,7 @@ function RackManagementView({ racks, parcels, onToggleShelf, onToggleRack, onOpe
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
           <div style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.8 }}>Total Shelves</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{totalShelves}</p></div>
-          <div style={{ backgroundColor: 'rgba(22,163,74,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}> Available</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{availableShelves}</p></div>
+          <div style={{ backgroundColor: 'rgba(22,163,74,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🟢 Available</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{availableShelves}</p></div>
           <div style={{ backgroundColor: 'rgba(220,38,38,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔴 Occupied</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{occupiedShelves}</p></div>
           <div style={{ backgroundColor: 'rgba(217,119,6,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🟠 Maintenance</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{maintenanceShelves}</p></div>
         </div>
@@ -1465,7 +1633,7 @@ function RackManagementView({ racks, parcels, onToggleShelf, onToggleRack, onOpe
                         {parcel && <span style={{ fontSize: '10px', color: theme.textSecondary }}>({parcel.trackingNo})</span>}
                       </div>
                       <span style={{ fontSize: '10px', fontWeight: 600, color: shelf.maintenance ? theme.maintenanceText : shelf.status === 'occupied' ? theme.occupiedText : theme.availableText, textTransform: 'uppercase' }}>
-                        {shelf.maintenance ? '🔧 Maint.' : shelf.status === 'occupied' ? '● Occ.' : '✓ Empty'}
+                        {shelf.maintenance ? ' Maint.' : shelf.status === 'occupied' ? '● Occ.' : '✓ Empty'}
                       </span>
                     </div>
                   );
@@ -1473,7 +1641,7 @@ function RackManagementView({ racks, parcels, onToggleShelf, onToggleRack, onOpe
               </div>
 
               <div style={{ padding: '12px', borderTop: `1px solid ${theme.border}`, backgroundColor: styles.cardBg, borderRadius: '0 0 12px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <button onClick={() => onOpenDetail(rack.letter)} style={{ width: '100%', padding: '8px', backgroundColor: theme.iconBg, color: theme.iconColor, border: `1px solid ${themeObj => theme === 'dark' ? '#4338ca' : '#c7d2fe'}`, borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Icons.Settings width={14} height={14} />Manage Shelves</button>
+                <button onClick={() => onOpenDetail(rack.letter)} style={{ width: '100%', padding: '8px', backgroundColor: theme.iconBg, color: theme.iconColor, border: `1px solid ${theme === 'dark' ? '#4338ca' : '#c7d2fe'}`, borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Icons.Settings width={14} height={14} />Manage Shelves</button>
                 <button onClick={() => onToggleRack(rack.letter)} style={{ width: '100%', padding: '8px', backgroundColor: isFullyMaintenance ? theme.availableBg : theme.maintenanceBg, color: isFullyMaintenance ? theme.availableText : theme.maintenanceText, border: `1px solid ${isFullyMaintenance ? theme.availableBorder : theme.maintenanceBorder}`, borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                   {isFullyMaintenance ? <><Icons.Check width={14} height={14} />Mark All Available</> : <><Icons.Wrench width={14} height={14} />Set Entire Rack to Maintenance</>}
                 </button>
@@ -1526,13 +1694,14 @@ function DetailRow({ label, value, valueColor, theme }) {
 }
 
 function Modal({ title, children, onClose, large, xlarge, theme }) {
-  const styles = createStyles(theme || THEMES.light);
+  const t = theme || THEMES.light;
+  const styles = createStyles(t);
   return (
     <div style={styles.modal} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={xlarge ? styles.modalContentXLarge : large ? styles.modalContentLarge : styles.modalContent}>
         <div style={styles.modalHeader}>
-          <h3 style={{ fontSize: '18px', fontWeight: 600, color: theme?.text || '#0f172a', margin: 0 }}>{title}</h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme?.textSecondary || '#64748b', padding: '4px', borderRadius: '6px' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.btnSecondaryBg; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 600, color: t.text, margin: 0 }}>{title}</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.textSecondary, padding: '4px', borderRadius: '6px' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.btnSecondaryBg; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
             <Icons.X width={20} height={20} />
           </button>
         </div>
@@ -1544,22 +1713,22 @@ function Modal({ title, children, onClose, large, xlarge, theme }) {
 
 function AuthView({ onLogin, onSignUp, view, setView, theme }) {
   return (
-    <div style={{ minHeight: '100vh', background: theme.authBg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: theme.authBg || 'linear-gradient(135deg, #0f172a 0%, #312e81 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
       <div style={{ marginBottom: '32px', textAlign: 'center' }}>
         <img src={IPGKPP_LOGO} alt="IPGKPP" style={{ width: '360px', height: 'auto', marginBottom: '16px', objectFit: 'contain' }} />
         <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.025em' }}>IPGKPP Smart Rack Parcel Management System</h1>
         <p style={{ color: '#c7d2fe', marginTop: '4px', fontSize: '13px' }}>Secure, efficient campus logistics tracking with IoT</p>
       </div>
-      <div style={{ width: '100%', maxWidth: '448px', backgroundColor: theme.authCardBg, borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', borderBottom: `1px solid ${theme.authBorder}` }}>
-          <button onClick={() => setView('login')} style={{ flex: 1, padding: '16px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', borderBottom: view === 'login' ? '2px solid #4f46e5' : 'none', backgroundColor: view === 'login' ? theme.authTabActive : 'transparent', color: view === 'login' ? theme.authTabActiveText : theme.authTabInactiveText, transition: 'all 0.15s' }}>Sign In</button>
-          <button onClick={() => setView('signup')} style={{ flex: 1, padding: '16px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', borderBottom: view === 'signup' ? '2px solid #4f46e5' : 'none', backgroundColor: view === 'signup' ? theme.authTabActive : 'transparent', color: view === 'signup' ? theme.authTabActiveText : theme.authTabInactiveText, transition: 'all 0.15s' }}>Create Account</button>
+      <div style={{ width: '100%', maxWidth: '448px', backgroundColor: theme.authCardBg || '#ffffff', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', borderBottom: `1px solid ${theme.authBorder || '#f1f5f9'}` }}>
+          <button onClick={() => setView('login')} style={{ flex: 1, padding: '16px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', borderBottom: view === 'login' ? '2px solid #4f46e5' : 'none', backgroundColor: view === 'login' ? (theme.authTabActive || '#eef2ff') : 'transparent', color: view === 'login' ? (theme.authTabActiveText || '#4f46e5') : (theme.authTabInactiveText || '#64748b'), transition: 'all 0.15s' }}>Sign In</button>
+          <button onClick={() => setView('signup')} style={{ flex: 1, padding: '16px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', borderBottom: view === 'signup' ? '2px solid #4f46e5' : 'none', backgroundColor: view === 'signup' ? (theme.authTabActive || '#eef2ff') : 'transparent', color: view === 'signup' ? (theme.authTabActiveText || '#4f46e5') : (theme.authTabInactiveText || '#64748b'), transition: 'all 0.15s' }}>Create Account</button>
         </div>
         <div style={{ padding: '32px' }}>
           {view === 'login' ? <LoginForm onLogin={onLogin} theme={theme} /> : <SignUpForm onSignUp={onSignUp} theme={theme} />}
         </div>
       </div>
-      <footer style={{ marginTop: '32px', textAlign: 'center', color: theme.footerText, fontSize: '12px' }}>© {new Date().getFullYear()} IPGKPP Campus Logistics. All rights reserved.</footer>
+      <footer style={{ marginTop: '32px', textAlign: 'center', color: theme.footerText || '#94a3b8', fontSize: '12px' }}>© {new Date().getFullYear()} IPGKPP Campus Logistics. All rights reserved.</footer>
     </div>
   );
 }
@@ -1576,7 +1745,7 @@ function LoginForm({ onLogin, theme }) {
       </div>
       <div>
         <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: theme.text, marginBottom: '4px' }}>Password</label>
-        <input type="password" value={p} onChange={e => setP(e.target.value)} style={{ ...styles.input, boxSizing: 'border-box' }} placeholder={theme.placeholder} required />
+        <input type="password" value={p} onChange={e => setP(e.target.value)} style={{ ...styles.input, boxSizing: 'border-box' }} placeholder="••••••••" required />
       </div>
       <button type="submit" style={styles.btnPrimary}>Access Dashboard</button>
       <p style={{ fontSize: '11px', color: theme.textMuted, textAlign: 'center', margin: 0 }}>Demo: student1/staff1/admin — Password: 123456</p>
@@ -1712,7 +1881,7 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
         <div onClick={onGoToMaintenance} style={{ ...styles.statCard, cursor: 'pointer', background: 'linear-gradient(135deg, #92400e 0%, #d97706 100%)', color: 'white', border: 'none' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(146,64,14,0.3)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px' }}><Icons.Wrench width={24} height={24} /></div>
-            <span style={{ fontSize: '12px', opacity: 0.9, fontWeight: 600 }}> MAINTENANCE ALERT</span>
+            <span style={{ fontSize: '12px', opacity: 0.9, fontWeight: 600 }}>⚠ MAINTENANCE ALERT</span>
           </div>
           <p style={{ fontSize: '28px', fontWeight: 700, margin: '0 0 4px 0' }}>{stats.racksMaintenance}</p>
           <p style={{ fontSize: '13px', opacity: 0.9, margin: 0 }}>shelves under maintenance — Click to manage</p>
@@ -1781,7 +1950,7 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
                   <td style={styles.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.trackingNo}</span></td>
                   <td style={styles.td}>{p.sender}</td>
                   <td style={styles.td}>{p.recipient}</td>
-                  <td style={styles.td}>{p.rackLocation ? <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</span> : <span style={{ color: theme.textMuted }}>{theme.bullet}</span>}</td>
+                  <td style={styles.td}>{p.rackLocation ? <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</span> : <span style={{ color: theme.textMuted }}>—</span>}</td>
                   <td style={styles.td}><span style={styles.badge(p.status)}>{p.status}</span></td>
                   <td style={styles.td}>{p.dateReceived}</td>
                   <td style={styles.td}>{p.status === 'Arrived' && (<button onClick={() => onRequestCollect(p)} style={{ padding: '4px 12px', backgroundColor: theme.iconBg, color: theme.iconColor, fontSize: '12px', fontWeight: 600, borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><Icons.Lock width={14} height={14} />Verify</button>)}</td>
@@ -1923,7 +2092,7 @@ function AdminView({ parcels, form, setForm, onAdd, onRequestCollect, onDelete, 
                 <tr key={p.id} style={{ transition: 'background-color 0.15s' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.tableRowHover; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
                   <td style={styles.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.trackingNo}</span></td>
                   <td style={styles.td}>{p.recipient}</td>
-                  <td style={styles.td}>{p.rackLocation ? <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</span> : <span style={{ color: theme.textMuted }}>{theme.bullet}</span>}</td>
+                  <td style={styles.td}>{p.rackLocation ? <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</span> : <span style={{ color: theme.textMuted }}>—</span>}</td>
                   <td style={{ ...styles.td, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description || '-'}</td>
                   <td style={styles.td}><span style={styles.badge(p.status)}>{p.status}</span></td>
                   <td style={styles.td}>
