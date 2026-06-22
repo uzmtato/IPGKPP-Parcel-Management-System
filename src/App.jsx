@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { supabase } from './services/supabaseClient';
 import {
   clearCloudSession,
   getCloudProfileByEmail,
@@ -2012,6 +2013,159 @@ function SignUpForm({ onSignUp, theme }) {
   );
 }
 
+function SupabaseItemsDemo({ theme }) {
+  const [items, setItems] = useState([]);
+  const [newItem, setNewItem] = useState({ name: '', quantity: '', price: '' });
+  const [loading, setLoading] = useState(true);
+  const styles = createStyles(theme);
+
+  const fetchItems = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('items')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching items:', error);
+      setItems([]);
+    } else {
+      setItems(data || []);
+    }
+    setLoading(false);
+  };
+
+  const addItem = async (e) => {
+    e.preventDefault();
+    if (!newItem.name.trim()) {
+      alert('Sila masukkan nama item');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('items')
+      .insert([{
+        name: newItem.name.trim(),
+        quantity: parseInt(newItem.quantity, 10) || 0,
+        price: parseFloat(newItem.price) || 0,
+      }])
+      .select();
+
+    if (error) {
+      console.error('Error adding item:', error);
+      alert('Gagal tambah item');
+    } else {
+      setNewItem({ name: '', quantity: '', price: '' });
+    }
+  };
+
+  const updateItem = async (id, field, value) => {
+    const { error } = await supabase
+      .from('items')
+      .update({ [field]: value })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error updating item:', error);
+    }
+  };
+
+  const deleteItem = async (id) => {
+    const { error } = await supabase
+      .from('items')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting item:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchItems();
+
+    const channel = supabase
+      .channel('items-changes')
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'items',
+        },
+        (payload) => {
+          console.log('Realtime change:', payload);
+          if (payload.eventType === 'INSERT') {
+            setItems((prev) => [payload.new, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setItems((prev) => prev.map((item) => (item.id === payload.new.id ? payload.new : item)));
+          } else if (payload.eventType === 'DELETE') {
+            setItems((prev) => prev.filter((item) => item.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  return (
+    <div style={{ ...styles.card, padding: '20px', marginBottom: '24px' }}>
+      <h3 style={{ margin: '0 0 16px 0', color: theme.text, fontSize: '18px' }}>Supabase Real-time Items</h3>
+      <form onSubmit={addItem} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px 120px', gap: '10px', marginBottom: '16px' }}>
+        <input
+          type="text"
+          placeholder="Nama item"
+          value={newItem.name}
+          onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+          style={{ ...styles.input, minWidth: '180px' }}
+        />
+        <input
+          type="number"
+          placeholder="Kuantiti"
+          value={newItem.quantity}
+          onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
+          style={styles.input}
+        />
+        <input
+          type="number"
+          placeholder="Harga"
+          value={newItem.price}
+          onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+          style={styles.input}
+        />
+        <button type="submit" style={{ padding: '10px 14px', backgroundColor: '#4f46e5', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+          Tambah
+        </button>
+      </form>
+
+      {loading ? (
+        <p style={{ color: theme.textSecondary }}>⏳ Memuatkan data Supabase...</p>
+      ) : items.length === 0 ? (
+        <p style={{ color: theme.textSecondary }}>Tiada item ditemui dalam jadual Supabase.</p>
+      ) : (
+        items.map((item) => (
+          <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', padding: '12px', backgroundColor: theme.surface, borderRadius: '10px', border: `1px solid ${theme.border}`, marginBottom: '10px' }}>
+            <div>
+              <strong style={{ display: 'block', color: theme.text }}>{item.name}</strong>
+              <span style={{ color: theme.textSecondary, fontSize: '13px' }}>Kuantiti: {item.quantity || 0} | Harga: RM{item.price || 0}</span>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button type="button" onClick={() => updateItem(item.id, 'quantity', (item.quantity || 0) + 1)} style={{ ...styles.btnSecondary, minWidth: '40px', padding: '8px' }}>+1</button>
+              <button type="button" onClick={() => updateItem(item.id, 'quantity', Math.max(0, (item.quantity || 0) - 1))} style={{ ...styles.btnSecondary, minWidth: '40px', padding: '8px' }}>-1</button>
+              <button type="button" onClick={() => deleteItem(item.id)} style={{ ...styles.btnDanger, minWidth: '40px', padding: '8px' }}>Padam</button>
+            </div>
+          </div>
+        ))
+      )}
+      <div style={{ marginTop: '12px', padding: '12px', backgroundColor: theme.infoBg, borderRadius: '10px', border: `1px solid ${theme.infoBorder}`, color: theme.infoText }}>
+        <strong>✅ Real-time Active:</strong> Semua perubahan akan dikemas kini secara automatik dari Supabase.
+      </div>
+    </div>
+  );
+}
+
 function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParcel, onRequestCollect, stats, isAdmin, user, racks, onGoToRack, onGoToMaintenance, theme }) {
   const cardGrid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' };
   const styles = createStyles(theme);
@@ -2023,6 +2177,8 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
           <Icons.Users width={16} height={16} />Administrator View: Showing all system parcels
         </div>
       )}
+
+      <SupabaseItemsDemo theme={theme} />
 
       <div style={{ backgroundColor: '#4f46e5', borderRadius: '12px', padding: '24px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', position: 'relative', zIndex: 1 }}>
         <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff', margin: '0 0 8px 0' }}>Track Your Parcel</h2>
