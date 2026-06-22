@@ -1089,6 +1089,7 @@ export default function ParcelManagementSystem() {
   const [maintenanceModal, setMaintenanceModal] = useState(null);
   const [cloudSession, setCloudSession] = useState(null);
   const [cloudReady, setCloudReady] = useState(!isCloudConfigured);
+  const [cloudSchemaMissing, setCloudSchemaMissing] = useState(false);
   const cloudPollRef = useRef(null);
 
   const [theme, setTheme] = useState(() => {
@@ -1144,11 +1145,16 @@ export default function ParcelManagementSystem() {
       }
 
       const token = activeSession?.access_token;
-      const [profiles, cloudParcels, cloudRacks] = await Promise.all([
+      // Use allSettled so a missing table or partial failure doesn't abort the entire sync
+      const results = await Promise.allSettled([
         listCloudProfiles(token),
         getCloudState('parcels', DEFAULT_PARCELS, token),
         getCloudState('racks', DEFAULT_RACKS, token),
       ]);
+
+      const profiles = results[0].status === 'fulfilled' ? results[0].value : [];
+      const cloudParcels = results[1].status === 'fulfilled' ? results[1].value : DEFAULT_PARCELS;
+      const cloudRacks = results[2].status === 'fulfilled' ? results[2].value : DEFAULT_RACKS;
 
       setCloudSession(activeSession || null);
       setMockUsers(profiles);
@@ -1164,6 +1170,10 @@ export default function ParcelManagementSystem() {
     } catch (error) {
       console.error('Cloud sync failed:', error);
       if (silent) return;
+      const isSchemaError = error?.message?.includes('PGRST205') || error?.message?.includes('42703');
+      if (isSchemaError) {
+        setCloudSchemaMissing(true);
+      }
       clearCloudSession();
       setCloudSession(null);
       setUser(null);
@@ -1181,12 +1191,12 @@ export default function ParcelManagementSystem() {
   }, [loadCloudData]);
 
   useEffect(() => {
-    if (!isCloudConfigured || !cloudReady) return;
+    if (!isCloudConfigured || !cloudReady || cloudSchemaMissing) return;
     cloudPollRef.current = setInterval(() => {
       loadCloudData(cloudSession || getSavedCloudSession(), true);
     }, 10000);
     return () => clearInterval(cloudPollRef.current);
-  }, [cloudReady, cloudSession, loadCloudData]);
+  }, [cloudReady, cloudSession, cloudSchemaMissing, loadCloudData]);
 
   useEffect(() => {
     const checkOverdue = () => {

@@ -1,178 +1,224 @@
-import { supabaseUrl as FALLBACK_SUPABASE_URL, supabaseAnonKey as FALLBACK_SUPABASE_ANON_KEY } from './supabaseClient';
+import { supabase } from './supabaseClient'
+export { isCloudConfigured } from './supabaseClient'
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || FALLBACK_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || FALLBACK_SUPABASE_ANON_KEY;
+const isMissingSchemaError = (error) => {
+  return error?.code === 'PGRST205' || error?.code === '42703'
+}
 
-export const isCloudConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
-
-const SESSION_KEY = 'ipgkpp_supabase_session';
-
-const normalizeBaseUrl = (url) => url?.replace(/\/$/, '');
-
-const toSnakeProfile = (user) => ({
-  auth_user_id: user.authUserId || user.auth_user_id || null,
-  username: user.username,
-  email: user.email,
-  name: user.name,
-  id_no: user.idNo || user.id_no || '',
-  phone: user.phone || '',
-  role: user.role || 'student',
-  profile_pic: user.profilePic || user.profile_pic || '',
-  created_at: user.createdAt || user.created_at || new Date().toISOString(),
-});
-
-const toCamelProfile = (row) => ({
-  authUserId: row.auth_user_id,
-  username: row.username,
-  email: row.email,
-  name: row.name,
-  idNo: row.id_no || '',
-  phone: row.phone || '',
-  role: row.role || 'student',
-  profilePic: row.profile_pic || '',
-  createdAt: row.created_at,
-});
-
-const request = async (path, { method = 'GET', body, token, headers = {} } = {}) => {
-  if (!isCloudConfigured) throw new Error('Cloud database is not configured.');
-
-  const response = await fetch(`${normalizeBaseUrl(SUPABASE_URL)}${path}`, {
-    method,
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${token || SUPABASE_ANON_KEY}`,
-      'Content-Type': 'application/json',
-      ...headers,
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || `Cloud request failed with ${response.status}`);
-  }
-
-  if (response.status === 204) return null;
-  const text = await response.text();
-  return text ? JSON.parse(text) : null;
-};
-
-export const saveCloudSession = (session) => {
-  if (!session) localStorage.removeItem(SESSION_KEY);
-  else localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-};
-
+// ===== SESSION MANAGEMENT =====
 export const getSavedCloudSession = () => {
   try {
-    const saved = localStorage.getItem(SESSION_KEY);
-    return saved ? JSON.parse(saved) : null;
+    const saved = localStorage.getItem('ipgkpp_cloud_session')
+    return saved ? JSON.parse(saved) : null
   } catch {
-    return null;
+    return null
   }
-};
+}
 
-export const clearCloudSession = () => saveCloudSession(null);
+export const saveCloudSession = (session) => {
+  try {
+    localStorage.setItem('ipgkpp_cloud_session', JSON.stringify(session))
+  } catch (e) {
+    console.error('Failed to save session:', e)
+  }
+}
 
-export const signUpCloudUser = async (data) => {
-  const auth = await request('/auth/v1/signup', {
-    method: 'POST',
-    body: {
-      email: data.email,
-      password: data.password,
-      data: { username: data.username, role: data.role },
-    },
-  });
-
-  const session = auth.session || null;
-  const profile = {
-    ...data,
-    authUserId: auth.user?.id || null,
-    profilePic: '',
-    createdAt: new Date().toISOString(),
-  };
-  delete profile.password;
-
-  await upsertCloudProfile(profile, session?.access_token);
-  if (session) saveCloudSession(session);
-  return { user: profile, session };
-};
-
-export const signInCloudUser = async (usernameOrEmail, password) => {
-  const email = usernameOrEmail.includes('@')
-    ? usernameOrEmail
-    : await getEmailForUsername(usernameOrEmail);
-
-  const auth = await request('/auth/v1/token?grant_type=password', {
-    method: 'POST',
-    body: { email, password },
-  });
-
-  saveCloudSession(auth);
-  const profile = await getCloudProfileByEmail(email, auth.access_token);
-  return { session: auth, user: { ...profile, lastLogin: new Date().toISOString() } };
-};
+export const clearCloudSession = () => {
+  try {
+    localStorage.removeItem('ipgkpp_cloud_session')
+  } catch (e) {
+    console.error('Failed to clear session:', e)
+  }
+}
 
 export const refreshCloudSession = async (session) => {
-  if (!session?.refresh_token) return null;
-  const refreshed = await request('/auth/v1/token?grant_type=refresh_token', {
-    method: 'POST',
-    body: { refresh_token: session.refresh_token },
-  });
-  saveCloudSession(refreshed);
-  return refreshed;
-};
+  const { data, error } = await supabase.auth.refreshSession({
+    refresh_token: session.refresh_token
+  })
+  if (error) throw error
+  saveCloudSession(data.session)
+  return data.session
+}
 
-export const updateCloudPassword = async (session, password) => {
-  const result = await request('/auth/v1/user', {
-    method: 'PUT',
-    token: session?.access_token,
-    body: { password },
-  });
-  return result;
-};
+// ===== AUTH FUNCTIONS =====
+export const signInCloudUser = async (username, password) => {
+  // Login guna email + password (Supabase Auth)
+  // Tapi sebab kita guna username, kita query dulu untuk dapat email
+  const { data: user, error: userError } = await supabase
+    .from('users')
+    .select('*')
+    .eq('username', username)
+    .eq('password', password)
+    .single()
 
+  if (userError || !user) {
+    throw new Error('Invalid credentials')
+  }
+
+  const session = {
+    access_token: 'local_' + user.id,
+    refresh_token: 'local_refresh_' + user.id,
+    user: { email: user.email, id: user.id },
+    expires_at: Math.floor(Date.now() / 1000) + 3600
+  }
+
+  saveCloudSession(session)
+  return { session, user }
+}
+
+export const signUpCloudUser = async (data) => {
+  const newUser = {
+    username: data.username,
+    email: data.email,
+    password: data.password,
+    name: data.name,
+    id_no: data.idNo,
+    phone: data.phone,
+    role: data.role || 'student',
+    profile_pic: '',
+    created_at: new Date().toISOString()
+  }
+
+  const { data: inserted, error } = await supabase
+    .from('users')
+    .insert([newUser])
+    .select()
+    .single()
+
+  if (error) throw error
+
+  const session = {
+    access_token: 'local_' + inserted.id,
+    refresh_token: 'local_refresh_' + inserted.id,
+    user: { email: inserted.email, id: inserted.id },
+    expires_at: Math.floor(Date.now() / 1000) + 3600
+  }
+
+  saveCloudSession(session)
+  return { session }
+}
+
+export const updateCloudPassword = async (session, newPassword) => {
+  const userId = session.user?.id
+  if (!userId) throw new Error('No user ID')
+
+  const { error } = await supabase
+    .from('users')
+    .update({ password: newPassword })
+    .eq('id', userId)
+
+  if (error) throw error
+}
+
+// ===== PROFILE FUNCTIONS =====
 export const listCloudProfiles = async (token) => {
-  const rows = await request('/rest/v1/profiles?select=*&order=created_at.asc', { token });
-  return (rows || []).map(toCamelProfile);
-};
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    if (isMissingSchemaError(error)) return []
+    throw error
+  }
+  return data || []
+}
 
 export const getCloudProfileByEmail = async (email, token) => {
-  const rows = await request(`/rest/v1/profiles?email=eq.${encodeURIComponent(email)}&select=*&limit=1`, { token });
-  if (!rows?.length) throw new Error('Profile not found.');
-  return toCamelProfile(rows[0]);
-};
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('email', email)
+    .single()
 
-export const getCloudProfileByUsername = async (username, token) => {
-  const rows = await request(`/rest/v1/profiles?username=eq.${encodeURIComponent(username)}&select=*&limit=1`, { token });
-  return rows?.length ? toCamelProfile(rows[0]) : null;
-};
+  if (error) {
+    if (isMissingSchemaError(error)) return null
+    throw error
+  }
+  return data
+}
 
-export const getEmailForUsername = async (username) => {
-  const profile = await getCloudProfileByUsername(username);
-  if (!profile?.email) throw new Error('Username not found.');
-  return profile.email;
-};
+export const upsertCloudProfile = async (profile, token) => {
+  const { data, error } = await supabase
+    .from('users')
+    .upsert({
+      id: profile.id,
+      username: profile.username,
+      email: profile.email,
+      name: profile.name,
+      phone: profile.phone,
+      profile_pic: profile.profilePic || '',
+      role: profile.role
+    })
+    .select()
+    .single()
 
-export const upsertCloudProfile = async (user, token) => {
-  const [row] = await request('/rest/v1/profiles?on_conflict=username', {
-    method: 'POST',
-    token,
-    headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
-    body: toSnakeProfile(user),
-  });
-  return toCamelProfile(row);
-};
+  if (error) throw error
+  return data
+}
 
-export const getCloudState = async (id, fallback, token) => {
-  const rows = await request(`/rest/v1/app_state?id=eq.${encodeURIComponent(id)}&select=value&limit=1`, { token });
-  return rows?.length ? rows[0].value : fallback;
-};
+// ===== STATE MANAGEMENT (Parcels & Racks) =====
+export const getCloudState = async (key, defaultValue, token) => {
+  try {
+    if (key === 'parcels') {
+      const { data, error } = await supabase
+        .from('parcels')
+        .select('*')
+        .order('created_at', { ascending: false })
 
-export const saveCloudState = async (id, value, token) => {
-  await request('/rest/v1/app_state?on_conflict=id', {
-    method: 'POST',
-    token,
-    headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: { id, value, updated_at: new Date().toISOString() },
-  });
-};
+      if (error) {
+        if (isMissingSchemaError(error)) return defaultValue
+        throw error
+      }
+      return data || []
+    }
+
+    if (key === 'racks') {
+      const { data, error } = await supabase
+        .from('racks')
+        .select('rack_data')
+        .eq('id', 1)
+        .single()
+
+      if (error) {
+        if (isMissingSchemaError(error)) return defaultValue
+        throw error
+      }
+      return data?.rack_data || defaultValue
+    }
+
+    return defaultValue
+  } catch (error) {
+      if (isMissingSchemaError(error)) return defaultValue
+      console.error(`Error getting ${key}:`, error)
+      return defaultValue
+  }
+}
+
+export const saveCloudState = async (key, value, token) => {
+  try {
+    if (key === 'parcels') {
+      // Delete semua parcels lama, insert yang baru
+      await supabase.from('parcels').delete().neq('id', 0)
+      
+      if (value.length > 0) {
+        const { error } = await supabase
+          .from('parcels')
+          .insert(value)
+        
+        if (error) throw error
+      }
+    }
+
+    if (key === 'racks') {
+      const { error } = await supabase
+        .from('racks')
+        .upsert({ id: 1, rack_data: value, updated_at: new Date().toISOString() })
+      
+      if (error) throw error
+    }
+  } catch (error) {
+    console.error(`Error saving ${key}:`, error)
+    throw error
+  }
+}

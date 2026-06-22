@@ -1,3 +1,41 @@
+-- Current app schema for cloud sync
+-- The frontend expects users, parcels, and racks tables.
+
+create table if not exists public.users (
+  id serial primary key,
+  username text unique,
+  email text unique not null,
+  password text,
+  name text,
+  id_no text,
+  phone text,
+  role text not null default 'student',
+  profile_pic text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.parcels (
+  id serial primary key,
+  trackingNo text,
+  sender text,
+  recipient text,
+  status text,
+  dateReceived date,
+  location text,
+  description text,
+  otp text,
+  rackLocation text,
+  weight text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.racks (
+  id integer primary key,
+  rack_data jsonb not null,
+  updated_at timestamptz not null default now()
+);
+
+-- Keep older helper tables if needed for previous versions
 create table if not exists public.profiles (
   username text primary key,
   auth_user_id uuid references auth.users(id) on delete set null,
@@ -16,37 +54,5 @@ create table if not exists public.app_state (
   updated_at timestamptz not null default now()
 );
 
-alter table public.profiles enable row level security;
-alter table public.app_state enable row level security;
-
-drop policy if exists "profiles can be read by app users" on public.profiles;
-create policy "profiles can be read by app users"
-on public.profiles for select
-using (true);
-
-drop policy if exists "profiles can be created during signup" on public.profiles;
-create policy "profiles can be created during signup"
-on public.profiles for insert
-with check (true);
-
-drop policy if exists "profiles can be updated by signed in users" on public.profiles;
-create policy "profiles can be updated by signed in users"
-on public.profiles for update
-using (auth.role() = 'authenticated')
-with check (auth.role() = 'authenticated');
-
-drop policy if exists "app state can be read by app users" on public.app_state;
-create policy "app state can be read by app users"
-on public.app_state for select
-using (true);
-
-drop policy if exists "app state can be created by signed in users" on public.app_state;
-create policy "app state can be created by signed in users"
-on public.app_state for insert
-with check (auth.role() = 'authenticated');
-
-drop policy if exists "app state can be updated by signed in users" on public.app_state;
-create policy "app state can be updated by signed in users"
-on public.app_state for update
-using (auth.role() = 'authenticated')
-with check (auth.role() = 'authenticated');
+-- For this app variant, keep RLS off on users/parcels/racks so anon access works with the current client setup.
+-- If you later migrate to Supabase Auth, add RLS policies and authenticated access rules.
