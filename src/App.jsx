@@ -1166,7 +1166,7 @@ export default function ParcelManagementSystem() {
       setParcels(Array.isArray(cloudParcels) ? cloudParcels : DEFAULT_PARCELS);
       setRacks(normalizeRacks(cloudRacks));
 
-      if (activeSession?.user?.email) {
+      if (activeSession?.user?.email && !silent) {
         const profile = await getCloudProfileByEmail(activeSession.user.email, token);
         if (profile) {
           setUser(profile);

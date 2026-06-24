@@ -16,21 +16,36 @@ create table if not exists public.users (
 
 create table if not exists public.parcels (
   id bigint primary key,
-  trackingNo text,
+  tracking_no text,
   sender text,
-  recipient text,
+  recipient_username text,
   status text,
-  dateReceived date,
+  date_received date,
   location text,
   description text,
   otp text,
-  rackLocation text,
+  rack_location text,
   weight text,
   created_at timestamptz not null default now()
 );
 
--- Run this once if your existing parcels table was created with serial/integer id.
+-- Run these once if your existing parcels table was created with older names.
 alter table public.parcels alter column id type bigint;
+do $$
+begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'parcels' and column_name = 'trackingno') then
+    alter table public.parcels rename column trackingno to tracking_no;
+  end if;
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'parcels' and column_name = 'recipient') then
+    alter table public.parcels rename column recipient to recipient_username;
+  end if;
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'parcels' and column_name = 'datereceived') then
+    alter table public.parcels rename column datereceived to date_received;
+  end if;
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'parcels' and column_name = 'racklocation') then
+    alter table public.parcels rename column racklocation to rack_location;
+  end if;
+end $$;
 
 create table if not exists public.racks (
   id integer primary key,

@@ -21,21 +21,36 @@ CREATE TABLE IF NOT EXISTS public.users (
 -- Stores parcel records
 CREATE TABLE IF NOT EXISTS public.parcels (
   id bigint PRIMARY KEY,
-  trackingNo text,
+  tracking_no text,
   sender text,
-  recipient text,
+  recipient_username text,
   status text,
-  dateReceived date,
+  date_received date,
   location text,
   description text,
   otp text,
-  rackLocation text,
+  rack_location text,
   weight text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
--- Run this once if the parcels table already exists with serial/integer id.
+-- Run this once if the parcels table already exists with older column names.
 ALTER TABLE public.parcels ALTER COLUMN id TYPE bigint;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'parcels' AND column_name = 'trackingno') THEN
+    ALTER TABLE public.parcels RENAME COLUMN trackingno TO tracking_no;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'parcels' AND column_name = 'recipient') THEN
+    ALTER TABLE public.parcels RENAME COLUMN recipient TO recipient_username;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'parcels' AND column_name = 'datereceived') THEN
+    ALTER TABLE public.parcels RENAME COLUMN datereceived TO date_received;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'parcels' AND column_name = 'racklocation') THEN
+    ALTER TABLE public.parcels RENAME COLUMN racklocation TO rack_location;
+  END IF;
+END $$;
 
 -- ===== Create Racks Table =====
 -- Stores rack configuration (JSON structure with all shelves)

@@ -2,7 +2,7 @@ import { supabase } from './supabaseClient'
 export { isCloudConfigured } from './supabaseClient'
 
 const isMissingSchemaError = (error) => {
-  return error?.code === 'PGRST205' || error?.code === '42703'
+  return error?.code === 'PGRST205' || error?.code === 'PGRST204' || error?.code === '42703'
 }
 
 const toAppParcel = (parcel) => {
@@ -10,12 +10,27 @@ const toAppParcel = (parcel) => {
   return {
     ...parcel,
     trackingNo: parcel.trackingNo ?? parcel.trackingno ?? parcel.tracking_no ?? '',
+    recipient: parcel.recipient ?? parcel.recipient_username ?? '',
     dateReceived: parcel.dateReceived ?? parcel.datereceived ?? parcel.date_received ?? '',
     rackLocation: parcel.rackLocation ?? parcel.racklocation ?? parcel.rack_location ?? '',
   }
 }
 
 const toDbParcel = (parcel) => ({
+  id: parcel.id,
+  tracking_no: parcel.trackingNo ?? parcel.trackingno ?? parcel.tracking_no ?? '',
+  sender: parcel.sender ?? '',
+  recipient_username: parcel.recipient ?? parcel.recipient_username ?? '',
+  status: parcel.status ?? 'Pending',
+  date_received: parcel.dateReceived ?? parcel.datereceived ?? parcel.date_received ?? null,
+  location: parcel.location ?? '',
+  description: parcel.description ?? '',
+  otp: parcel.otp ?? '',
+  rack_location: parcel.rackLocation ?? parcel.racklocation ?? parcel.rack_location ?? '',
+  weight: parcel.weight ?? '',
+})
+
+const toLegacyDbParcel = (parcel) => ({
   id: parcel.id,
   trackingno: parcel.trackingNo ?? parcel.trackingno ?? '',
   sender: parcel.sender ?? '',
@@ -26,20 +41,6 @@ const toDbParcel = (parcel) => ({
   description: parcel.description ?? '',
   otp: parcel.otp ?? '',
   racklocation: parcel.rackLocation ?? parcel.racklocation ?? '',
-  weight: parcel.weight ?? '',
-})
-
-const toCamelDbParcel = (parcel) => ({
-  id: parcel.id,
-  trackingNo: parcel.trackingNo ?? parcel.trackingno ?? '',
-  sender: parcel.sender ?? '',
-  recipient: parcel.recipient ?? '',
-  status: parcel.status ?? 'Pending',
-  dateReceived: parcel.dateReceived ?? parcel.datereceived ?? null,
-  location: parcel.location ?? '',
-  description: parcel.description ?? '',
-  otp: parcel.otp ?? '',
-  rackLocation: parcel.rackLocation ?? parcel.racklocation ?? '',
   weight: parcel.weight ?? '',
 })
 
@@ -262,7 +263,7 @@ export const upsertCloudParcels = async (parcels, token) => {
     .select()
 
   if (isMissingSchemaError(error)) {
-    const fallbackRows = parcels.map(toCamelDbParcel)
+    const fallbackRows = parcels.map(toLegacyDbParcel)
     const fallback = await supabase
       .from('parcels')
       .upsert(fallbackRows, { onConflict: 'id' })
