@@ -2195,8 +2195,6 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
         </div>
       )}
 
-      <SupabaseItemsDemo theme={theme} />
-
       <div style={{ backgroundColor: '#4f46e5', borderRadius: '12px', padding: '24px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', position: 'relative', zIndex: 1 }}>
         <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff', margin: '0 0 8px 0' }}>Track Your Parcel</h2>
         <p style={{ color: '#c7d2fe', marginBottom: '16px', fontSize: '14px' }}>Enter your tracking number to find the status and description of your package.</p>
