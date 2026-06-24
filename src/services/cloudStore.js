@@ -135,17 +135,25 @@ export const saveCloudUser = async (user) => {
     profile_pic: user.profilePic ?? user.profile_pic ?? '',
   }
 
-  if (user.id) payload.id = user.id
   if (!payload.password) delete payload.password
 
-  const { data, error } = await supabase
-    .from('users')
-    .upsert(payload, { onConflict: 'username' })
-    .select()
-    .single()
+  const query = user.id
+    ? supabase.from('users').update(payload).eq('id', user.id)
+    : supabase.from('users').insert([payload])
+
+  const { data, error } = await query.select().single()
 
   if (error) throw error
   return data
+}
+
+export const deleteCloudUser = async (id) => {
+  const { error } = await supabase
+    .from('users')
+    .delete()
+    .eq('id', id)
+
+  if (error) throw error
 }
 
 export const updateCloudPassword = async (session, newPassword) => {

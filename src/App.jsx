@@ -14,6 +14,7 @@ import {
   subscribeCloudChanges,
   updateCloudPassword,
   deleteCloudParcel,
+  deleteCloudUser,
   upsertCloudParcel,
   upsertCloudProfile,
 } from './services/cloudStore';
@@ -1427,6 +1428,32 @@ export default function ParcelManagementSystem() {
     });
   };
 
+  const handleAdminDeleteUser = async (targetUser) => {
+    if (!targetUser?.id && !targetUser?.username) return;
+    if (targetUser.role === 'admin') {
+      alert('Admin accounts cannot be deleted from this page.');
+      return;
+    }
+    if (!window.confirm(`Delete ${targetUser.name || targetUser.username}? This will remove the user account only.`)) return;
+
+    if (isCloudConfigured && cloudSession?.access_token) {
+      try {
+        await deleteCloudUser(targetUser.id);
+        setUsers(prev => prev.filter(u => u.id !== targetUser.id));
+        if (adminUserForm.id === targetUser.id) resetAdminUserForm();
+        showNotification('User deleted.');
+      } catch (error) {
+        console.error('Failed to delete user from cloud:', error);
+        alert(`Unable to delete user: ${error.message || 'Unknown error'}`);
+      }
+      return;
+    }
+
+    setUsers(prev => prev.filter(u => (targetUser.id ? u.id !== targetUser.id : u.username !== targetUser.username)));
+    if ((adminUserForm.id && adminUserForm.id === targetUser.id) || adminUserForm.username === targetUser.username) resetAdminUserForm();
+    showNotification('User deleted.');
+  };
+
   const handleToggleMaintenance = (rackLetter, shelfId, reason = '') => {
     setRacks(prev => prev.map(r => {
       if (r.letter !== rackLetter) return r;
@@ -1685,7 +1712,7 @@ export default function ParcelManagementSystem() {
 
   if (!user) return <AuthView onLogin={handleLogin} onSignUp={handleSignUp} view={view === 'dashboard' ? 'login' : view} setView={setView} theme={themeObj} />;
 
-  const viewTitles = { dashboard: 'Dashboard', myparcels: 'Parcel Tracking', admin: 'Admin Panel', rack: 'Smart Rack', rackmgmt: 'Rack Maintenance' };
+  const viewTitles = { dashboard: 'Dashboard', myparcels: 'Parcel Tracking', admin: 'Admin Panel', users: 'Student & Staff', rack: 'Smart Rack', rackmgmt: 'Rack Maintenance' };
 
   return (
     <div style={styles.app}>
@@ -1708,6 +1735,7 @@ export default function ParcelManagementSystem() {
             { id: 'myparcels', label: 'My Parcels', icon: Icons.Inbox },
             { id: 'rack', label: 'Smart Rack', icon: Icons.Layers },
             { id: 'rackmgmt', label: 'Rack Maintenance', icon: Icons.Wrench, adminOnly: true },
+            { id: 'users', label: 'Students & Staff', icon: Icons.User, adminOnly: true },
             { id: 'admin', label: 'Admin Panel', icon: Icons.Users, adminOnly: true }
           ].filter(item => !item.adminOnly || isAdmin).map(item => (
             <button key={item.id} onClick={() => { setView(item.id); setSidebarOpen(false); }} style={styles.navItem(view === item.id)}>
@@ -1815,8 +1843,12 @@ export default function ParcelManagementSystem() {
               />
             )}
 
+            {view === 'users' && isAdmin && (
+              <UserManagementView users={users} userForm={adminUserForm} setUserForm={setAdminUserForm} onSaveUser={handleAdminSaveUser} onEditUser={handleAdminEditUser} onDeleteUser={handleAdminDeleteUser} onCancelUserEdit={resetAdminUserForm} theme={themeObj} />
+            )}
+
             {view === 'admin' && isAdmin && (
-              <AdminView parcels={parcels} users={users} form={adminForm} setForm={setAdminForm} userForm={adminUserForm} setUserForm={setAdminUserForm} onSaveUser={handleAdminSaveUser} onEditUser={handleAdminEditUser} onCancelUserEdit={resetAdminUserForm} onAdd={handleAddParcel} onRequestCollect={handleRequestCollect} onDelete={handleDeleteParcel} onUpdateStatus={updateStatus} onOpenScanner={openScannerForTracking} scannedTracking={scannedTracking} racks={racks} theme={themeObj} />
+              <AdminView parcels={parcels} users={users} form={adminForm} setForm={setAdminForm} onAdd={handleAddParcel} onRequestCollect={handleRequestCollect} onDelete={handleDeleteParcel} onUpdateStatus={updateStatus} onOpenScanner={openScannerForTracking} scannedTracking={scannedTracking} racks={racks} theme={themeObj} />
             )}
 
             {totalPages > 1 && (view === 'dashboard' || view === 'myparcels' || view === 'admin') && (
@@ -2370,16 +2402,11 @@ function MyParcelsView({ parcels, user, theme }) {
   );
 }
 
-function AdminView({ parcels, users = [], form, setForm, userForm, setUserForm, onSaveUser, onEditUser, onCancelUserEdit, onAdd, onRequestCollect, onDelete, onUpdateStatus, onOpenScanner, scannedTracking, racks, theme }) {
+function UserManagementView({ users = [], userForm, setUserForm, onSaveUser, onEditUser, onDeleteUser, onCancelUserEdit, theme }) {
   const styles = createStyles(theme);
-  const up = (k) => (e) => { const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value; setForm(prev => ({ ...prev, [k]: value })); };
   const upUser = (k) => (e) => setUserForm(prev => ({ ...prev, [k]: e.target.value }));
-  const isOthers = form.sender === 'Others';
-  const emptyShelves = racks.flatMap(r => r.shelves.filter(s => s.status === 'empty' && !s.maintenance).map(s => ({ ...s, rackLetter: r.letter })));
-  const maintenanceShelves = racks.flatMap(r => r.shelves.filter(s => s.maintenance).map(s => ({ ...s, rackLetter: r.letter })));
-  const statusOptions = ['Pending', 'Arrived', 'Overdue', 'Collected'];
   const roleRank = { student: 1, staff: 2 };
-  const recipientOptions = users
+  const managedUsers = users
     .filter(u => u.role === 'student' || u.role === 'staff')
     .sort((a, b) => (roleRank[a.role] || 99) - (roleRank[b.role] || 99) || (a.name || a.username || '').localeCompare(b.name || b.username || ''));
 
@@ -2420,9 +2447,9 @@ function AdminView({ parcels, users = [], form, setForm, userForm, setUserForm, 
               </tr>
             </thead>
             <tbody>
-              {recipientOptions.length === 0 ? (
+              {managedUsers.length === 0 ? (
                 <tr><td colSpan="6" style={{ ...styles.td, textAlign: 'center', color: theme.textSecondary }}>No student or staff accounts yet</td></tr>
-              ) : recipientOptions.map(u => (
+              ) : managedUsers.map(u => (
                 <tr key={u.id || u.username}>
                   <td style={styles.td}>{u.name || '-'}</td>
                   <td style={styles.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{u.username}</span></td>
@@ -2430,7 +2457,10 @@ function AdminView({ parcels, users = [], form, setForm, userForm, setUserForm, 
                   <td style={styles.td}>{u.idNo || u.id_no || '-'}</td>
                   <td style={styles.td}>{u.phone || '-'}</td>
                   <td style={styles.td}>
-                    <button type="button" onClick={() => onEditUser(u)} style={styles.btnSecondary}><Icons.Edit width={16} height={16} />Edit</button>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <button type="button" onClick={() => onEditUser(u)} style={styles.btnSecondary}><Icons.Edit width={16} height={16} />Edit</button>
+                      <button type="button" onClick={() => onDeleteUser(u)} style={styles.btnDanger} title="Delete user"><Icons.Trash2 width={18} height={18} /></button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -2438,7 +2468,24 @@ function AdminView({ parcels, users = [], form, setForm, userForm, setUserForm, 
           </table>
         </div>
       </div>
+    </div>
+  );
+}
 
+function AdminView({ parcels, users = [], form, setForm, onAdd, onRequestCollect, onDelete, onUpdateStatus, onOpenScanner, scannedTracking, racks, theme }) {
+  const styles = createStyles(theme);
+  const up = (k) => (e) => { const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value; setForm(prev => ({ ...prev, [k]: value })); };
+  const isOthers = form.sender === 'Others';
+  const emptyShelves = racks.flatMap(r => r.shelves.filter(s => s.status === 'empty' && !s.maintenance).map(s => ({ ...s, rackLetter: r.letter })));
+  const maintenanceShelves = racks.flatMap(r => r.shelves.filter(s => s.maintenance).map(s => ({ ...s, rackLetter: r.letter })));
+  const statusOptions = ['Pending', 'Arrived', 'Overdue', 'Collected'];
+  const roleRank = { student: 1, staff: 2 };
+  const recipientOptions = users
+    .filter(u => u.role === 'student' || u.role === 'staff')
+    .sort((a, b) => (roleRank[a.role] || 99) - (roleRank[b.role] || 99) || (a.name || a.username || '').localeCompare(b.name || b.username || ''));
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={styles.card}>
         <div style={{ padding: '20px 24px', borderBottom: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ fontWeight: 600, color: theme.text, margin: 0, fontSize: '16px' }}>Register Incoming Parcel</h3>
