@@ -1091,6 +1091,7 @@ export default function ParcelManagementSystem() {
   const [cloudReady, setCloudReady] = useState(!isCloudConfigured);
   const [cloudSchemaMissing, setCloudSchemaMissing] = useState(false);
   const cloudPollRef = useRef(null);
+  const cloudHydratingRef = useRef(false);
 
   const [theme, setTheme] = useState(() => {
     try {
@@ -1156,6 +1157,7 @@ export default function ParcelManagementSystem() {
       const cloudParcels = results[1].status === 'fulfilled' ? results[1].value : DEFAULT_PARCELS;
       const cloudRacks = results[2].status === 'fulfilled' ? results[2].value : DEFAULT_RACKS;
 
+      cloudHydratingRef.current = true;
       setCloudSession(activeSession || null);
       setMockUsers(profiles);
       setParcels(Array.isArray(cloudParcels) ? cloudParcels : DEFAULT_PARCELS);
@@ -1163,9 +1165,11 @@ export default function ParcelManagementSystem() {
 
       if (activeSession?.user?.email) {
         const profile = await getCloudProfileByEmail(activeSession.user.email, token);
-        setUser(profile);
-        setProfileForm({ name: profile.name, email: profile.email, phone: profile.phone || '', address: '' });
-        setView('dashboard');
+        if (profile) {
+          setUser(profile);
+          setProfileForm({ name: profile.name, email: profile.email, phone: profile.phone || '', address: '' });
+          setView('dashboard');
+        }
       }
     } catch (error) {
       console.error('Cloud sync failed:', error);
@@ -1182,6 +1186,7 @@ export default function ParcelManagementSystem() {
       setRacks(DEFAULT_RACKS);
     } finally {
       if (!silent) setCloudReady(true);
+      setTimeout(() => { cloudHydratingRef.current = false; }, 0);
     }
   }, []);
 
@@ -1194,7 +1199,7 @@ export default function ParcelManagementSystem() {
     if (!isCloudConfigured || !cloudReady || cloudSchemaMissing) return;
     cloudPollRef.current = setInterval(() => {
       loadCloudData(cloudSession || getSavedCloudSession(), true);
-    }, 10000);
+    }, 60000);
     return () => clearInterval(cloudPollRef.current);
   }, [cloudReady, cloudSession, cloudSchemaMissing, loadCloudData]);
 
@@ -1229,16 +1234,18 @@ export default function ParcelManagementSystem() {
       try { localStorage.setItem(STORAGE_KEYS.PARCELS, JSON.stringify(parcels)); } catch (e) {}
       return;
     }
+    if (cloudHydratingRef.current) return;
     if (cloudReady && cloudSession?.access_token) saveCloudState('parcels', parcels, cloudSession.access_token).catch(error => console.error('Failed to save parcels:', error));
-  }, [parcels, cloudReady, cloudSession]);
+  }, [parcels, cloudReady, cloudSession?.access_token]);
 
   useEffect(() => {
     if (!isCloudConfigured) {
       try { localStorage.setItem(STORAGE_KEYS.RACKS, JSON.stringify(racks)); } catch (e) {}
       return;
     }
+    if (cloudHydratingRef.current) return;
     if (cloudReady && cloudSession?.access_token) saveCloudState('racks', racks, cloudSession.access_token).catch(error => console.error('Failed to save racks:', error));
-  }, [racks, cloudReady, cloudSession]);
+  }, [racks, cloudReady, cloudSession?.access_token]);
 
   useEffect(() => {
     if (isCloudConfigured) return;
