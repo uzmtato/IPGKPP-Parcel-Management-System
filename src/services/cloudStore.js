@@ -123,6 +123,31 @@ export const signUpCloudUser = async (data) => {
   return { session }
 }
 
+export const saveCloudUser = async (user) => {
+  const payload = {
+    username: user.username,
+    email: user.email,
+    password: user.password,
+    name: user.name,
+    id_no: user.idNo ?? user.id_no ?? '',
+    phone: user.phone ?? '',
+    role: user.role || 'student',
+    profile_pic: user.profilePic ?? user.profile_pic ?? '',
+  }
+
+  if (user.id) payload.id = user.id
+  if (!payload.password) delete payload.password
+
+  const { data, error } = await supabase
+    .from('users')
+    .upsert(payload, { onConflict: 'username' })
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
 export const updateCloudPassword = async (session, newPassword) => {
   const userId = session.user?.id
   if (!userId) throw new Error('No user ID')

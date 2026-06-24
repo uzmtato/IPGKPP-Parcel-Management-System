@@ -7,6 +7,7 @@ import {
   isCloudConfigured,
   listCloudProfiles,
   refreshCloudSession,
+  saveCloudUser,
   saveCloudState,
   signInCloudUser,
   signUpCloudUser,
@@ -1132,6 +1133,7 @@ export default function ParcelManagementSystem() {
   });
 
   const [adminForm, setAdminForm] = useState({ trackingNo: '', sender: '', senderOther: '', recipient: '', status: 'Pending', location: 'Main Post Office', description: '', assignRack: false, selectedRackShelf: '' });
+  const [adminUserForm, setAdminUserForm] = useState({ id: null, username: '', email: '', password: '', name: '', idNo: '', phone: '', role: 'student' });
   const [profileForm, setProfileForm] = useState({ name: '', email: '', phone: '', address: '' });
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
 
@@ -1346,6 +1348,83 @@ export default function ParcelManagementSystem() {
     setUsers(prev => [...prev, newUser]);
     alert('Account created successfully');
     setView('login');
+  };
+
+  const resetAdminUserForm = () => {
+    setAdminUserForm({ id: null, username: '', email: '', password: '', name: '', idNo: '', phone: '', role: 'student' });
+  };
+
+  const handleAdminSaveUser = async (e) => {
+    e.preventDefault();
+    const username = adminUserForm.username.trim();
+    const email = adminUserForm.email.trim();
+    const name = adminUserForm.name.trim();
+    const phone = adminUserForm.phone.trim();
+    const idNo = adminUserForm.idNo.trim();
+    const password = adminUserForm.password.trim();
+    const isEditing = Boolean(adminUserForm.id);
+
+    if (!username || !email || !name || !idNo || !phone || (!isEditing && !password)) {
+      alert('Please complete all required student/staff information.');
+      return;
+    }
+    if (adminUserForm.role === 'admin') {
+      alert('This form is for student and staff accounts only.');
+      return;
+    }
+    if (users.some(u => u.username === username && u.id !== adminUserForm.id)) {
+      alert('Username already exists.');
+      return;
+    }
+    if (users.some(u => u.email === email && u.id !== adminUserForm.id)) {
+      alert('Email already exists.');
+      return;
+    }
+
+    const userPayload = { ...adminUserForm, username, email, name, phone, idNo, password };
+
+    if (isCloudConfigured && cloudSession?.access_token) {
+      try {
+        const savedUser = await saveCloudUser(userPayload);
+        setUsers(prev => {
+          const exists = prev.some(u => u.id === savedUser.id || u.username === savedUser.username);
+          return exists ? prev.map(u => (u.id === savedUser.id || u.username === savedUser.username ? savedUser : u)) : [...prev, savedUser];
+        });
+        resetAdminUserForm();
+        showNotification('Student/staff account saved.');
+      } catch (error) {
+        console.error('Failed to save user to cloud:', error);
+        alert(`Unable to save user: ${error.message || 'Unknown error'}`);
+      }
+      return;
+    }
+
+    const localUser = {
+      ...userPayload,
+      id: adminUserForm.id || Date.now(),
+      profilePic: adminUserForm.profilePic || '',
+      createdAt: adminUserForm.createdAt || new Date().toISOString(),
+    };
+    setUsers(prev => prev.some(u => u.id === localUser.id || u.username === localUser.username)
+      ? prev.map(u => (u.id === localUser.id || u.username === localUser.username ? localUser : u))
+      : [...prev, localUser]);
+    resetAdminUserForm();
+    showNotification('Student/staff account saved.');
+  };
+
+  const handleAdminEditUser = (targetUser) => {
+    setAdminUserForm({
+      id: targetUser.id || null,
+      username: targetUser.username || '',
+      email: targetUser.email || '',
+      password: '',
+      name: targetUser.name || '',
+      idNo: targetUser.idNo || targetUser.id_no || '',
+      phone: targetUser.phone || '',
+      role: targetUser.role === 'staff' ? 'staff' : 'student',
+      profilePic: targetUser.profilePic || targetUser.profile_pic || '',
+      createdAt: targetUser.createdAt || targetUser.created_at,
+    });
   };
 
   const handleToggleMaintenance = (rackLetter, shelfId, reason = '') => {
@@ -1737,7 +1816,7 @@ export default function ParcelManagementSystem() {
             )}
 
             {view === 'admin' && isAdmin && (
-              <AdminView parcels={parcels} users={users} form={adminForm} setForm={setAdminForm} onAdd={handleAddParcel} onRequestCollect={handleRequestCollect} onDelete={handleDeleteParcel} onUpdateStatus={updateStatus} onOpenScanner={openScannerForTracking} scannedTracking={scannedTracking} racks={racks} theme={themeObj} />
+              <AdminView parcels={parcels} users={users} form={adminForm} setForm={setAdminForm} userForm={adminUserForm} setUserForm={setAdminUserForm} onSaveUser={handleAdminSaveUser} onEditUser={handleAdminEditUser} onCancelUserEdit={resetAdminUserForm} onAdd={handleAddParcel} onRequestCollect={handleRequestCollect} onDelete={handleDeleteParcel} onUpdateStatus={updateStatus} onOpenScanner={openScannerForTracking} scannedTracking={scannedTracking} racks={racks} theme={themeObj} />
             )}
 
             {totalPages > 1 && (view === 'dashboard' || view === 'myparcels' || view === 'admin') && (
@@ -2291,9 +2370,10 @@ function MyParcelsView({ parcels, user, theme }) {
   );
 }
 
-function AdminView({ parcels, users = [], form, setForm, onAdd, onRequestCollect, onDelete, onUpdateStatus, onOpenScanner, scannedTracking, racks, theme }) {
+function AdminView({ parcels, users = [], form, setForm, userForm, setUserForm, onSaveUser, onEditUser, onCancelUserEdit, onAdd, onRequestCollect, onDelete, onUpdateStatus, onOpenScanner, scannedTracking, racks, theme }) {
   const styles = createStyles(theme);
   const up = (k) => (e) => { const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value; setForm(prev => ({ ...prev, [k]: value })); };
+  const upUser = (k) => (e) => setUserForm(prev => ({ ...prev, [k]: e.target.value }));
   const isOthers = form.sender === 'Others';
   const emptyShelves = racks.flatMap(r => r.shelves.filter(s => s.status === 'empty' && !s.maintenance).map(s => ({ ...s, rackLetter: r.letter })));
   const maintenanceShelves = racks.flatMap(r => r.shelves.filter(s => s.maintenance).map(s => ({ ...s, rackLetter: r.letter })));
@@ -2305,6 +2385,60 @@ function AdminView({ parcels, users = [], form, setForm, onAdd, onRequestCollect
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={styles.card}>
+        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${theme.border}` }}>
+          <h3 style={{ fontWeight: 600, color: theme.text, margin: 0, fontSize: '16px' }}>Student & Staff Management</h3>
+        </div>
+        <form onSubmit={onSaveUser} style={{ padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+          <input value={userForm.name} onChange={upUser('name')} placeholder="Full Name" style={styles.input} required />
+          <input value={userForm.username} onChange={upUser('username')} placeholder="Username" style={styles.input} required />
+          <input value={userForm.email} onChange={upUser('email')} type="email" placeholder="Email Address" style={styles.input} required />
+          <input value={userForm.idNo} onChange={upUser('idNo')} placeholder="Matric / Staff ID" style={styles.input} required />
+          <input value={userForm.phone} onChange={upUser('phone')} type="tel" placeholder="Phone Number" style={styles.input} required />
+          <input value={userForm.password} onChange={upUser('password')} type="password" placeholder={userForm.id ? 'New password (optional)' : 'Password'} style={styles.input} required={!userForm.id} />
+          <select value={userForm.role} onChange={upUser('role')} style={{ ...styles.input, backgroundColor: styles.inputBg }}>
+            <option value="student">Student</option>
+            <option value="staff">Staff</option>
+          </select>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button type="submit" style={{ ...styles.btnPrimary, flex: 1 }}>{userForm.id ? 'Update User' : 'Add User'}</button>
+            {userForm.id && (
+              <button type="button" onClick={onCancelUserEdit} style={{ ...styles.btnSecondary, justifyContent: 'center' }}>Cancel</button>
+            )}
+          </div>
+        </form>
+        <div style={{ overflowX: 'auto', borderTop: `1px solid ${theme.border}` }}>
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th style={styles.th}>Name</th>
+                <th style={styles.th}>Username</th>
+                <th style={styles.th}>Role</th>
+                <th style={styles.th}>ID</th>
+                <th style={styles.th}>Phone</th>
+                <th style={styles.th}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recipientOptions.length === 0 ? (
+                <tr><td colSpan="6" style={{ ...styles.td, textAlign: 'center', color: theme.textSecondary }}>No student or staff accounts yet</td></tr>
+              ) : recipientOptions.map(u => (
+                <tr key={u.id || u.username}>
+                  <td style={styles.td}>{u.name || '-'}</td>
+                  <td style={styles.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{u.username}</span></td>
+                  <td style={styles.td}><span style={styles.badge(u.role === 'staff' ? 'Arrived' : 'Pending')}>{u.role === 'staff' ? 'Staff' : 'Student'}</span></td>
+                  <td style={styles.td}>{u.idNo || u.id_no || '-'}</td>
+                  <td style={styles.td}>{u.phone || '-'}</td>
+                  <td style={styles.td}>
+                    <button type="button" onClick={() => onEditUser(u)} style={styles.btnSecondary}><Icons.Edit width={16} height={16} />Edit</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div style={styles.card}>
         <div style={{ padding: '20px 24px', borderBottom: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ fontWeight: 600, color: theme.text, margin: 0, fontSize: '16px' }}>Register Incoming Parcel</h3>
