@@ -88,7 +88,38 @@ const STORAGE_KEYS = {
   PARCELS: 'ipgkpp_parcels_data',
   SESSION: 'ipgkpp_parcels_session',
   RACKS: 'ipgkpp_racks_data',
-  THEME: 'ipgkpp_theme_preference'
+  THEME: 'ipgkpp_theme_preference',
+  READ_NOTIFICATIONS: 'ipgkpp_read_notifications'
+};
+
+const NOTIFIABLE_STATUSES = ['Arrived', 'Overdue', 'Pending'];
+
+const getNotificationStorageKey = (username = 'guest') => `${STORAGE_KEYS.READ_NOTIFICATIONS}_${username}`;
+
+const getParcelNotificationId = (parcel) => `${parcel.id || parcel.trackingNo || 'parcel'}:${parcel.status || 'Pending'}`;
+
+const getParcelNotificationMessage = (parcel) => {
+  const tracking = parcel.trackingNo || 'Parcel';
+  const rackText = parcel.rackLocation ? ` Rak: ${parcel.rackLocation}.` : '';
+  if (parcel.status === 'Arrived') {
+    return {
+      title: 'Parcel telah sampai',
+      body: `${tracking} daripada ${parcel.sender || 'kurier'} telah sampai.${rackText} Sila ambil dengan kod OTP yang diberi.`,
+      tone: 'success',
+    };
+  }
+  if (parcel.status === 'Overdue') {
+    return {
+      title: 'Parcel overdue',
+      body: `${tracking} masih belum diambil selepas tempoh ditetapkan.${rackText} Sila ambil secepat mungkin.`,
+      tone: 'danger',
+    };
+  }
+  return {
+    title: 'Parcel masih pending',
+    body: `${tracking} sedang diproses dan belum sedia untuk diambil.`,
+    tone: 'warning',
+  };
 };
 
 const DEFAULT_USERS = [];
@@ -1090,6 +1121,8 @@ export default function ParcelManagementSystem() {
   const [picModalOpen, setPicModalOpen] = useState(false);
   const [verifyParcel, setVerifyParcel] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+  const [readNotificationIds, setReadNotificationIds] = useState([]);
   const [selectedShelf, setSelectedShelf] = useState(null);
   const [maintenanceModal, setMaintenanceModal] = useState(null);
   const [cloudSession, setCloudSession] = useState(null);
@@ -1116,7 +1149,10 @@ export default function ParcelManagementSystem() {
   };
 
   const menuRef = useRef(null);
+  const notificationMenuRef = useRef(null);
   const parcelsRef = useRef([]);
+  const parcelStatusRef = useRef(new Map());
+  const notificationsPrimedRef = useRef(false);
 
   const [users, setUsers] = useState(() => {
     if (isCloudConfigured) return [];
@@ -1272,6 +1308,29 @@ export default function ParcelManagementSystem() {
     else { try { localStorage.removeItem(STORAGE_KEYS.SESSION); } catch {} }
   }, [user]);
 
+  useEffect(() => {
+    notificationsPrimedRef.current = false;
+    parcelStatusRef.current = new Map();
+    setNotificationPanelOpen(false);
+    if (!user?.username) {
+      setReadNotificationIds([]);
+      return;
+    }
+    try {
+      const saved = localStorage.getItem(getNotificationStorageKey(user.username));
+      setReadNotificationIds(saved ? JSON.parse(saved) : []);
+    } catch {
+      setReadNotificationIds([]);
+    }
+  }, [user?.username]);
+
+  useEffect(() => {
+    if (!user?.username) return;
+    try {
+      localStorage.setItem(getNotificationStorageKey(user.username), JSON.stringify(readNotificationIds));
+    } catch {}
+  }, [readNotificationIds, user?.username]);
+
   useEffect(() => { const timer = setInterval(() => setCurrentTime(new Date()), 1000); return () => clearInterval(timer); }, []);
 
   useEffect(() => {
@@ -1282,7 +1341,10 @@ export default function ParcelManagementSystem() {
   }, []);
 
   useEffect(() => {
-    const handleClickOutside = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setUserMenuOpen(false); };
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setUserMenuOpen(false);
+      if (notificationMenuRef.current && !notificationMenuRef.current.contains(e.target)) setNotificationPanelOpen(false);
+    };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -1293,6 +1355,28 @@ export default function ParcelManagementSystem() {
   }, [activeModal, verifyParcel, scannerOpen, picModalOpen, selectedShelf, maintenanceModal]);
 
   const showNotification = (message) => { setNotification(message); setTimeout(() => setNotification(null), 5000); };
+
+  const requestBrowserNotifications = async () => {
+    if (!('Notification' in window)) {
+      showNotification('Browser ini tidak menyokong notification sistem.');
+      return;
+    }
+    if (Notification.permission === 'granted') {
+      showNotification('Browser notification sudah aktif.');
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    showNotification(permission === 'granted' ? 'Browser notification diaktifkan.' : 'Browser notification tidak diaktifkan.');
+  };
+
+  const pushBrowserNotification = (message) => {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    new Notification(`IPGKPP: ${message.title}`, {
+      body: message.body,
+      tag: message.id,
+      icon: IPGKPP_LOGO,
+    });
+  };
 
   const handleLogin = async (username, password) => {
     if (isCloudConfigured) {
@@ -1573,6 +1657,11 @@ export default function ParcelManagementSystem() {
         const [rackLetter] = parcel.rackLocation.split('-');
         setRacks(prev => prev.map(r => r.letter === rackLetter ? { ...r, shelves: r.shelves.map(s => s.id === parcel.rackLocation ? { ...s, status: 'empty', parcelId: null, weight: 0 } : s) } : r));
       }
+    } else if (parcel && NOTIFIABLE_STATUSES.includes(status)) {
+      const recipientUser = users.find(u => u.username === parcel.recipient);
+      const contact = recipientUser?.phone || recipientUser?.email || parcel.recipient;
+      const message = getParcelNotificationMessage({ ...parcel, status });
+      showNotification(`Mesej "${message.body}" dihantar kepada ${contact}.`);
     }
   };
 
@@ -1679,6 +1768,51 @@ export default function ParcelManagementSystem() {
 
   const isAdmin = user?.role === 'admin';
   const filtered = isAdmin ? parcels : parcels.filter(p => p.recipient === user?.username && p.status !== 'Collected');
+  const userNotificationMessages = (isAdmin ? [] : parcels)
+    .filter(p => p.recipient === user?.username && NOTIFIABLE_STATUSES.includes(p.status))
+    .map(p => {
+      const copy = { ...p };
+      const message = getParcelNotificationMessage(copy);
+      return {
+        ...message,
+        id: getParcelNotificationId(copy),
+        parcelId: copy.id,
+        trackingNo: copy.trackingNo,
+        status: copy.status,
+        date: copy.dateReceived,
+        rackLocation: copy.rackLocation,
+      };
+    })
+    .sort((a, b) => {
+      const priority = { Overdue: 0, Arrived: 1, Pending: 2 };
+      return (priority[a.status] ?? 9) - (priority[b.status] ?? 9) || String(b.date || '').localeCompare(String(a.date || ''));
+    });
+  const unreadNotificationCount = userNotificationMessages.filter(message => !readNotificationIds.includes(message.id)).length;
+
+  useEffect(() => {
+    if (!user?.username || isAdmin) return;
+    const relevantParcels = parcels.filter(p => p.recipient === user.username && NOTIFIABLE_STATUSES.includes(p.status));
+    const nextStatuses = new Map(relevantParcels.map(p => [p.id || p.trackingNo, p.status]));
+
+    if (!notificationsPrimedRef.current) {
+      parcelStatusRef.current = nextStatuses;
+      notificationsPrimedRef.current = true;
+      return;
+    }
+
+    relevantParcels.forEach(parcel => {
+      const key = parcel.id || parcel.trackingNo;
+      const previousStatus = parcelStatusRef.current.get(key);
+      if (previousStatus !== parcel.status) {
+        const message = { ...getParcelNotificationMessage(parcel), id: getParcelNotificationId(parcel) };
+        showNotification(message.body);
+        pushBrowserNotification(message);
+      }
+    });
+
+    parcelStatusRef.current = nextStatuses;
+  }, [isAdmin, parcels, user?.username]);
+
   const itemsPerPage = 5;
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginatedParcels = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -1700,6 +1834,19 @@ export default function ParcelManagementSystem() {
   const renderAvatar = (size = 32) => {
     if (user?.profilePic) return <img src={user.profilePic} alt={user.name} style={styles.userAvatar(size)} />;
     return (<div style={styles.avatarPlaceholder(size)}><Icons.User width={size * 0.55} height={size * 0.55} /></div>);
+  };
+
+  const markNotificationRead = (id) => {
+    setReadNotificationIds(prev => prev.includes(id) ? prev : [...prev, id]);
+  };
+
+  const markAllNotificationsRead = () => {
+    setReadNotificationIds(prev => Array.from(new Set([...prev, ...userNotificationMessages.map(message => message.id)])));
+  };
+
+  const openNotificationPanel = () => {
+    setNotificationPanelOpen(open => !open);
+    if ('Notification' in window && Notification.permission === 'default') requestBrowserNotifications();
   };
 
   if (isCloudConfigured && !cloudReady) {
@@ -1761,6 +1908,61 @@ export default function ParcelManagementSystem() {
             <button onClick={toggleTheme} title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`} style={styles.themeToggle} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.themeToggleHover; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = styles.btnSecondaryBg; }}>
               {theme === 'light' ? <Icons.Moon width={18} height={18} /> : <Icons.Sun width={18} height={18} />}
             </button>
+
+            {!isAdmin && (
+              <div style={{ position: 'relative' }} ref={notificationMenuRef}>
+                <button onClick={openNotificationPanel} title="Notifications" style={{ ...styles.themeToggle, position: 'relative' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.themeToggleHover; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = styles.btnSecondaryBg; }}>
+                  <Icons.Bell width={18} height={18} />
+                  {unreadNotificationCount > 0 && (
+                    <span style={{ position: 'absolute', top: '-6px', right: '-6px', minWidth: '18px', height: '18px', padding: '0 5px', borderRadius: '9999px', backgroundColor: '#dc2626', color: '#ffffff', fontSize: '11px', fontWeight: 800, lineHeight: '18px', textAlign: 'center', boxSizing: 'border-box' }}>{unreadNotificationCount}</span>
+                  )}
+                </button>
+                {notificationPanelOpen && (
+                  <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: isMobile ? 'min(320px, calc(100vw - 32px))' : '360px', maxHeight: '440px', overflow: 'hidden', backgroundColor: themeObj.dropdownBg, borderRadius: '12px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25)', border: `1px solid ${themeObj.border}`, zIndex: 220 }}>
+                    <div style={{ padding: '14px 16px', borderBottom: `1px solid ${themeObj.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                      <div>
+                        <p style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: themeObj.text }}>Mesej Parcel</p>
+                        <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: themeObj.textSecondary }}>{unreadNotificationCount} belum dibaca</p>
+                      </div>
+                      {userNotificationMessages.length > 0 && (
+                        <button type="button" onClick={markAllNotificationsRead} style={{ border: 'none', backgroundColor: 'transparent', color: themeObj.iconColor, fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>Mark all</button>
+                      )}
+                    </div>
+                    <div style={{ maxHeight: '360px', overflowY: 'auto' }}>
+                      {userNotificationMessages.length === 0 ? (
+                        <div style={{ padding: '28px 18px', textAlign: 'center', color: themeObj.textSecondary }}>
+                          <Icons.Bell width={32} height={32} style={{ opacity: 0.35, marginBottom: '8px' }} />
+                          <p style={{ margin: 0, fontSize: '13px' }}>Tiada mesej parcel buat masa ini.</p>
+                        </div>
+                      ) : userNotificationMessages.map(message => {
+                        const isUnread = !readNotificationIds.includes(message.id);
+                        const toneColor = message.tone === 'danger' ? '#dc2626' : message.tone === 'success' ? '#16a34a' : '#d97706';
+                        return (
+                          <button
+                            key={message.id}
+                            type="button"
+                            onClick={() => { markNotificationRead(message.id); setView('myparcels'); setNotificationPanelOpen(false); }}
+                            style={{ width: '100%', display: 'flex', gap: '12px', padding: '14px 16px', border: 'none', borderBottom: `1px solid ${themeObj.border}`, backgroundColor: isUnread ? themeObj.iconBg : 'transparent', textAlign: 'left', cursor: 'pointer' }}
+                          >
+                            <span style={{ width: '34px', height: '34px', borderRadius: '8px', backgroundColor: `${toneColor}18`, color: toneColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              {message.status === 'Overdue' ? <Icons.AlertTriangle width={18} height={18} /> : message.status === 'Arrived' ? <Icons.Package width={18} height={18} /> : <Icons.Clock width={18} height={18} />}
+                            </span>
+                            <span style={{ minWidth: 0, flex: 1 }}>
+                              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                                <span style={{ fontSize: '13px', fontWeight: 800, color: themeObj.text }}>{message.title}</span>
+                                {isUnread && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#dc2626', flexShrink: 0 }} />}
+                              </span>
+                              <span style={{ display: 'block', marginTop: '4px', fontSize: '12px', lineHeight: '1.4', color: themeObj.textSecondary }}>{message.body}</span>
+                              <span style={{ display: 'block', marginTop: '6px', fontSize: '11px', fontFamily: 'monospace', color: themeObj.textMuted }}>{message.trackingNo}</span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div style={styles.userMenuContainer} ref={menuRef}>
               <button onClick={() => setUserMenuOpen(!userMenuOpen)} style={styles.userMenuBtn}>
