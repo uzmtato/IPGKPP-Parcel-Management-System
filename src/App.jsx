@@ -1614,9 +1614,19 @@ export default function ParcelManagementSystem() {
 
     const recipientUser = users.find(u => u.username === newParcel.recipient);
     const phone = recipientUser?.phone || newParcel.recipient;
-    let notifyMsg = `Parcel dari ${newParcel.sender} telah sampai. Kod OTP: ${otp}`;
-    if (assignedRack) notifyMsg += ` | Rak: ${assignedRack}`;
-    showNotification(`API WhatsApp/Telegram: "${notifyMsg}" dihantar kepada ${phone}.`);
+    const message = getParcelNotificationMessage(newParcel);
+
+    showNotification(`Notifikasi dihantar kepada ${phone}: ${message.title}`);
+
+    // Auto-trigger WhatsApp link for admin
+    if (isAdmin && recipientUser?.phone) {
+      const whatsappUrl = `https://wa.me/${recipientUser.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message.body)}`;
+      if (window.confirm(`Mahu menghantar mesej WhatsApp kepada ${recipientUser.name}?`)) {
+        window.open(whatsappUrl, '_blank');
+      }
+    }
+
+    pushBrowserNotification(message);
   };
 
   const handleDeleteParcel = async (id) => {
@@ -1661,7 +1671,18 @@ export default function ParcelManagementSystem() {
       const recipientUser = users.find(u => u.username === parcel.recipient);
       const contact = recipientUser?.phone || recipientUser?.email || parcel.recipient;
       const message = getParcelNotificationMessage({ ...parcel, status });
-      showNotification(`Mesej "${message.body}" dihantar kepada ${contact}.`);
+
+      showNotification(`Notifikasi dihantar kepada ${contact}: ${message.title}`);
+
+      // Auto-trigger WhatsApp link for admin
+      if (isAdmin && recipientUser?.phone) {
+        const whatsappUrl = `https://wa.me/${recipientUser.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message.body)}`;
+        if (window.confirm(`Adakah anda mahu menghantar mesej WhatsApp kepada ${recipientUser.name}?`)) {
+          window.open(whatsappUrl, '_blank');
+        }
+      }
+
+      pushBrowserNotification(message);
     }
   };
 
@@ -2788,6 +2809,26 @@ function AdminView({ parcels, users = [], form, setForm, onAdd, onRequestCollect
                   <td style={styles.td}>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                       {p.status === 'Arrived' && (<button onClick={() => onRequestCollect(p)} style={{ padding: '6px 12px', backgroundColor: '#4f46e5', color: '#ffffff', fontSize: '12px', fontWeight: 600, borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><Icons.Lock width={14} height={14} />Verify</button>)}
+
+                      {NOTIFIABLE_STATUSES.includes(p.status) && (
+                        <button
+                          onClick={() => {
+                            const recipientUser = users.find(u => u.username === p.recipient);
+                            if (recipientUser?.phone) {
+                              const message = getParcelNotificationMessage(p);
+                              const whatsappUrl = `https://wa.me/${recipientUser.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message.body)}`;
+                              window.open(whatsappUrl, '_blank');
+                            } else {
+                              alert('No phone number found for this recipient.');
+                            }
+                          }}
+                          style={{ padding: '6px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                          title="Hantar Mesej WhatsApp"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg>
+                        </button>
+                      )}
+
                       <button onClick={() => onDelete(p.id)} style={styles.btnDanger}><Icons.Trash2 width={18} height={18} /></button>
                     </div>
                   </td>
