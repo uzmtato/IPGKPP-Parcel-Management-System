@@ -1104,6 +1104,86 @@ function RackMaintenanceModal({ rackLetter, shelves, onClose, onToggleShelf, onT
   );
 }
 
+function RackSensorView({ rackIoTData, theme }) {
+  const styles = createStyles(theme);
+
+  const fill = rackIoTData?.fill_level || 0;
+  const weight = rackIoTData?.weight || 0;
+  const gas = rackIoTData?.gas_level || 0;
+  const isFull = rackIoTData?.is_full || false;
+  const isOverweight = rackIoTData?.is_overweight || false;
+  const hasBadOdor = rackIoTData?.has_bad_odor || false;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ ...styles.card, padding: '24px', background: 'linear-gradient(135deg, #0f172a 0%, #312e81 100%)', color: 'white', border: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+          <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '12px' }}>
+            <Icons.Cpu width={32} height={32} />
+          </div>
+          <div>
+            <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>IPGKPP Smart Rack IoT Monitor</h2>
+            <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Real-time environmental & weight sensors</p>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: rackIoTData ? '#4ade80' : '#f87171', boxShadow: `0 0 10px ${rackIoTData ? '#4ade80' : '#f87171'}` }}></div>
+          <span style={{ fontSize: '14px', fontWeight: 600 }}>{rackIoTData ? 'Online & Syncing' : 'Waiting for data...'}</span>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+        <div style={styles.statCard}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: '#4f46e515' }}><Icons.Layers width={20} height={20} style={{ color: '#4f46e5' }} /></div>
+            <span style={{ fontSize: '24px', fontWeight: 700, color: theme.text }}>{fill}%</span>
+          </div>
+          <p style={{ fontSize: '14px', color: theme.textSecondary, fontWeight: 500, margin: 0 }}>Capacity Fill Level</p>
+          <div style={{ marginTop: '12px', height: '6px', backgroundColor: theme.border, borderRadius: '9999px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', backgroundColor: fill > 80 ? '#dc2626' : '#4f46e5', width: `${fill}%`, transition: 'width 0.5s' }} />
+          </div>
+        </div>
+
+        <div style={styles.statCard}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: '#16a34a15' }}><Icons.Scale width={20} height={20} style={{ color: '#16a34a' }} /></div>
+            <span style={{ fontSize: '24px', fontWeight: 700, color: theme.text }}>{weight}kg</span>
+          </div>
+          <p style={{ fontSize: '14px', color: theme.textSecondary, fontWeight: 500, margin: 0 }}>Total Weight Load</p>
+        </div>
+
+        <div style={styles.statCard}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: '#d9770615' }}><Icons.Activity width={20} height={20} style={{ color: '#d97706' }} /></div>
+            <span style={{ fontSize: '24px', fontWeight: 700, color: theme.text }}>{gas} ppm</span>
+          </div>
+          <p style={{ fontSize: '14px', color: theme.textSecondary, fontWeight: 500, margin: 0 }}>Air Quality / Gas Level</p>
+        </div>
+      </div>
+
+      <div style={styles.card}>
+        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${theme.border}` }}>
+          <h3 style={{ fontWeight: 600, color: theme.text, margin: 0, fontSize: '16px' }}>Sensor Alerts & Thresholds</h3>
+        </div>
+        <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+          <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: isFull ? theme.occupiedBg : theme.availableBg, border: `1px solid ${isFull ? theme.occupiedBorder : theme.availableBorder}`, display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: isFull ? '#dc2626' : '#16a34a' }} />
+            <span style={{ fontSize: '14px', fontWeight: 600, color: isFull ? theme.occupiedText : theme.availableText }}>{isFull ? 'RACK FULL' : 'Space Available'}</span>
+          </div>
+          <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: isOverweight ? theme.occupiedBg : theme.availableBg, border: `1px solid ${isOverweight ? theme.occupiedBorder : theme.availableBorder}`, display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: isOverweight ? '#dc2626' : '#16a34a' }} />
+            <span style={{ fontSize: '14px', fontWeight: 600, color: isOverweight ? theme.occupiedText : theme.availableText }}>{isOverweight ? 'OVERWEIGHT' : 'Weight Normal'}</span>
+          </div>
+          <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: hasBadOdor ? theme.maintenanceBg : theme.availableBg, border: `1px solid ${hasBadOdor ? theme.maintenanceBorder : theme.availableBorder}`, display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: hasBadOdor ? '#d97706' : '#16a34a' }} />
+            <span style={{ fontSize: '14px', fontWeight: 600, color: hasBadOdor ? theme.maintenanceText : theme.availableText }}>{hasBadOdor ? 'BAD ODOR DETECTED' : 'Air Quality Good'}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ParcelManagementSystem() {
   const [user, setUser] = useState(null);
   const [view, setView] = useState('dashboard');
@@ -1130,6 +1210,7 @@ export default function ParcelManagementSystem() {
   const [cloudSchemaMissing, setCloudSchemaMissing] = useState(false);
   const cloudPollRef = useRef(null);
   const cloudHydratingRef = useRef(false);
+  const [rackIoTData, setRackIoTData] = useState(null);
 
   const [theme, setTheme] = useState(() => {
     try {
@@ -1252,6 +1333,32 @@ export default function ParcelManagementSystem() {
     });
     return unsubscribe;
   }, [cloudReady, cloudSession, cloudSchemaMissing, loadCloudData]);
+
+  useEffect(() => {
+    const fetchRackIoTData = async () => {
+      try {
+        const SUPABASE_URL = 'https://xlsosjhrqyjroipowwdq.supabase.co/rest/v1/smart_racks?select=*';
+        const SUPABASE_KEY = 'sb_publishable_ewTZ0PemwqQBRW_U8HK7LQ_ftuKZafB';
+
+        const response = await fetch(SUPABASE_URL, {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+          }
+        });
+        const data = await response.json();
+        if (data && data.length > 0) {
+          setRackIoTData(data[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching rack IoT data:", error);
+      }
+    };
+
+    fetchRackIoTData();
+    const interval = setInterval(fetchRackIoTData, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const checkOverdue = () => {
@@ -1908,7 +2015,7 @@ export default function ParcelManagementSystem() {
 
   if (!user) return <AuthView onLogin={handleLogin} onSignUp={handleSignUp} view={view === 'dashboard' ? 'login' : view} setView={setView} theme={themeObj} />;
 
-  const viewTitles = { dashboard: 'Dashboard', myparcels: 'Parcel Tracking', admin: 'Admin Panel', users: 'Student & Staff', rack: 'Smart Rack', rackmgmt: 'Rack Maintenance' };
+  const viewTitles = { dashboard: 'Dashboard', myparcels: 'Parcel Tracking', admin: 'Admin Panel', users: 'Student & Staff', rack: 'Smart Rack', racksensors: 'Rack Sensors (IoT)', rackmgmt: 'Rack Maintenance' };
 
   return (
     <div style={styles.app}>
@@ -1930,6 +2037,7 @@ export default function ParcelManagementSystem() {
             { id: 'dashboard', label: 'Dashboard', icon: Icons.LayoutDashboard },
             { id: 'myparcels', label: 'My Parcels', icon: Icons.Inbox },
             { id: 'rack', label: 'Smart Rack', icon: Icons.Layers },
+            { id: 'racksensors', label: 'Rack Sensors (IoT)', icon: Icons.Cpu },
             { id: 'rackmgmt', label: 'Rack Maintenance', icon: Icons.Wrench, adminOnly: true },
             { id: 'users', label: 'Students & Staff', icon: Icons.User, adminOnly: true },
             { id: 'admin', label: 'Admin Panel', icon: Icons.Users, adminOnly: true }
@@ -2084,6 +2192,8 @@ export default function ParcelManagementSystem() {
                 }}
               />
             )}
+
+            {view === 'racksensors' && <RackSensorView rackIoTData={rackIoTData} theme={themeObj} />}
 
             {view === 'rackmgmt' && isAdmin && (
               <RackManagementView
