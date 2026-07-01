@@ -19,7 +19,7 @@ import {
   upsertCloudProfile,
 } from './services/cloudStore';
 
-const IPGKPP_LOGO = 'https://image.qwenlm.ai/public_source/a5365ccb-778a-4d10-aedb-64b519a3dff3/10c2878d5-8e35-49f7-9978-d6f399874b81.png';
+const IPGKPP_LOGO = 'https://image.qwenlm.ai/public_source/a5365ccb-778a-4d10-aedb-64b519a3dff3/612a44e54-5778-4034-8c83-094191c01f6f.png';
 const IPGKPP_BG = 'https://image.qwenlm.ai/public_source/a5365ccb-778a-4d10-aedb-64b519a3dff3/1ee67feb7-707c-4c46-8395-a946662c0e1d.png';
 
 const Icons = {
