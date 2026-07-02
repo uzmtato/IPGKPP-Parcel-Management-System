@@ -792,8 +792,43 @@ function ProfilePicUpload({ currentUser, onUpdate, onClose, theme }) {
     if (file.size > 2 * 1024 * 1024) { setUploadError('Image size must be less than 2MB'); return; }
     setIsUploading(true);
     setUploadError('');
+
     const reader = new FileReader();
-    reader.onload = (event) => { setPreview(event.target.result); setIsUploading(false); onUpdate(event.target.result); };
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        // Create canvas for compression
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 300;
+        const MAX_HEIGHT = 300;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Convert to low quality JPEG (Base64)
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+        setPreview(compressedDataUrl);
+        setIsUploading(false);
+        onUpdate(compressedDataUrl);
+      };
+      img.src = event.target.result;
+    };
     reader.onerror = () => { setUploadError('Failed to read image file'); setIsUploading(false); };
     reader.readAsDataURL(file);
   };
@@ -1890,7 +1925,7 @@ export default function ParcelManagementSystem() {
         setUsers(prev => prev.map(u => u.username === savedUser.username ? savedUser : u));
       } catch (error) {
         console.error('Cloud profile picture update failed:', error);
-        alert('Unable to update profile picture.');
+        alert(`Gagal mengemaskini gambar profil: ${error.message || 'Ralat tidak diketahui'}`);
       }
       return;
     }

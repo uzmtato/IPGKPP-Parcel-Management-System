@@ -197,17 +197,20 @@ export const getCloudProfileByEmail = async (email, token) => {
 }
 
 export const upsertCloudProfile = async (profile, token) => {
+  const payload = {
+    username: profile.username,
+    email: profile.email,
+    name: profile.name,
+    phone: profile.phone,
+    profile_pic: profile.profilePic || profile.profile_pic || '',
+    role: profile.role,
+    id_no: profile.idNo || profile.id_no || '',
+  }
+
   const { data, error } = await supabase
     .from('users')
-    .upsert({
-      id: profile.id,
-      username: profile.username,
-      email: profile.email,
-      name: profile.name,
-      phone: profile.phone,
-      profile_pic: profile.profilePic || '',
-      role: profile.role
-    })
+    .update(payload)
+    .eq('id', profile.id)
     .select()
     .single()
 
