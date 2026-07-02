@@ -203,17 +203,56 @@ export const upsertCloudProfile = async (profile, token) => {
     profile_pic: profile.profilePic || profile.profile_pic || '',
   }
 
-  if (!profile.id) throw new Error('ID pengguna tidak ditemui. Sila log keluar dan masuk semula.');
+  if (!profile.username) throw new Error('Username tidak ditemui. Sila log keluar dan masuk semula.');
 
+  // Update using username as the unique key instead of id to avoid serial column errors
   const { data, error } = await supabase
     .from('users')
     .update(payload)
-    .eq('id', profile.id)
+    .eq('username', profile.username)
     .select()
     .single()
 
   if (error) throw error
   return data
+}
+
+// ===== CLOUD STORAGE FUNCTIONS (Supabase Storage) =====
+export const uploadCloudFile = async (userId, fileBase64) => {
+  try {
+    // 1. Convert Base64 back to Blob for storage
+    const base64Data = fileBase64.split(',')[1];
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+    const fileName = `avatar_${userId}_${Date.now()}.jpg`;
+    const filePath = `${userId}/${fileName}`;
+
+    // 2. Upload to 'profiles' bucket
+    const { data, error } = await supabase.storage
+      .from('profiles')
+      .upload(filePath, blob, {
+        contentType: 'image/jpeg',
+        upsert: true
+      });
+
+    if (error) throw error;
+
+    // 3. Get Public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('profiles')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  } catch (error) {
+    console.error('Storage upload failed:', error);
+    throw error;
+  }
 }
 
 // ===== STATE MANAGEMENT (Parcels & Racks) =====

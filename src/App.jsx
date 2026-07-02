@@ -17,6 +17,7 @@ import {
   deleteCloudUser,
   upsertCloudParcel,
   upsertCloudProfile,
+  uploadCloudFile,
 } from './services/cloudStore';
 
 const IPGKPP_LOGO = '/logo.png';
@@ -1917,21 +1918,40 @@ export default function ParcelManagementSystem() {
   };
 
   const handleUpdateProfilePic = async (picData) => {
-    const updatedUser = { ...user, profilePic: picData };
-    if (isCloudConfigured) {
+    if (!picData) {
+      // Remove picture case
+      const updatedUser = { ...user, profilePic: '' };
       try {
         const savedUser = await upsertCloudProfile(updatedUser, cloudSession?.access_token);
         setUser(savedUser);
-        setUsers(prev => prev.map(u => u.username === savedUser.username ? savedUser : u));
-      } catch (error) {
-        console.error('Cloud profile picture update failed:', error);
-        alert(`Gagal mengemaskini gambar profil: ${error.message || 'Ralat tidak diketahui'}`);
-      }
+      } catch (err) { alert('Gagal membuang gambar.'); }
       return;
     }
 
-    setUser(updatedUser);
-    setUsers(prev => prev.map(u => u.username === updatedUser.username ? updatedUser : u));
+    try {
+      showNotification('Sedang memproses & memuat naik gambar...');
+
+      // 1. Upload to Supabase Storage first
+      const publicUrl = await uploadCloudFile(user.id || user.username, picData);
+
+      // 2. Update user profile with the new URL
+      const updatedUser = { ...user, profilePic: publicUrl };
+      const savedUser = await upsertCloudProfile(updatedUser, cloudSession?.access_token);
+
+      setUser(savedUser);
+      setUsers(prev => prev.map(u => u.username === savedUser.username ? savedUser : u));
+      showNotification('Gambar profil berjaya dikemaskini!');
+    } catch (error) {
+      console.error('Cloud profile picture update failed:', error);
+      // Fallback: If storage fails (maybe bucket not created), try direct table update with compressed base64
+      try {
+        const savedUser = await upsertCloudProfile({ ...user, profilePic: picData }, cloudSession?.access_token);
+        setUser(savedUser);
+        showNotification('Gambar dikemaskini (Table Storage)');
+      } catch (fallbackError) {
+        alert(`Gagal: ${error.message || 'Ralat storan'}. Pastikan bucket "profiles" telah dicipta di Supabase.`);
+      }
+    }
   };
 
   // ===== UNIVERSAL SCAN HANDLER - Works with all scan modes =====
