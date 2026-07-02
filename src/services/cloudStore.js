@@ -198,19 +198,17 @@ export const getCloudProfileByEmail = async (email, token) => {
 
 export const upsertCloudProfile = async (profile, token) => {
   const payload = {
-    username: profile.username,
-    email: profile.email,
     name: profile.name,
     phone: profile.phone || '',
     profile_pic: profile.profilePic || profile.profile_pic || '',
-    role: profile.role,
-    id_no: profile.idNo || profile.id_no || '',
   }
 
-  // Use upsert to handle both insert and update, or use ID if available
+  if (!profile.id) throw new Error('ID pengguna tidak ditemui. Sila log keluar dan masuk semula.');
+
   const { data, error } = await supabase
     .from('users')
-    .upsert({ id: profile.id, ...payload }, { onConflict: 'username' })
+    .update(payload)
+    .eq('id', profile.id)
     .select()
     .single()
 
