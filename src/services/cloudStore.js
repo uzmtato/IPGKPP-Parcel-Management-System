@@ -201,16 +201,16 @@ export const upsertCloudProfile = async (profile, token) => {
     username: profile.username,
     email: profile.email,
     name: profile.name,
-    phone: profile.phone,
+    phone: profile.phone || '',
     profile_pic: profile.profilePic || profile.profile_pic || '',
     role: profile.role,
     id_no: profile.idNo || profile.id_no || '',
   }
 
+  // Use upsert to handle both insert and update, or use ID if available
   const { data, error } = await supabase
     .from('users')
-    .update(payload)
-    .eq('id', profile.id)
+    .upsert({ id: profile.id, ...payload }, { onConflict: 'username' })
     .select()
     .single()
 
