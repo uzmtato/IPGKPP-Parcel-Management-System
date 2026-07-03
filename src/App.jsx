@@ -1326,7 +1326,7 @@ export default function ParcelManagementSystem() {
       setUsers(profiles);
       setParcels(Array.isArray(cloudParcels) ? cloudParcels : DEFAULT_PARCELS);
       setRacks(normalizeRacks(cloudRacks));
-      if (iotData) setRackIoTData(iotData);
+      setRackIoTData(iotData);
 
       if (activeSession?.user?.email && !silent) {
         const profile = await getCloudProfileByEmail(activeSession.user.email, token);
@@ -1375,6 +1375,15 @@ export default function ParcelManagementSystem() {
     });
     return unsubscribe;
   }, [cloudReady, cloudSession, cloudSchemaMissing, loadCloudData]);
+
+  // Frequent polling for IoT data as a fallback for Realtime
+  useEffect(() => {
+    if (!isCloudConfigured || !cloudReady) return;
+    const iotPoll = setInterval(() => {
+      loadCloudData(cloudSession || getSavedCloudSession(), true);
+    }, 5000); // 5 seconds poll
+    return () => clearInterval(iotPoll);
+  }, [cloudReady, cloudSession, loadCloudData]);
 
   useEffect(() => {
     const checkOverdue = () => {

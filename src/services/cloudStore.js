@@ -291,13 +291,13 @@ export const getCloudState = async (key, defaultValue, token) => {
         .select('*')
         .order('updated_at', { ascending: false })
         .limit(1)
-        .single()
 
       if (error) {
         if (isMissingSchemaError(error)) return null
-        throw error
+        console.warn('Error fetching smart_racks:', error)
+        return null
       }
-      return data
+      return data && data.length > 0 ? data[0] : null
     }
 
     return defaultValue
