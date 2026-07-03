@@ -1143,12 +1143,15 @@ function RackMaintenanceModal({ rackLetter, shelves, onClose, onToggleShelf, onT
 function RackSensorView({ rackIoTData, theme }) {
   const styles = createStyles(theme);
 
-  const fill = rackIoTData?.fill_level || 0;
-  const weight = rackIoTData?.weight || 0;
-  const gas = rackIoTData?.gas_level || 0;
-  const isFull = rackIoTData?.is_full || false;
-  const isOverweight = rackIoTData?.is_overweight || false;
-  const hasBadOdor = rackIoTData?.has_bad_odor || false;
+  // Memadankan dengan kunci daripada kod ESP32 user
+  const fill = rackIoTData?.fill_percent || 0;
+  const weight = rackIoTData?.weight_kg || 0;
+  const gas = rackIoTData?.gas_value || 0;
+  const status = rackIoTData?.status || 'Normal';
+
+  const isFull = status === 'Penuh' || fill >= 80;
+  const isOverweight = status === 'Berat Berlebihan' || weight >= 2.0;
+  const hasBadOdor = status === 'Bau Busuk' || gas >= 1000;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -1159,12 +1162,12 @@ function RackSensorView({ rackIoTData, theme }) {
           </div>
           <div>
             <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>IPGKPP Smart Rack IoT Monitor</h2>
-            <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Real-time environmental & weight sensors</p>
+            <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Real-time environmental & weight sensors — Rack {rackIoTData?.rack_id || '-'}</p>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: rackIoTData ? '#4ade80' : '#f87171', boxShadow: `0 0 10px ${rackIoTData ? '#4ade80' : '#f87171'}` }}></div>
-          <span style={{ fontSize: '14px', fontWeight: 600 }}>{rackIoTData ? 'Online & Syncing' : 'Waiting for data...'}</span>
+          <span style={{ fontSize: '14px', fontWeight: 600 }}>{rackIoTData ? `Device Online (${rackIoTData.bin_id})` : 'Waiting for data...'}</span>
         </div>
       </div>
 
@@ -1183,7 +1186,7 @@ function RackSensorView({ rackIoTData, theme }) {
         <div style={styles.statCard}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: '#16a34a15' }}><Icons.Scale width={20} height={20} style={{ color: '#16a34a' }} /></div>
-            <span style={{ fontSize: '24px', fontWeight: 700, color: theme.text }}>{weight}kg</span>
+            <span style={{ fontSize: '24px', fontWeight: 700, color: theme.text }}>{weight} kg</span>
           </div>
           <p style={{ fontSize: '14px', color: theme.textSecondary, fontWeight: 500, margin: 0 }}>Total Weight Load</p>
         </div>
@@ -1191,9 +1194,9 @@ function RackSensorView({ rackIoTData, theme }) {
         <div style={styles.statCard}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: '#d9770615' }}><Icons.Activity width={20} height={20} style={{ color: '#d97706' }} /></div>
-            <span style={{ fontSize: '24px', fontWeight: 700, color: theme.text }}>{gas} ppm</span>
+            <span style={{ fontSize: '24px', fontWeight: 700, color: theme.text }}>{gas}</span>
           </div>
-          <p style={{ fontSize: '14px', color: theme.textSecondary, fontWeight: 500, margin: 0 }}>Air Quality / Gas Level</p>
+          <p style={{ fontSize: '14px', color: theme.textSecondary, fontWeight: 500, margin: 0 }}>Gas Value / Odor Level</p>
         </div>
       </div>
 
@@ -1373,7 +1376,7 @@ export default function ParcelManagementSystem() {
   useEffect(() => {
     const fetchRackIoTData = async () => {
       try {
-        const SUPABASE_URL = 'https://xlsosjhrqyjroipowwdq.supabase.co/rest/v1/smart_racks?select=*';
+        const SUPABASE_URL = 'https://xlsosjhrqyjroipowwdq.supabase.co/rest/v1/smart_racks?select=*&order=updated_at.desc&limit=1';
         const SUPABASE_KEY = 'sb_publishable_ewTZ0PemwqQBRW_U8HK7LQ_ftuKZafB';
 
         const response = await fetch(SUPABASE_URL, {
