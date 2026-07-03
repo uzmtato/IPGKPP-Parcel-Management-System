@@ -452,6 +452,8 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
     setError('');
     setIsStarting(true);
     setLastScanned('');
+
+    // Pastikan sebarang sesi lama ditutup sepenuhnya
     await safeStopScanner();
 
     try {
@@ -462,14 +464,26 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
         return;
       }
 
-      const cameraId = devices[0].id;
+      // Cuba cari kamera belakang secara automatik
+      const backCamera = devices.find(d =>
+        d.label.toLowerCase().includes('back') ||
+        d.label.toLowerCase().includes('rear') ||
+        d.label.toLowerCase().includes('environment')
+      );
+
+      const cameraId = backCamera ? backCamera.id : devices[0].id;
 
       const html5QrCode = new window.Html5Qrcode(scannerContainerId);
       qrInstanceRef.current = html5QrCode;
 
       const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 150 }
+        fps: 15,
+        qrbox: (viewfinderWidth, viewFinderHeight) => {
+          const minEdge = Math.min(viewfinderWidth, viewFinderHeight);
+          const qrboxSize = Math.floor(minEdge * 0.7);
+          return { width: qrboxSize, height: Math.floor(qrboxSize * 0.6) };
+        },
+        aspectRatio: 1.0
       };
 
       await html5QrCode.start(
@@ -479,23 +493,29 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
           setLastScanned(decodedText);
           setIsScanning(false);
           setIsStarting(false);
-          html5QrCode.stop();
-          html5QrCode.clear();
-          scanTimeoutRef.current = setTimeout(() => {
+
+          // Berhenti dengan cara yang selamat
+          html5QrCode.stop().then(() => {
+            html5QrCode.clear();
             if (!isUnmountingRef.current) onScan(decodedText);
-          }, 300);
+          }).catch(err => {
+            console.warn("Stop failed", err);
+            if (!isUnmountingRef.current) onScan(decodedText);
+          });
         },
         (error) => {
-          if (error && typeof error === 'string' && !error.includes('No MultiFormat Readers')) {
-            console.warn('Scan frame error:', error);
-          }
+          // Abaikan ralat frame-by-frame
         }
       );
 
       setIsScanning(true);
     } catch (err) {
       console.error('Scanner start error:', err);
-      setError(`Camera error: ${err.message || 'Unknown'}`);
+      if (!isSecureContext && !isLocalhost) {
+        setError('KESELAMATAN: Pelayar menyekat kamera kerana anda tidak menggunakan HTTPS. Sila guna mod "Upload Image" atau akses melalui localhost.');
+      } else {
+        setError(`Camera error: ${err.message || 'Unknown'}`);
+      }
       setIsScanning(false);
     } finally {
       setIsStarting(false);
