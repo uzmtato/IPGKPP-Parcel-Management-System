@@ -449,79 +449,68 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
     }
     if (isStarting) return;
 
-    setError('');
-    setIsStarting(true);
-    setLastScanned('');
+  setError('');
+  setIsStarting(true);
+  setLastScanned('');
+  await safeStopScanner();
 
-    // Pastikan sebarang sesi lama ditutup sepenuhnya
-    await safeStopScanner();
-
-    try {
-      const devices = await window.Html5Qrcode.getCameras();
-      if (!devices || devices.length === 0) {
-        setError('No camera found');
-        setIsStarting(false);
-        return;
-      }
-
-      // Cuba cari kamera belakang secara automatik
-      const backCamera = devices.find(d =>
-        d.label.toLowerCase().includes('back') ||
-        d.label.toLowerCase().includes('rear') ||
-        d.label.toLowerCase().includes('environment')
-      );
-
-      const cameraId = backCamera ? backCamera.id : devices[0].id;
-
-      const html5QrCode = new window.Html5Qrcode(scannerContainerId);
-      qrInstanceRef.current = html5QrCode;
-
-      const config = {
-        fps: 15,
-        qrbox: (viewfinderWidth, viewFinderHeight) => {
-          const minEdge = Math.min(viewfinderWidth, viewFinderHeight);
-          const qrboxSize = Math.floor(minEdge * 0.7);
-          return { width: qrboxSize, height: Math.floor(qrboxSize * 0.6) };
-        },
-        aspectRatio: 1.0
-      };
-
-      await html5QrCode.start(
-        cameraId,
-        config,
-        (decodedText) => {
-          setLastScanned(decodedText);
-          setIsScanning(false);
-          setIsStarting(false);
-
-          // Berhenti dengan cara yang selamat
-          html5QrCode.stop().then(() => {
-            html5QrCode.clear();
-            if (!isUnmountingRef.current) onScan(decodedText);
-          }).catch(err => {
-            console.warn("Stop failed", err);
-            if (!isUnmountingRef.current) onScan(decodedText);
-          });
-        },
-        (error) => {
-          // Abaikan ralat frame-by-frame
-        }
-      );
-
-      setIsScanning(true);
-    } catch (err) {
-      console.error('Scanner start error:', err);
-      if (!isSecureContext && !isLocalhost) {
-        setError('KESELAMATAN: Pelayar menyekat kamera kerana anda tidak menggunakan HTTPS. Sila guna mod "Upload Image" atau akses melalui localhost.');
-      } else {
-        setError(`Camera error: ${err.message || 'Unknown'}`);
-      }
-      setIsScanning(false);
-    } finally {
+  try {
+    const devices = await window.Html5Qrcode.getCameras();
+    if (!devices || devices.length === 0) {
+      setError('No camera found');
       setIsStarting(false);
+      return;
     }
-  };
 
+    // Prefer back camera if available
+    const backCamera = devices.find(d => d.label.toLowerCase().includes('back'));
+    const cameraId = backCamera ? backCamera.id : devices[0].id;
+
+    const html5QrCode = new window.Html5Qrcode(scannerContainerId);
+    qrInstanceRef.current = html5QrCode;
+
+    const config = {
+      fps: 10,
+      qrbox: { width: 250, height: 150 }
+    };
+
+    await html5QrCode.start(
+      cameraId,
+      config,
+      // ✅ SUCCESS CALLBACK – calls onScan immediately, then stops camera in background
+      (decodedText) => {
+        // 1. Immediately pass the result to the parent (this closes the modal)
+        onScan(decodedText);
+
+        // 2. Stop and clean up the scanner in the background (fire & forget)
+        if (qrInstanceRef.current) {
+          qrInstanceRef.current.stop().catch(() => {});
+          qrInstanceRef.current.clear().catch(() => {});
+          qrInstanceRef.current = null;
+        }
+
+        // 3. Update local UI state (optional)
+        setLastScanned(decodedText);
+        setIsScanning(false);
+        setIsStarting(false);
+      },
+      // Error callback – log only critical errors
+      (error) => {
+        if (error && !error.includes('No MultiFormat Readers')) {
+          console.warn('Scan frame error:', error);
+        }
+      }
+    );
+
+    setIsScanning(true);
+  } catch (err) {
+    console.error('Scanner start error:', err);
+    setError(`Camera error: ${err.message || 'Unknown'}`);
+    setIsScanning(false);
+  } finally {
+    setIsStarting(false);
+  }
+};
   const stopCameraScanner = async () => { await safeStopScanner(); };
 
   // Scan from uploaded image file
@@ -691,7 +680,7 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
             ) : (
               <>
                 <div style={styles.scannerContainer}>
-                  <div id={scannerContainerId} ref={scannerRef} style={{ width: '100%', minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.textSecondary, fontSize: '13px' }}>
+                  <div id={scannerContainerId} ref={scannerRef} style={{ width: '100%', minHeight: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.textSecondary, fontSize: '13px' }}>
                     {!isScanning && !isStarting && 'Camera preview will appear here'}
                   </div>
                   {isScanning && (<><div style={styles.scannerOverlay}></div><div style={styles.scannerLine}></div></>)}
