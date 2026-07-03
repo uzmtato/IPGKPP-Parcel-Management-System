@@ -443,7 +443,10 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
   }, []);
 
   const startCameraScanner = async () => {
-    if (!scannerRef.current || !isLibraryLoaded) return;
+    if (!isLibraryLoaded) {
+      setError('Scanner library not loaded yet.');
+      return;
+    }
     if (isStarting) return;
 
     setError('');
@@ -452,72 +455,71 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
     await safeStopScanner();
 
     try {
-      const instance = new window.Html5Qrcode(scannerContainerId);
-      qrInstanceRef.current = instance;
-
-      // Define formats to support (QR + Common Barcodes)
-      const formatsToSupport = [
-        window.Html5QrcodeSupportedFormats.QR_CODE,
-        window.Html5QrcodeSupportedFormats.UPC_A,
-        window.Html5QrcodeSupportedFormats.UPC_E,
-        window.Html5QrcodeSupportedFormats.EAN_13,
-        window.Html5QrcodeSupportedFormats.EAN_8,
-        window.Html5QrcodeSupportedFormats.CODE_39,
-        window.Html5QrcodeSupportedFormats.CODE_128,
-        window.Html5QrcodeSupportedFormats.ITF,
-        window.Html5QrcodeSupportedFormats.RSS_14,
-        window.Html5QrcodeSupportedFormats.RSS_EXPANDED,
-        window.Html5QrcodeSupportedFormats.CODABAR,
-        window.Html5QrcodeSupportedFormats.DATA_MATRIX,
-        window.Html5QrcodeSupportedFormats.PDF_417,
-      ];
-
-      const config = {
-        fps: 20,
-        qrbox: { width: 280, height: 200 },
-        aspectRatio: 1.0,
-        disableFlip: false,
-        formatsToSupport: formatsToSupport
-      };
-
-      // Ensure the container is visible and has dimensions before starting
-      const container = document.getElementById(scannerContainerId);
-      if (container) {
-        container.style.display = 'block';
-        container.style.minHeight = '300px';
+      const devices = await window.Html5Qrcode.getCameras();
+      if (!devices || devices.length === 0) {
+        setError('No camera found');
+        setIsStarting(false);
+        return;
       }
 
-      await instance.start({ facingMode: "environment" }, config, (decodedText) => {
-        if (isUnmountingRef.current) return;
-        if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
-        setLastScanned(decodedText);
-        setIsScanning(false);
-        setIsStarting(false);
-        safeStopScanner().then(() => {
-          scanTimeoutRef.current = setTimeout(() => { if (!isUnmountingRef.current) onScan(decodedText); }, 500);
-        });
-      }, (errorMessage) => {
-        // Only log if it's a real error, not just "code not found" noise
-        if (!errorMessage.includes("No MultiFormat Readers")) {
-           console.debug("Scanner noise:", errorMessage);
+      // Try to find the back camera (environment), otherwise use the first one
+      const backCamera = devices.find(device =>
+        device.label.toLowerCase().includes('back') ||
+        device.label.toLowerCase().includes('rear') ||
+        device.label.toLowerCase().includes('environment')
+      );
+      const cameraId = backCamera ? backCamera.id : devices[0].id;
+
+      const html5QrCode = new window.Html5Qrcode(scannerContainerId);
+      qrInstanceRef.current = html5QrCode;
+
+      const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 150 },
+        // Support common parcel barcodes + QR
+        formatsToSupport: [
+          window.Html5QrcodeSupportedFormats.QR_CODE,
+          window.Html5QrcodeSupportedFormats.CODE_128,
+          window.Html5QrcodeSupportedFormats.CODE_39,
+          window.Html5QrcodeSupportedFormats.EAN_13,
+          window.Html5QrcodeSupportedFormats.UPC_A
+        ]
+      };
+
+      await html5QrCode.start(
+        cameraId,
+        config,
+        (decodedText) => {
+          setLastScanned(decodedText);
+          setIsScanning(false);
+          setIsStarting(false);
+
+          // Stop and clear immediately on success
+          html5QrCode.stop().then(() => {
+            html5QrCode.clear();
+            scanTimeoutRef.current = setTimeout(() => {
+              if (!isUnmountingRef.current) onScan(decodedText);
+            }, 300);
+          }).catch(err => {
+            console.warn("Stop failed", err);
+            if (!isUnmountingRef.current) onScan(decodedText);
+          });
+        },
+        (error) => {
+          if (error && typeof error === 'string' && !error.includes('No MultiFormat Readers')) {
+            // console.warn('Scan frame error:', error);
+          }
         }
-      });
+      );
+
       setIsScanning(true);
     } catch (err) {
       console.error('Scanner start error:', err);
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        setError('Camera permission denied. Please allow camera access in your browser settings.');
-      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        setError('No camera found on this device.');
-      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-        setError('Camera is already in use by another application.');
-      } else if (!isSecureContext && !isLocalhost) {
-        setError('CAMERA BLOCKED: Browsers require HTTPS to use the camera. Please use a secure connection or "Upload Image" mode.');
-      } else {
-        setError(`Camera error: ${err.message || 'Unknown error'}. Try "Upload Image" mode.`);
-      }
+      setError(`Camera error: ${err.message || 'Unknown'}`);
       setIsScanning(false);
-    } finally { setIsStarting(false); }
+    } finally {
+      setIsStarting(false);
+    }
   };
 
   const stopCameraScanner = async () => { await safeStopScanner(); };
@@ -532,6 +534,7 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
     setIsProcessingImage(true);
     setError('');
     setLastScanned('');
+    await safeStopScanner();
 
     try {
       if (!window.Html5Qrcode) {
@@ -540,29 +543,25 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
         return;
       }
 
-      // Important: Use a fresh instance and try to detect all common formats
-      const tempInstance = new window.Html5Qrcode(scannerContainerId);
-
-      // We don't call .start() for file scanning, but we use .scanFile()
-      // scanFile takes the file and a boolean for 'showImage'
-      const decodedText = await tempInstance.scanFile(file, true);
+      // Important: Use a fresh instance for processing
+      const html5QrCode = new window.Html5Qrcode(scannerContainerId);
       
-      if (decodedText) {
-        setLastScanned(decodedText);
-        // Clear instance
-        try { await tempInstance.clear(); } catch (e) {}
-        scanTimeoutRef.current = setTimeout(() => { onScan(decodedText); }, 800);
-      } else {
-        setError('No barcode/QR code detected. Make sure the image is clear and not blurry.');
+      try {
+        const decodedText = await html5QrCode.scanFile(file, true);
+        if (decodedText) {
+          setLastScanned(decodedText);
+          scanTimeoutRef.current = setTimeout(() => { onScan(decodedText); }, 800);
+        } else {
+          setError('No barcode detected. Try a clearer photo.');
+        }
+      } catch (scanErr) {
+        setError('No barcode detected in this image. Please make sure the barcode is clear and well-lit.');
+      } finally {
+        try { await html5QrCode.clear(); } catch (e) {}
       }
     } catch (err) {
       console.error('Image scan error:', err);
-      setError('Failed to scan image. The barcode might be unclear or format not supported.');
-      // Cleanup
-      try {
-        const checkInstance = new window.Html5Qrcode(scannerContainerId);
-        await checkInstance.clear();
-      } catch (e) {}
+      setError('Failed to process image. Try another file.');
     } finally {
       setIsProcessingImage(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
