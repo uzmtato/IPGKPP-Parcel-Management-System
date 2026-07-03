@@ -952,7 +952,7 @@ function SmartRackView({ racks, parcels, rackIoTData, onShelfClick, isAdmin, onT
     );
   }
 
-  const totalShelves = racks.reduce((sum, r) => sum + (r?.shelves?.length || 0), 0);
+  const styles = createStyles(theme);
 
   // Fungsi untuk memadankan data IoT dengan shelf ID
   const getIoTShelfData = (shelfId) => {
@@ -964,25 +964,30 @@ function SmartRackView({ racks, parcels, rackIoTData, onShelfClick, isAdmin, onT
     });
   };
 
-  const occupiedShelvesCount = racks.reduce((sum, r) => sum + (r?.shelves || []).filter(s => {
-    const iot = getIoTShelfData(s.id);
-    return s.status === 'occupied' || (iot && (Number(iot.weight) > 0.1 || iot.is_full));
-  }).length, 0);
+  const totalShelves = racks.reduce((sum, r) => sum + (r?.shelves?.length || 0), 0);
 
-  const readyShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status === 'ready').length, 0);
-  const maintenanceShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.maintenance).length, 0);
+  const occupiedShelvesCount = racks.reduce((sum, r) => {
+    const shelves = r?.shelves || [];
+    return sum + shelves.filter(s => {
+      if (!s) return false;
+      const iot = getIoTShelfData(s.id);
+      return s.status === 'occupied' || (iot && (Number(iot.weight) > 0.1 || iot.is_full));
+    }).length;
+  }, 0);
+
+  const readyShelves = racks.reduce((sum, r) => sum + (r?.shelves || []).filter(s => s && s.status === 'ready').length, 0);
+  const maintenanceShelves = racks.reduce((sum, r) => sum + (r?.shelves || []).filter(s => s && s.maintenance).length, 0);
   const emptyShelves = totalShelves - occupiedShelvesCount - readyShelves - maintenanceShelves;
-  const styles = createStyles(theme);
 
   const getShelfColor = (shelf, iotData) => {
+    if (!shelf) return { bg: theme.availableBg, border: theme.availableBorder, led: '#16a34a', label: 'Unknown' };
     if (shelf.maintenance) return { bg: theme.maintenanceBg, border: theme.maintenanceBorder, led: '#d97706', label: 'Maintenance' };
 
-    // Keutamaan kepada data IoT jika ada
     if (iotData) {
       if (iotData.is_full) {
         return { bg: theme.occupiedBg, border: '#dc2626', led: '#dc2626', label: 'FULL' };
       }
-      if (iotData.weight > 0.1) {
+      if (Number(iotData.weight) > 0.1) {
          return { bg: theme.occupiedBg, border: theme.occupiedBorder, led: '#dc2626', label: 'Occupied (Sensor)' };
       }
     }
@@ -1032,7 +1037,10 @@ function SmartRackView({ racks, parcels, rackIoTData, onShelfClick, isAdmin, onT
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
         {racks.map((rack) => {
-          const rackMaintenanceCount = rack.shelves.filter(s => s.maintenance).length;
+          if (!rack || !Array.isArray(rack.shelves)) return null;
+          const rackMaintenanceCount = rack.shelves.filter(s => s && s.maintenance).length;
+          const isFullyMaintenance = rackMaintenanceCount === rack.shelves.length;
+
           return (
             <div key={rack.id} style={{ ...styles.card, overflow: 'visible' }}>
               <div style={{ padding: '12px 16px', backgroundColor: '#1e3a8a', color: 'white', borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1041,12 +1049,12 @@ function SmartRackView({ racks, parcels, rackIoTData, onShelfClick, isAdmin, onT
               </div>
               <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: styles.sectionBg }}>
                 {rack.shelves.map((shelf) => {
+                  if (!shelf) return null;
                   const iotData = getIoTShelfData(shelf.id);
                   const shelfInfo = getShelfColor(shelf, iotData);
-                  const shelfParcel = parcels.find(p => p.id === shelf.parcelId);
+                  const shelfParcel = Array.isArray(parcels) ? parcels.find(p => p && p.id === shelf.parcelId) : null;
 
-                  // Gunakan berat daripada sensor jika ada, jika tidak guna data database
-                  const currentWeight = iotData ? iotData.weight : shelf.weight;
+                  const currentWeight = iotData ? Number(iotData.weight) : (Number(shelf.weight) || 0);
 
                   return (
                     <div key={shelf.id} onClick={() => onShelfClick(shelf, rack.letter)} style={{ backgroundColor: shelfInfo.bg, border: `2px solid ${shelfInfo.border}`, borderRadius: '8px', padding: '12px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', opacity: shelf.maintenance ? 0.85 : 1 }} onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}>
