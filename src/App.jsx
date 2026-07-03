@@ -480,6 +480,13 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
         formatsToSupport: formatsToSupport
       };
 
+      // Ensure the container is visible and has dimensions before starting
+      const container = document.getElementById(scannerContainerId);
+      if (container) {
+        container.style.display = 'block';
+        container.style.minHeight = '300px';
+      }
+
       await instance.start({ facingMode: "environment" }, config, (decodedText) => {
         if (isUnmountingRef.current) return;
         if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
@@ -489,7 +496,12 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
         safeStopScanner().then(() => {
           scanTimeoutRef.current = setTimeout(() => { if (!isUnmountingRef.current) onScan(decodedText); }, 500);
         });
-      }, () => {});
+      }, (errorMessage) => {
+        // Only log if it's a real error, not just "code not found" noise
+        if (!errorMessage.includes("No MultiFormat Readers")) {
+           console.debug("Scanner noise:", errorMessage);
+        }
+      });
       setIsScanning(true);
     } catch (err) {
       console.error('Scanner start error:', err);
@@ -499,8 +511,10 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
         setError('No camera found on this device.');
       } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
         setError('Camera is already in use by another application.');
+      } else if (!isSecureContext && !isLocalhost) {
+        setError('CAMERA BLOCKED: Browsers require HTTPS to use the camera. Please use a secure connection or "Upload Image" mode.');
       } else {
-        setError(`Camera error: ${err.message || 'Unknown error'}. Try another scan mode.`);
+        setError(`Camera error: ${err.message || 'Unknown error'}. Try "Upload Image" mode.`);
       }
       setIsScanning(false);
     } finally { setIsStarting(false); }
@@ -526,19 +540,29 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
         return;
       }
 
-      // Use the existing scanner container for processing (it must be in DOM)
+      // Important: Use a fresh instance and try to detect all common formats
       const tempInstance = new window.Html5Qrcode(scannerContainerId);
+
+      // We don't call .start() for file scanning, but we use .scanFile()
+      // scanFile takes the file and a boolean for 'showImage'
       const decodedText = await tempInstance.scanFile(file, true);
       
       if (decodedText) {
         setLastScanned(decodedText);
+        // Clear instance
+        try { await tempInstance.clear(); } catch (e) {}
         scanTimeoutRef.current = setTimeout(() => { onScan(decodedText); }, 800);
       } else {
-        setError('No barcode/QR code detected in this image. Please try a clearer image.');
+        setError('No barcode/QR code detected. Make sure the image is clear and not blurry.');
       }
     } catch (err) {
       console.error('Image scan error:', err);
-      setError('Failed to scan image. Make sure it contains a clear barcode or QR code.');
+      setError('Failed to scan image. The barcode might be unclear or format not supported.');
+      // Cleanup
+      try {
+        const checkInstance = new window.Html5Qrcode(scannerContainerId);
+        await checkInstance.clear();
+      } catch (e) {}
     } finally {
       setIsProcessingImage(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
