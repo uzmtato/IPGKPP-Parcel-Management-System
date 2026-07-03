@@ -1827,51 +1827,41 @@ export default function ParcelManagementSystem() {
   };
 
   const handleToggleMaintenance = (rackLetter, shelfId, reason = '') => {
-    let isNowMaintenance = false;
+    let statusText = '';
 
     setRacks(prev => {
       const next = prev.map(r => {
         if (r.letter !== rackLetter) return r;
         if (shelfId === null) {
           const allMaintenance = r.shelves.every(s => s.maintenance);
-          isNowMaintenance = !allMaintenance;
+          const willBeMaintenance = !allMaintenance;
+          statusText = willBeMaintenance ? 'MAINTENANCE' : 'AVAILABLE';
           const updatedShelves = r.shelves.map(s => ({
             ...s,
-            maintenance: !allMaintenance,
-            maintenanceReason: !allMaintenance ? reason || 'Rack-wide maintenance' : '',
-            maintenanceDate: !allMaintenance ? new Date().toISOString() : null
+            maintenance: willBeMaintenance,
+            maintenanceReason: willBeMaintenance ? reason || 'Rack-wide maintenance' : '',
+            maintenanceDate: willBeMaintenance ? new Date().toISOString() : null
           }));
           return { ...r, shelves: updatedShelves };
         } else {
           return { ...r, shelves: r.shelves.map(s => {
             if (s.id !== shelfId) return s;
-            isNowMaintenance = !s.maintenance;
+            const willBeMaintenance = !s.maintenance;
+            statusText = willBeMaintenance ? 'MAINTENANCE' : 'AVAILABLE';
             return {
               ...s,
-              maintenance: !s.maintenance,
-              maintenanceReason: !s.maintenance ? reason : '',
-              maintenanceDate: !s.maintenance ? new Date().toISOString() : null
+              maintenance: willBeMaintenance,
+              maintenanceReason: willBeMaintenance ? reason : '',
+              maintenanceDate: willBeMaintenance ? new Date().toISOString() : null
             };
           }) };
         }
       });
-
-      // Save to cloud immediately if enabled to prevent race conditions with polling
-      if (isCloudConfigured && cloudSession?.access_token) {
-        saveCloudState('racks', next, cloudSession.access_token).catch(error => {
-          console.error('Failed to save maintenance status:', error);
-          showNotification('Error saving to cloud. Change might not persist.');
-        });
-      }
-
       return next;
     });
 
-    const target = shelfId === null ? `Rack ${rackLetter} (all shelves)` : `Shelf ${shelfId}`;
-    // Use a small delay for notification to ensure isNowMaintenance is captured from the functional update loop
-    setTimeout(() => {
-      showNotification(`${target} has been ${isNowMaintenance ? 'set to MAINTENANCE' : 'marked as AVAILABLE'}.`);
-    }, 100);
+    const target = shelfId === null ? `Rak ${rackLetter}` : `Shelf ${shelfId}`;
+    showNotification(`${target} kini dalam status ${statusText}.`);
   };
 
   const handleAddParcel = async (e) => {
