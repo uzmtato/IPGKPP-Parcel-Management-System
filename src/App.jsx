@@ -1827,19 +1827,51 @@ export default function ParcelManagementSystem() {
   };
 
   const handleToggleMaintenance = (rackLetter, shelfId, reason = '') => {
-    setRacks(prev => prev.map(r => {
-      if (r.letter !== rackLetter) return r;
-      if (shelfId === null) {
-        const allMaintenance = r.shelves.every(s => s.maintenance);
-        const updatedShelves = r.shelves.map(s => ({ ...s, maintenance: !allMaintenance, maintenanceReason: !allMaintenance ? reason || 'Rack-wide maintenance' : '', maintenanceDate: !allMaintenance ? new Date().toISOString() : null }));
-        return { ...r, shelves: updatedShelves };
-      } else {
-        return { ...r, shelves: r.shelves.map(s => { if (s.id !== shelfId) return s; return { ...s, maintenance: !s.maintenance, maintenanceReason: !s.maintenance ? reason : '', maintenanceDate: !s.maintenance ? new Date().toISOString() : null }; }) };
+    let isNowMaintenance = false;
+
+    setRacks(prev => {
+      const next = prev.map(r => {
+        if (r.letter !== rackLetter) return r;
+        if (shelfId === null) {
+          const allMaintenance = r.shelves.every(s => s.maintenance);
+          isNowMaintenance = !allMaintenance;
+          const updatedShelves = r.shelves.map(s => ({
+            ...s,
+            maintenance: !allMaintenance,
+            maintenanceReason: !allMaintenance ? reason || 'Rack-wide maintenance' : '',
+            maintenanceDate: !allMaintenance ? new Date().toISOString() : null
+          }));
+          return { ...r, shelves: updatedShelves };
+        } else {
+          return { ...r, shelves: r.shelves.map(s => {
+            if (s.id !== shelfId) return s;
+            isNowMaintenance = !s.maintenance;
+            return {
+              ...s,
+              maintenance: !s.maintenance,
+              maintenanceReason: !s.maintenance ? reason : '',
+              maintenanceDate: !s.maintenance ? new Date().toISOString() : null
+            };
+          }) };
+        }
+      });
+
+      // Save to cloud immediately if enabled to prevent race conditions with polling
+      if (isCloudConfigured && cloudSession?.access_token) {
+        saveCloudState('racks', next, cloudSession.access_token).catch(error => {
+          console.error('Failed to save maintenance status:', error);
+          showNotification('Error saving to cloud. Change might not persist.');
+        });
       }
-    }));
+
+      return next;
+    });
+
     const target = shelfId === null ? `Rack ${rackLetter} (all shelves)` : `Shelf ${shelfId}`;
-    const isNowMaintenance = shelfId === null ? !racks.find(r => r.letter === rackLetter)?.shelves.every(s => s.maintenance) : !racks.find(r => r.letter === rackLetter)?.shelves.find(s => s.id === shelfId)?.maintenance;
-    showNotification(`${target} has been ${isNowMaintenance ? 'set to MAINTENANCE' : 'marked as AVAILABLE'}.`);
+    // Use a small delay for notification to ensure isNowMaintenance is captured from the functional update loop
+    setTimeout(() => {
+      showNotification(`${target} has been ${isNowMaintenance ? 'set to MAINTENANCE' : 'marked as AVAILABLE'}.`);
+    }, 100);
   };
 
   const handleAddParcel = async (e) => {
