@@ -5,6 +5,15 @@ const isMissingSchemaError = (error) => {
   return error?.code === 'PGRST205' || error?.code === 'PGRST204' || error?.code === '42703'
 }
 
+const toAppUser = (user) => {
+  if (!user) return user
+  return {
+    ...user,
+    idNo: user.idNo ?? user.id_no ?? '',
+    profilePic: user.profilePic ?? user.profile_pic ?? '',
+  }
+}
+
 const toAppParcel = (parcel) => {
   if (!parcel) return parcel
   return {
@@ -80,15 +89,16 @@ export const signInCloudUser = async (username, password) => {
     throw new Error('Invalid credentials')
   }
 
+  const formattedUser = toAppUser(user)
   const session = {
-    access_token: 'local_' + user.id,
-    refresh_token: 'local_refresh_' + user.id,
-    user: { email: user.email, id: user.id },
+    access_token: 'local_' + formattedUser.id,
+    refresh_token: 'local_refresh_' + formattedUser.id,
+    user: { email: formattedUser.email, id: formattedUser.id },
     expires_at: Math.floor(Date.now() / 1000) + 3600
   }
 
   saveCloudSession(session)
-  return { session, user }
+  return { session, user: formattedUser }
 }
 
 export const signUpCloudUser = async (data) => {
@@ -144,7 +154,7 @@ export const saveCloudUser = async (user) => {
   const { data, error } = await query.select().single()
 
   if (error) throw error
-  return data
+  return toAppUser(data)
 }
 
 export const deleteCloudUser = async (id) => {
@@ -179,7 +189,7 @@ export const listCloudProfiles = async (token) => {
     if (isMissingSchemaError(error)) return []
     throw error
   }
-  return data || []
+  return (data || []).map(toAppUser)
 }
 
 export const getCloudProfileByEmail = async (email, token) => {
@@ -193,7 +203,7 @@ export const getCloudProfileByEmail = async (email, token) => {
     if (isMissingSchemaError(error)) return null
     throw error
   }
-  return data
+  return toAppUser(data)
 }
 
 export const upsertCloudProfile = async (profile, token) => {
@@ -214,7 +224,7 @@ export const upsertCloudProfile = async (profile, token) => {
     .single()
 
   if (error) throw error
-  return data
+  return toAppUser(data)
 }
 
 // ===== CLOUD STORAGE FUNCTIONS (Supabase Storage) =====

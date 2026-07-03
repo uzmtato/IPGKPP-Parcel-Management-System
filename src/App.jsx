@@ -827,6 +827,7 @@ function ProfilePicUpload({ currentUser, onUpdate, onClose, theme }) {
         setPreview(compressedDataUrl);
         setIsUploading(false);
         onUpdate(compressedDataUrl);
+        if (fileInputRef.current) fileInputRef.current.value = '';
       };
       img.src = event.target.result;
     };
@@ -1980,6 +1981,11 @@ export default function ParcelManagementSystem() {
 
       setUser(savedUser);
       setUsers(prev => prev.map(u => u.username === savedUser.username ? savedUser : u));
+
+      if (!isCloudConfigured) {
+        localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(savedUser));
+      }
+
       showNotification('Gambar profil berjaya dikemaskini!');
     } catch (error) {
       console.error('Cloud profile picture update failed:', error);
