@@ -22,6 +22,7 @@ const toAppParcel = (parcel) => {
     recipient: parcel.recipient ?? parcel.recipient_username ?? '',
     dateReceived: parcel.dateReceived ?? parcel.datereceived ?? parcel.date_received ?? '',
     rackLocation: parcel.rackLocation ?? parcel.racklocation ?? parcel.rack_location ?? '',
+    dateCollected: parcel.dateCollected ?? parcel.date_collected ?? null,
   }
 }
 
@@ -37,6 +38,7 @@ const toDbParcel = (parcel) => ({
   otp: parcel.otp ?? '',
   rack_location: parcel.rackLocation ?? parcel.racklocation ?? parcel.rack_location ?? '',
   weight: parcel.weight ?? '',
+  date_collected: parcel.dateCollected ?? null,
 })
 
 // ===== SESSION MANAGEMENT =====

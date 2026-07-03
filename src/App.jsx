@@ -1496,6 +1496,44 @@ export default function ParcelManagementSystem() {
     return () => clearInterval(interval);
   }, []);
 
+  // AUTO-CLEANUP: Hapus rekod Collected yang lebih 7 hari
+  useEffect(() => {
+    if (!parcels || parcels.length === 0) return;
+
+    const cleanupOldRecords = async () => {
+      const now = new Date();
+      const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+      const toDelete = parcels.filter(p => {
+        if (p.status !== 'Collected' || !p.dateCollected) return false;
+        const collectedDate = new Date(p.dateCollected);
+        return (now - collectedDate) > ONE_WEEK_MS;
+      });
+
+      if (toDelete.length > 0) {
+        console.log(`Cleaning up ${toDelete.length} old collected records...`);
+        for (const p of toDelete) {
+          try {
+            if (isCloudConfigured && cloudSession?.access_token) {
+              await deleteCloudParcel(p.id, cloudSession.access_token);
+            }
+            setParcels(prev => prev.filter(item => item.id !== p.id));
+          } catch (err) {
+            console.error('Auto-cleanup failed for parcel:', p.id, err);
+          }
+        }
+      }
+    };
+
+    const timeout = setTimeout(cleanupOldRecords, 5000);
+    const interval = setInterval(cleanupOldRecords, 3600000);
+
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
+  }, [parcels, cloudSession, isCloudConfigured]);
+
   useEffect(() => {
     if (isCloudConfigured) return;
     try { localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users)); } catch (e) {}
@@ -1902,8 +1940,12 @@ export default function ParcelManagementSystem() {
 
   const updateStatus = async (id, status) => {
     const parcel = parcels.find(p => p.id === id);
-    const updatedParcel = parcel ? { ...parcel, status } : null;
-    setParcels(p => p.map(x => x.id === id ? { ...x, status } : x));
+    const dateCollected = status === 'Collected' ? new Date().toISOString() : (parcel?.dateCollected || null);
+
+    const updatedParcel = parcel ? { ...parcel, status, dateCollected } : null;
+
+    setParcels(p => p.map(x => x.id === id ? { ...x, status, dateCollected } : x));
+
     if (isCloudConfigured && cloudSession?.access_token && updatedParcel) {
       try {
         await upsertCloudParcel(updatedParcel, cloudSession.access_token);
@@ -2154,7 +2196,7 @@ export default function ParcelManagementSystem() {
 
   if (!user) return <AuthView onLogin={handleLogin} onSignUp={handleSignUp} view={view === 'dashboard' ? 'login' : view} setView={setView} theme={themeObj} />;
 
-  const viewTitles = { dashboard: 'Dashboard', myparcels: 'Parcel Tracking', admin: 'Admin Panel', users: 'Student & Staff', rack: 'Smart Rack', racksensors: 'Rack Sensors (IoT)', rackmgmt: 'Rack Maintenance' };
+  const viewTitles = { dashboard: 'Dashboard', myparcels: 'Parcel Tracking', admin: 'Admin Panel', users: 'Student & Staff', rack: 'Smart Rack', racksensors: 'Rack Sensors (IoT)', rackmgmt: 'Rack Maintenance', history: 'Collection History' };
 
   return (
     <div style={styles.app}>
@@ -2175,6 +2217,7 @@ export default function ParcelManagementSystem() {
           {[
             { id: 'dashboard', label: 'Dashboard', icon: Icons.LayoutDashboard },
             { id: 'myparcels', label: 'My Parcels', icon: Icons.Inbox },
+            { id: 'history', label: 'Collection History', icon: Icons.Clock },
             { id: 'rack', label: 'Smart Rack', icon: Icons.Layers },
             { id: 'racksensors', label: 'Rack Sensors (IoT)', icon: Icons.Cpu },
             { id: 'rackmgmt', label: 'Rack Maintenance', icon: Icons.Wrench, adminOnly: true },
@@ -2320,6 +2363,8 @@ export default function ParcelManagementSystem() {
             )}
 
             {view === 'myparcels' && <MyParcelsView parcels={paginatedParcels} user={user} rackIoTData={rackIoTData} theme={themeObj} />}
+
+            {view === 'history' && <HistoryView parcels={parcels} user={user} theme={themeObj} />}
 
             {view === 'rack' && (
               <SmartRackView
@@ -2870,6 +2915,61 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
                   <td style={styles.td}><span style={styles.badge(p.status)}>{p.status}</span></td>
                   <td style={styles.td}>{p.dateReceived}</td>
                   <td style={styles.td}>{p.status === 'Arrived' && (<button onClick={() => onRequestCollect(p)} style={{ padding: '4px 12px', backgroundColor: theme.iconBg, color: theme.iconColor, fontSize: '12px', fontWeight: 600, borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><Icons.Lock width={14} height={14} />Verify</button>)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HistoryView({ parcels, user, theme }) {
+  const styles = createStyles(theme);
+  const isAdmin = user?.role === 'admin';
+
+  // Filter: Hanya Collected, dan jika bukan admin hanya milik sendiri
+  const historyParcels = parcels
+    .filter(p => p.status === 'Collected' && (isAdmin || p.recipient === user?.username))
+    .sort((a, b) => new Date(b.dateCollected || 0) - new Date(a.dateCollected || 0));
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ ...styles.card, padding: '24px', background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', color: 'white', border: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '12px' }}><Icons.Clock width={32} height={32} /></div>
+          <div>
+            <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>Sejarah Pengambilan (Collection History)</h2>
+            <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Rekod disimpan selama 7 hari sebelum dipadam secara automatik.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style={styles.card}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th style={styles.th}>Tracking No</th>
+                {isAdmin && <th style={styles.th}>Recipient</th>}
+                <th style={styles.th}>Sender</th>
+                <th style={styles.th}>Tarikh Sampai</th>
+                <th style={styles.th}>Tarikh Diambil</th>
+                <th style={styles.th}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {historyParcels.length === 0 ? (
+                <tr><td colSpan={isAdmin ? "6" : "5"} style={{ ...styles.td, textAlign: 'center', padding: '40px', color: theme.textSecondary }}>Tiada rekod sejarah pengambilan buat masa ini.</td></tr>
+              ) : historyParcels.map(p => (
+                <tr key={p.id}>
+                  <td style={styles.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.trackingNo}</span></td>
+                  {isAdmin && <td style={styles.td}>{p.recipient}</td>}
+                  <td style={styles.td}>{p.sender}</td>
+                  <td style={styles.td}>{p.dateReceived}</td>
+                  <td style={styles.td}>{p.dateCollected ? new Date(p.dateCollected).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                  <td style={styles.td}><span style={styles.badge('Collected')}>TELAH DIAMBIL</span></td>
                 </tr>
               ))}
             </tbody>
