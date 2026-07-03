@@ -1012,9 +1012,15 @@ function SmartRackView({ racks, parcels, rackIoTData, onShelfClick, isAdmin, onT
                           {iotData && <p style={{ margin: '2px 0 0 0', fontSize: '9px', color: '#4f46e5', fontWeight: 600 }}>LIVE SENSOR ACTIVE</p>}
                         </div>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
                         <span style={{ fontSize: '10px', fontWeight: 600, color: shelfInfo.led, textTransform: 'uppercase' }}>{shelfInfo.label}</span>
-                        {currentWeight > 0 && <span style={{ fontSize: '10px', color: theme.textSecondary, display: 'flex', alignItems: 'center', gap: '4px' }}><Icons.Scale width={10} height={10} />{currentWeight.toFixed(2)}kg</span>}
+                        {currentWeight > 0 && <span style={{ fontSize: '10px', color: theme.textSecondary, display: 'flex', alignItems: 'center', gap: '4px' }} title="Berat"><Icons.Scale width={10} height={10} />{currentWeight.toFixed(2)}kg</span>}
+                        {iotData && (
+                          <>
+                            <span style={{ fontSize: '10px', color: theme.textSecondary, display: 'flex', alignItems: 'center', gap: '4px' }} title="Kapasiti"><Icons.Layers width={10} height={10} />{iotData.fill_level}%</span>
+                            <span style={{ fontSize: '10px', color: theme.textSecondary, display: 'flex', alignItems: 'center', gap: '4px' }} title="Gas/Bau"><Icons.Activity width={10} height={10} />{iotData.gas_value}</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   );
