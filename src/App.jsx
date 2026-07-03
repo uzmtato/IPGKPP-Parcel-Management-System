@@ -932,7 +932,10 @@ function SmartRackView({ racks, parcels, rackIoTData, onShelfClick, isAdmin, onT
 
     // Keutamaan kepada data IoT jika ada
     if (iotData) {
-      if (iotData.is_full || iotData.weight > 0.1) {
+      if (iotData.is_full) {
+        return { bg: theme.occupiedBg, border: '#dc2626', led: '#dc2626', label: 'FULL' };
+      }
+      if (iotData.weight > 0.1) {
          return { bg: theme.occupiedBg, border: theme.occupiedBorder, led: '#dc2626', label: 'Occupied (Sensor)' };
       }
     }
