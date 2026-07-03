@@ -454,7 +454,32 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
     try {
       const instance = new window.Html5Qrcode(scannerContainerId);
       qrInstanceRef.current = instance;
-      const config = { fps: 10, qrbox: { width: 250, height: 150 }, aspectRatio: 1.0, disableFlip: false };
+
+      // Define formats to support (QR + Common Barcodes)
+      const formatsToSupport = [
+        window.Html5QrcodeSupportedFormats.QR_CODE,
+        window.Html5QrcodeSupportedFormats.UPC_A,
+        window.Html5QrcodeSupportedFormats.UPC_E,
+        window.Html5QrcodeSupportedFormats.EAN_13,
+        window.Html5QrcodeSupportedFormats.EAN_8,
+        window.Html5QrcodeSupportedFormats.CODE_39,
+        window.Html5QrcodeSupportedFormats.CODE_128,
+        window.Html5QrcodeSupportedFormats.ITF,
+        window.Html5QrcodeSupportedFormats.RSS_14,
+        window.Html5QrcodeSupportedFormats.RSS_EXPANDED,
+        window.Html5QrcodeSupportedFormats.CODABAR,
+        window.Html5QrcodeSupportedFormats.DATA_MATRIX,
+        window.Html5QrcodeSupportedFormats.PDF_417,
+      ];
+
+      const config = {
+        fps: 20,
+        qrbox: { width: 280, height: 200 },
+        aspectRatio: 1.0,
+        disableFlip: false,
+        formatsToSupport: formatsToSupport
+      };
+
       await instance.start({ facingMode: "environment" }, config, (decodedText) => {
         if (isUnmountingRef.current) return;
         if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
@@ -501,7 +526,8 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
         return;
       }
 
-      const tempInstance = new window.Html5Qrcode(`image-scanner-${Date.now()}`, { verbose: false });
+      // Use the existing scanner container for processing (it must be in DOM)
+      const tempInstance = new window.Html5Qrcode(scannerContainerId);
       const decodedText = await tempInstance.scanFile(file, true);
       
       if (decodedText) {
