@@ -144,7 +144,7 @@ const DEFAULT_RACKS = ['A', 'B', 'C'].map(rackLetter => ({
 }));
 
 const normalizeRacks = (value) => {
-  if (!Array.isArray(value)) return DEFAULT_RACKS;
+  if (!Array.isArray(value) || value.length === 0) return DEFAULT_RACKS;
   const isValid = value.every(rack =>
     rack &&
     typeof rack === 'object' &&
@@ -1859,6 +1859,14 @@ export default function ParcelManagementSystem() {
           }) };
         }
       });
+
+      // Force an immediate cloud save to override any polling race conditions
+      if (isCloudConfigured && cloudSession?.access_token) {
+        saveCloudState('racks', next, cloudSession.access_token).catch(err => {
+          console.error('Failed to sync maintenance status:', err);
+        });
+      }
+
       return next;
     });
 
@@ -2535,6 +2543,19 @@ function RackManagementView({ racks, parcels, onToggleShelf, onToggleRack, onOpe
   const occupiedShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status === 'occupied').length, 0);
   const styles = createStyles(theme);
 
+  if (racks.length === 0) {
+    return (
+      <div style={{ ...styles.card, padding: '40px', textAlign: 'center' }}>
+        <Icons.AlertTriangle width={48} height={48} style={{ color: '#dc2626', marginBottom: '16px' }} />
+        <h2 style={{ color: theme.text }}>Data Rak Tidak Ditemui</h2>
+        <p style={{ color: theme.textSecondary, marginBottom: '24px' }}>Sistem gagal memuatkan data rak dari pangkalan data.</p>
+        <button onClick={() => onToggleRack('ALL')} style={{ ...styles.btnPrimary, width: 'auto', padding: '12px 32px' }}>
+          Pulihkan Sistem Rak (Reset)
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={{ ...styles.card, padding: '24px', background: 'linear-gradient(135deg, #92400e 0%, #d97706 100%)', color: 'white', border: 'none' }}>
@@ -2546,11 +2567,9 @@ function RackManagementView({ racks, parcels, onToggleShelf, onToggleRack, onOpe
               <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Admin Control • Toggle Availability • Track Status</p>
             </div>
           </div>
-          {maintenanceShelves > 0 && (
-            <button onClick={() => { if(window.confirm('Reset semua rak kepada status Available?')) onToggleRack('ALL'); }} style={{ ...styles.btnPrimary, width: 'auto', backgroundColor: '#ffffff', color: '#92400e', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Icons.CheckCircle width={18} height={18} /> Reset Semua Rak (Available)
-            </button>
-          )}
+          <button onClick={() => { if(window.confirm('Reset semua rak kepada status Available?')) onToggleRack('ALL'); }} style={{ ...styles.btnPrimary, width: 'auto', backgroundColor: '#ffffff', color: '#92400e', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
+            <Icons.RefreshCw width={18} height={18} /> Reset Semua Rak
+          </button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginTop: '20px' }}>
           <div style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.8 }}>Total Shelves</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{totalShelves}</p></div>
