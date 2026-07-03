@@ -1067,8 +1067,8 @@ function SmartRackView({ racks, parcels, rackIoTData, onShelfClick, isAdmin, onT
               </div>
               {isAdmin && (
                 <div style={{ padding: '12px 16px', borderTop: `1px solid ${theme.border}`, backgroundColor: styles.cardBg, borderRadius: '0 0 12px 12px' }}>
-                  <button onClick={(e) => { e.stopPropagation(); onToggleMaintenance(rack.letter, null); }} style={{ width: '100%', padding: '8px', backgroundColor: rackMaintenanceCount > 0 ? theme.availableBg : theme.maintenanceBg, color: rackMaintenanceCount > 0 ? theme.availableText : theme.maintenanceText, border: `1px solid ${rackMaintenanceCount > 0 ? theme.availableBorder : theme.maintenanceBorder}`, borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                    {rackMaintenanceCount > 0 ? <><Icons.Check width={14} height={14} />Mark All as Available</> : <><Icons.Wrench width={14} height={14} />Set Entire Rack to Maintenance</>}
+                  <button onClick={(e) => { e.stopPropagation(); onToggleMaintenance(rack.letter, null); }} style={{ width: '100%', padding: '8px', backgroundColor: isFullyMaintenance ? theme.availableBg : theme.maintenanceBg, color: isFullyMaintenance ? theme.availableText : theme.maintenanceText, border: `1px solid ${isFullyMaintenance ? theme.availableBorder : theme.maintenanceBorder}`, borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                    {isFullyMaintenance ? <><Icons.Check width={14} height={14} />Set All to Available</> : <><Icons.Wrench width={14} height={14} />Set Entire Rack to Maintenance</>}
                   </button>
                 </div>
               )}
@@ -1831,11 +1831,13 @@ export default function ParcelManagementSystem() {
 
     setRacks(prev => {
       const next = prev.map(r => {
-        if (r.letter !== rackLetter) return r;
-        if (shelfId === null) {
-          const allMaintenance = r.shelves.every(s => s.maintenance);
-          const willBeMaintenance = !allMaintenance;
+        if (rackLetter !== 'ALL' && r.letter !== rackLetter) return r;
+
+        if (shelfId === null || rackLetter === 'ALL') {
+          const allMaintenance = rackLetter === 'ALL' ? false : r.shelves.every(s => s.maintenance);
+          const willBeMaintenance = rackLetter === 'ALL' ? false : !allMaintenance;
           statusText = willBeMaintenance ? 'MAINTENANCE' : 'AVAILABLE';
+
           const updatedShelves = r.shelves.map(s => ({
             ...s,
             maintenance: willBeMaintenance,
@@ -1860,8 +1862,8 @@ export default function ParcelManagementSystem() {
       return next;
     });
 
-    const target = shelfId === null ? `Rak ${rackLetter}` : `Shelf ${shelfId}`;
-    showNotification(`${target} kini dalam status ${statusText}.`);
+    const target = rackLetter === 'ALL' ? 'Semua Rak' : (shelfId === null ? `Rak ${rackLetter}` : `Shelf ${shelfId}`);
+    showNotification(`${target} kini dalam status ${statusText || 'AVAILABLE'}.`);
   };
 
   const handleAddParcel = async (e) => {
@@ -2536,14 +2538,21 @@ function RackManagementView({ racks, parcels, onToggleShelf, onToggleRack, onOpe
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={{ ...styles.card, padding: '24px', background: 'linear-gradient(135deg, #92400e 0%, #d97706 100%)', color: 'white', border: 'none' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-          <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '12px' }}><Icons.Wrench width={32} height={32} /></div>
-          <div>
-            <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>Rack Maintenance Management</h2>
-            <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Admin Control • Toggle Availability • Track Status</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '12px' }}><Icons.Wrench width={32} height={32} /></div>
+            <div>
+              <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>Rack Maintenance Management</h2>
+              <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Admin Control • Toggle Availability • Track Status</p>
+            </div>
           </div>
+          {maintenanceShelves > 0 && (
+            <button onClick={() => { if(window.confirm('Reset semua rak kepada status Available?')) onToggleRack('ALL'); }} style={{ ...styles.btnPrimary, width: 'auto', backgroundColor: '#ffffff', color: '#92400e', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Icons.CheckCircle width={18} height={18} /> Reset Semua Rak (Available)
+            </button>
+          )}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginTop: '20px' }}>
           <div style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.8 }}>Total Shelves</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{totalShelves}</p></div>
           <div style={{ backgroundColor: 'rgba(22,163,74,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🟢 Available</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{availableShelves}</p></div>
           <div style={{ backgroundColor: 'rgba(220,38,38,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔴 Occupied</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{occupiedShelves}</p></div>
@@ -2600,8 +2609,8 @@ function RackManagementView({ racks, parcels, onToggleShelf, onToggleRack, onOpe
 
               <div style={{ padding: '12px', borderTop: `1px solid ${theme.border}`, backgroundColor: styles.cardBg, borderRadius: '0 0 12px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <button onClick={() => onOpenDetail(rack.letter)} style={{ width: '100%', padding: '8px', backgroundColor: theme.iconBg, color: theme.iconColor, border: `1px solid ${theme === 'dark' ? '#4338ca' : '#c7d2fe'}`, borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Icons.Settings width={14} height={14} />Manage Shelves</button>
-                <button onClick={() => onToggleRack(rack.letter)} style={{ width: '100%', padding: '8px', backgroundColor: isFullyMaintenance ? theme.availableBg : theme.maintenanceBg, color: isFullyMaintenance ? theme.availableText : theme.maintenanceText, border: `1px solid ${isFullyMaintenance ? theme.availableBorder : theme.maintenanceBorder}`, borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                  {isFullyMaintenance ? <><Icons.Check width={14} height={14} />Mark All Available</> : <><Icons.Wrench width={14} height={14} />Set Entire Rack to Maintenance</>}
+                <button onClick={() => onToggleRack(rack.letter)} style={{ width: '100%', padding: '8px', backgroundColor: rackMaintenanceCount > 0 ? theme.availableBg : theme.maintenanceBg, color: rackMaintenanceCount > 0 ? theme.availableText : theme.maintenanceText, border: `1px solid ${rackMaintenanceCount > 0 ? theme.availableBorder : theme.maintenanceBorder}`, borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  {rackMaintenanceCount > 0 ? <><Icons.Check width={14} height={14} />Mark Rack as Available</> : <><Icons.Wrench width={14} height={14} />Set Entire Rack to Maintenance</>}
                 </button>
               </div>
             </div>
