@@ -944,21 +944,29 @@ function CollectionVerifier({ parcel, onClose, onVerify, onOpenScanner, theme })
 }
 
 function SmartRackView({ racks, parcels, rackIoTData, onShelfClick, isAdmin, onToggleMaintenance, theme }) {
-  const totalShelves = racks.reduce((sum, r) => sum + r.shelves.length, 0);
+  if (!Array.isArray(racks) || racks.length === 0) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        <p style={{ color: theme.textSecondary }}>Tiada data rak untuk dipaparkan.</p>
+      </div>
+    );
+  }
+
+  const totalShelves = racks.reduce((sum, r) => sum + (r?.shelves?.length || 0), 0);
 
   // Fungsi untuk memadankan data IoT dengan shelf ID
-  // ESP32 guna "RACK-A-SHELF-1", Grid guna "A-1"
   const getIoTShelfData = (shelfId) => {
     if (!Array.isArray(rackIoTData)) return null;
     return rackIoTData.find(d => {
-      const formattedId = d.rack_id.replace('RACK-', '').replace('-SHELF-', '-'); // "RACK-A-SHELF-1" -> "A-1"
+      if (!d || !d.rack_id || typeof d.rack_id !== 'string') return false;
+      const formattedId = d.rack_id.replace('RACK-', '').replace('-SHELF-', '-');
       return formattedId === shelfId || d.rack_id === shelfId;
     });
   };
 
-  const occupiedShelvesCount = racks.reduce((sum, r) => sum + r.shelves.filter(s => {
+  const occupiedShelvesCount = racks.reduce((sum, r) => sum + (r?.shelves || []).filter(s => {
     const iot = getIoTShelfData(s.id);
-    return s.status === 'occupied' || (iot && (iot.weight > 0.1 || iot.is_full));
+    return s.status === 'occupied' || (iot && (Number(iot.weight) > 0.1 || iot.is_full));
   }).length, 0);
 
   const readyShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status === 'ready').length, 0);
