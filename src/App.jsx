@@ -2275,7 +2275,7 @@ export default function ParcelManagementSystem() {
               <DashboardView parcels={paginatedParcels} trackInput={trackInput} setTrackInput={setTrackInput} onTrack={handleTrackParcel} foundParcel={foundParcel} onRequestCollect={handleRequestCollect} stats={stats} isAdmin={isAdmin} user={user} racks={racks} onGoToRack={() => setView('rack')} onGoToMaintenance={() => setView('rackmgmt')} theme={themeObj} />
             )}
 
-            {view === 'myparcels' && <MyParcelsView parcels={paginatedParcels} user={user} theme={themeObj} />}
+            {view === 'myparcels' && <MyParcelsView parcels={paginatedParcels} user={user} rackIoTData={rackIoTData} theme={themeObj} />}
 
             {view === 'rack' && (
               <SmartRackView
@@ -2836,43 +2836,65 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
   );
 }
 
-function MyParcelsView({ parcels, user, theme }) {
+function MyParcelsView({ parcels, user, rackIoTData, theme }) {
   const styles = createStyles(theme);
+
+  // Fungsi untuk memadankan data IoT dengan rack location parcel
+  const getIoTShelfData = (rackLocation) => {
+    if (!Array.isArray(rackIoTData) || !rackLocation) return null;
+    return rackIoTData.find(d => {
+      const formattedId = d.rack_id.replace('RACK-', '').replace('-SHELF-', '-');
+      return formattedId === rackLocation || d.rack_id === rackLocation;
+    });
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {parcels.map(p => (
-        <div key={p.id} style={{ ...styles.card, padding: '0' }}>
-          <div style={{ padding: '16px 20px', borderBottom: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '16px', color: theme.text }}>{p.trackingNo}</span><span style={{ marginLeft: '12px' }}><span style={styles.badge(p.status)}>{p.status}</span></span></div>
-            <span style={{ fontSize: '14px', color: theme.textSecondary }}>{p.dateReceived}</span>
-          </div>
-          <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Penghantar</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: theme.text }}>{p.sender}</p></div>
-            <div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Lokasi</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: theme.text }}>{p.location}</p></div>
-            {p.rackLocation && (<div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Rak</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</p></div>)}
-            {p.weight && (<div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Berat</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: theme.text }}>{p.weight}</p></div>)}
-            <div style={{ gridColumn: '1 / -1' }}><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Deskripsi</p><p style={{ margin: 0, fontSize: '14px', color: theme.text }}>{p.description || '-'}</p></div>
-          </div>
-          {p.status === 'Arrived' && user?.role !== 'admin' && (
-            <div style={{ padding: '20px', backgroundColor: theme.successBg, borderTop: `1px solid ${theme.successBorder}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-              <p style={{ margin: 0, fontWeight: 700, color: theme.successText, fontSize: '15px' }}>Kod Pengambilan Anda</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: theme.successText, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Kod OTP</p>
-                  <div style={{ backgroundColor: styles.cardBg, padding: '10px 20px', borderRadius: '8px', border: '2px dashed #16a34a', fontFamily: 'monospace', fontSize: '28px', fontWeight: 800, color: '#16a34a', letterSpacing: '4px' }}>{p.otp || '------'}</div>
+      {parcels.map(p => {
+        const iotData = getIoTShelfData(p.rackLocation);
+        const currentWeight = iotData ? `${iotData.weight.toFixed(2)}kg` : p.weight;
+
+        return (
+          <div key={p.id} style={{ ...styles.card, padding: '0' }}>
+            <div style={{ padding: '16px 20px', borderBottom: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '16px', color: theme.text }}>{p.trackingNo}</span><span style={{ marginLeft: '12px' }}><span style={styles.badge(p.status)}>{p.status}</span></span></div>
+              <span style={{ fontSize: '14px', color: theme.textSecondary }}>{p.dateReceived}</span>
+            </div>
+            <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Penghantar</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: theme.text }}>{p.sender}</p></div>
+              <div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Lokasi</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: theme.text }}>{p.location}</p></div>
+              {p.rackLocation && (<div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Rak</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</p></div>)}
+              {currentWeight && (
+                <div>
+                  <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Berat {iotData ? '(Live Sensor)' : ''}</p>
+                  <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: iotData ? '#16a34a' : theme.text }}>
+                    {currentWeight}
+                  </p>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: theme.successText, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Kod QR</p>
-                  <div style={{ backgroundColor: styles.cardBg, padding: '6px', borderRadius: '8px', border: `1px solid ${theme.successBorder}` }}>
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(p.otp || '')}`} alt="QR Code" style={{ width: '100px', height: '100px', display: 'block' }} />
+              )}
+              <div style={{ gridColumn: '1 / -1' }}><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Deskripsi</p><p style={{ margin: 0, fontSize: '14px', color: theme.text }}>{p.description || '-'}</p></div>
+            </div>
+            {p.status === 'Arrived' && user?.role !== 'admin' && (
+              <div style={{ padding: '20px', backgroundColor: theme.successBg, borderTop: `1px solid ${theme.successBorder}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                <p style={{ margin: 0, fontWeight: 700, color: theme.successText, fontSize: '15px' }}>Kod Pengambilan Anda</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: theme.successText, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Kod OTP</p>
+                    <div style={{ backgroundColor: styles.cardBg, padding: '10px 20px', borderRadius: '8px', border: '2px dashed #16a34a', fontFamily: 'monospace', fontSize: '28px', fontWeight: 800, color: '#16a34a', letterSpacing: '4px' }}>{p.otp || '------'}</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: theme.successText, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Kod QR</p>
+                    <div style={{ backgroundColor: styles.cardBg, padding: '6px', borderRadius: '8px', border: `1px solid ${theme.successBorder}` }}>
+                      <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(p.otp || '')}`} alt="QR Code" style={{ width: '100px', height: '100px', display: 'block' }} />
+                    </div>
                   </div>
                 </div>
+                <p style={{ margin: 0, fontSize: '12px', color: theme.successText, textAlign: 'center', maxWidth: '350px', lineHeight: '1.4' }}>Tunjukkan kod ini kepada staf pos untuk pengesahan sebelum mengambil parcel.</p>
               </div>
-              <p style={{ margin: 0, fontSize: '12px', color: theme.successText, textAlign: 'center', maxWidth: '350px', lineHeight: '1.4' }}>Tunjukkan kod ini kepada staf pos untuk pengesahan sebelum mengambil parcel.</p>
-            </div>
-          )}
-        </div>
-      ))}
+            )}
+          </div>
+        );
+      })}
       {parcels.length === 0 && (
         <div style={{ ...styles.card, padding: '40px', textAlign: 'center', color: theme.textSecondary }}>
           <Icons.Inbox width={48} height={48} style={{ marginBottom: '12px', opacity: 0.3 }} />
