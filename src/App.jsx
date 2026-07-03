@@ -904,16 +904,39 @@ function CollectionVerifier({ parcel, onClose, onVerify, onOpenScanner, theme })
   );
 }
 
-function SmartRackView({ racks, parcels, onShelfClick, isAdmin, onToggleMaintenance, theme }) {
+function SmartRackView({ racks, parcels, rackIoTData, onShelfClick, isAdmin, onToggleMaintenance, theme }) {
   const totalShelves = racks.reduce((sum, r) => sum + r.shelves.length, 0);
-  const occupiedShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status === 'occupied').length, 0);
+
+  // Fungsi untuk memadankan data IoT dengan shelf ID
+  // ESP32 guna "RACK-A-SHELF-1", Grid guna "A-1"
+  const getIoTShelfData = (shelfId) => {
+    if (!Array.isArray(rackIoTData)) return null;
+    return rackIoTData.find(d => {
+      const formattedId = d.rack_id.replace('RACK-', '').replace('-SHELF-', '-'); // "RACK-A-SHELF-1" -> "A-1"
+      return formattedId === shelfId || d.rack_id === shelfId;
+    });
+  };
+
+  const occupiedShelvesCount = racks.reduce((sum, r) => sum + r.shelves.filter(s => {
+    const iot = getIoTShelfData(s.id);
+    return s.status === 'occupied' || (iot && (iot.weight > 0.1 || iot.is_full));
+  }).length, 0);
+
   const readyShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.status === 'ready').length, 0);
   const maintenanceShelves = racks.reduce((sum, r) => sum + r.shelves.filter(s => s.maintenance).length, 0);
-  const emptyShelves = totalShelves - occupiedShelves - readyShelves - maintenanceShelves;
+  const emptyShelves = totalShelves - occupiedShelvesCount - readyShelves - maintenanceShelves;
   const styles = createStyles(theme);
 
-  const getShelfColor = (shelf) => {
+  const getShelfColor = (shelf, iotData) => {
     if (shelf.maintenance) return { bg: theme.maintenanceBg, border: theme.maintenanceBorder, led: '#d97706', label: 'Maintenance' };
+
+    // Keutamaan kepada data IoT jika ada
+    if (iotData) {
+      if (iotData.is_full || iotData.weight > 0.1) {
+         return { bg: theme.occupiedBg, border: theme.occupiedBorder, led: '#dc2626', label: 'Occupied (Sensor)' };
+      }
+    }
+
     if (shelf.status === 'empty') return { bg: theme.availableBg, border: theme.availableBorder, led: '#16a34a', label: 'Empty' };
     if (shelf.status === 'ready') return { bg: theme.infoBg, border: theme.infoBorder, led: '#2563eb', label: 'Ready' };
     return { bg: theme.occupiedBg, border: theme.occupiedBorder, led: '#dc2626', label: 'Occupied' };
@@ -932,7 +955,7 @@ function SmartRackView({ racks, parcels, onShelfClick, isAdmin, onToggleMaintena
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
           <div style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.8 }}>Total Shelves</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{totalShelves}</p></div>
           <div style={{ backgroundColor: 'rgba(22,163,74,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🟢 Empty</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{emptyShelves}</p></div>
-          <div style={{ backgroundColor: 'rgba(220,38,38,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔴 Occupied</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{occupiedShelves}</p></div>
+          <div style={{ backgroundColor: 'rgba(220,38,38,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔴 Occupied</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{occupiedShelvesCount}</p></div>
           <div style={{ backgroundColor: 'rgba(37,99,235,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔵 Ready</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{readyShelves}</p></div>
           {maintenanceShelves > 0 && (<div style={{ backgroundColor: 'rgba(217,119,6,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🟠 Maintenance</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{maintenanceShelves}</p></div>)}
         </div>
@@ -968,21 +991,27 @@ function SmartRackView({ racks, parcels, onShelfClick, isAdmin, onToggleMaintena
               </div>
               <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: styles.sectionBg }}>
                 {rack.shelves.map((shelf) => {
-                  const shelfInfo = getShelfColor(shelf);
+                  const iotData = getIoTShelfData(shelf.id);
+                  const shelfInfo = getShelfColor(shelf, iotData);
                   const shelfParcel = parcels.find(p => p.id === shelf.parcelId);
+
+                  // Gunakan berat daripada sensor jika ada, jika tidak guna data database
+                  const currentWeight = iotData ? iotData.weight : shelf.weight;
+
                   return (
                     <div key={shelf.id} onClick={() => onShelfClick(shelf, rack.letter)} style={{ backgroundColor: shelfInfo.bg, border: `2px solid ${shelfInfo.border}`, borderRadius: '8px', padding: '12px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', opacity: shelf.maintenance ? 0.85 : 1 }} onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: shelfInfo.led, boxShadow: `0 0 10px ${shelfInfo.led}`, animation: (shelf.status !== 'empty' && !shelf.maintenance) ? 'pulse 2s infinite' : 'none', flexShrink: 0 }} />
+                        <div style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: shelfInfo.led, boxShadow: `0 0 10px ${shelfInfo.led}`, animation: (shelfInfo.led !== '#16a34a' && !shelf.maintenance) ? 'pulse 2s infinite' : 'none', flexShrink: 0 }} />
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: theme.text }}>{shelf.id}</p>{shelf.maintenance && <Icons.Wrench width={14} height={14} style={{ color: '#d97706' }} />}</div>
                           {shelfParcel && <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: theme.textSecondary }}>{shelfParcel.trackingNo}</p>}
                           {shelf.maintenance && shelf.maintenanceReason && <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: theme.maintenanceText, fontStyle: 'italic' }}>{shelf.maintenanceReason}</p>}
+                          {iotData && <p style={{ margin: '2px 0 0 0', fontSize: '9px', color: '#4f46e5', fontWeight: 600 }}>LIVE SENSOR ACTIVE</p>}
                         </div>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
                         <span style={{ fontSize: '10px', fontWeight: 600, color: shelfInfo.led, textTransform: 'uppercase' }}>{shelfInfo.label}</span>
-                        {shelf.weight > 0 && <span style={{ fontSize: '10px', color: theme.textSecondary, display: 'flex', alignItems: 'center', gap: '4px' }}><Icons.Scale width={10} height={10} />{shelf.weight}kg</span>}
+                        {currentWeight > 0 && <span style={{ fontSize: '10px', color: theme.textSecondary, display: 'flex', alignItems: 'center', gap: '4px' }}><Icons.Scale width={10} height={10} />{currentWeight.toFixed(2)}kg</span>}
                       </div>
                     </div>
                   );
@@ -1143,14 +1172,16 @@ function RackMaintenanceModal({ rackLetter, shelves, onClose, onToggleShelf, onT
 function RackSensorView({ rackIoTData, theme }) {
   const styles = createStyles(theme);
 
-  // Memadankan dengan kunci daripada kod ESP32 user
-  const fill = rackIoTData?.fill_level || 0;
-  const weight = rackIoTData?.weight || 0;
-  const gas = rackIoTData?.gas_value || 0;
-  const status = rackIoTData?.status || 'Normal';
-  const lastUpdate = rackIoTData?.updated_at ? new Date(rackIoTData.updated_at).toLocaleTimeString() : 'Never';
+  // Mengambil data terkini (paling atas) daripada senarai IoT data
+  const latestData = Array.isArray(rackIoTData) && rackIoTData.length > 0 ? rackIoTData[0] : null;
 
-  const isFull = rackIoTData?.is_full ?? (status === 'Penuh' || fill >= 80);
+  const fill = latestData?.fill_level || 0;
+  const weight = latestData?.weight || 0;
+  const gas = latestData?.gas_value || 0;
+  const status = latestData?.status || 'Normal';
+  const lastUpdate = latestData?.updated_at ? new Date(latestData.updated_at).toLocaleTimeString() : 'Never';
+
+  const isFull = latestData?.is_full ?? (status === 'Penuh' || fill >= 80);
   const isOverweight = status === 'Berat Berlebihan' || weight >= 2.0;
   const hasBadOdor = status === 'Bau Busuk' || gas >= 1000;
 
@@ -1163,13 +1194,13 @@ function RackSensorView({ rackIoTData, theme }) {
           </div>
           <div>
             <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>IPGKPP Smart Rack IoT Monitor</h2>
-            <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Real-time environmental & weight sensors — Rack {rackIoTData?.rack_id || '-'}</p>
+            <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Real-time environmental & weight sensors — Rack {latestData?.rack_id || '-'}</p>
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: rackIoTData ? '#4ade80' : '#f87171', boxShadow: `0 0 10px ${rackIoTData ? '#4ade80' : '#f87171'}` }}></div>
-            <span style={{ fontSize: '14px', fontWeight: 600 }}>{rackIoTData ? `Device Online (${rackIoTData.rack_id || 'RACK-A-1'})` : 'Waiting for data...'}</span>
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: latestData ? '#4ade80' : '#f87171', boxShadow: `0 0 10px ${latestData ? '#4ade80' : '#f87171'}` }}></div>
+            <span style={{ fontSize: '14px', fontWeight: 600 }}>{latestData ? `Device Online (${latestData.rack_id})` : 'Waiting for data...'}</span>
           </div>
           <div style={{ fontSize: '12px', opacity: 0.8, backgroundColor: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: '6px' }}>
             Last Sync: {lastUpdate}
@@ -1255,7 +1286,7 @@ export default function ParcelManagementSystem() {
   const [cloudSchemaMissing, setCloudSchemaMissing] = useState(false);
   const cloudPollRef = useRef(null);
   const cloudHydratingRef = useRef(false);
-  const [rackIoTData, setRackIoTData] = useState(null);
+  const [rackIoTData, setRackIoTData] = useState([]);
 
   const [theme, setTheme] = useState(() => {
     try {
@@ -1325,7 +1356,7 @@ export default function ParcelManagementSystem() {
       const profiles = results[0].status === 'fulfilled' ? results[0].value : [];
       const cloudParcels = results[1].status === 'fulfilled' ? results[1].value : DEFAULT_PARCELS;
       const cloudRacks = results[2].status === 'fulfilled' ? results[2].value : DEFAULT_RACKS;
-      const iotData = results[3].status === 'fulfilled' ? results[3].value : null;
+      const iotData = results[3].status === 'fulfilled' ? results[3].value : [];
 
       cloudHydratingRef.current = true;
       setCloudSession(activeSession || null);
@@ -2239,7 +2270,7 @@ export default function ParcelManagementSystem() {
 
             {view === 'rack' && (
               <SmartRackView
-                racks={racks} parcels={parcels} isAdmin={isAdmin} theme={themeObj}
+                racks={racks} parcels={parcels} rackIoTData={rackIoTData} isAdmin={isAdmin} theme={themeObj}
                 onShelfClick={(shelf, rackLetter) => { const parcel = parcels.find(p => p.id === shelf.parcelId); setSelectedShelf({ shelf, rackLetter, parcel }); }}
                 onToggleMaintenance={(rackLetter, shelfId) => {
                   if (shelfId !== null) { const reason = prompt('Enter maintenance reason (optional):'); handleToggleMaintenance(rackLetter, shelfId, reason || ''); }
