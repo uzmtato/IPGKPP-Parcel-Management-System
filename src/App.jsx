@@ -462,28 +462,14 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
         return;
       }
 
-      // Try to find the back camera (environment), otherwise use the first one
-      const backCamera = devices.find(device =>
-        device.label.toLowerCase().includes('back') ||
-        device.label.toLowerCase().includes('rear') ||
-        device.label.toLowerCase().includes('environment')
-      );
-      const cameraId = backCamera ? backCamera.id : devices[0].id;
+      const cameraId = devices[0].id;
 
       const html5QrCode = new window.Html5Qrcode(scannerContainerId);
       qrInstanceRef.current = html5QrCode;
 
       const config = {
         fps: 10,
-        qrbox: { width: 250, height: 150 },
-        // Support common parcel barcodes + QR
-        formatsToSupport: [
-          window.Html5QrcodeSupportedFormats.QR_CODE,
-          window.Html5QrcodeSupportedFormats.CODE_128,
-          window.Html5QrcodeSupportedFormats.CODE_39,
-          window.Html5QrcodeSupportedFormats.EAN_13,
-          window.Html5QrcodeSupportedFormats.UPC_A
-        ]
+        qrbox: { width: 250, height: 150 }
       };
 
       await html5QrCode.start(
@@ -493,21 +479,15 @@ function UniversalScanner({ onScan, onClose, theme, mode: initialMode = 'auto' }
           setLastScanned(decodedText);
           setIsScanning(false);
           setIsStarting(false);
-
-          // Stop and clear immediately on success
-          html5QrCode.stop().then(() => {
-            html5QrCode.clear();
-            scanTimeoutRef.current = setTimeout(() => {
-              if (!isUnmountingRef.current) onScan(decodedText);
-            }, 300);
-          }).catch(err => {
-            console.warn("Stop failed", err);
+          html5QrCode.stop();
+          html5QrCode.clear();
+          scanTimeoutRef.current = setTimeout(() => {
             if (!isUnmountingRef.current) onScan(decodedText);
-          });
+          }, 300);
         },
         (error) => {
           if (error && typeof error === 'string' && !error.includes('No MultiFormat Readers')) {
-            // console.warn('Scan frame error:', error);
+            console.warn('Scan frame error:', error);
           }
         }
       );
