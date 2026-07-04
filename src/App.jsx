@@ -1925,7 +1925,20 @@ export default function ParcelManagementSystem() {
       if (!assigned) { alert('No available shelves found. Some shelves may be under maintenance.'); return; }
     }
 
-    const newParcel = { ...adminForm, sender: senderValue, id: newParcelId, dateReceived: new Date().toISOString().split('T')[0], otp: otp, status: adminForm.status || 'Pending', rackLocation: assignedRack, weight: `${parcelWeight}kg` };
+    const recipientUser = users.find(u => u.username === adminForm.recipient);
+
+    const newParcel = {
+      ...adminForm,
+      sender: senderValue,
+      id: newParcelId,
+      dateReceived: new Date().toISOString().split('T')[0],
+      otp: otp,
+      status: adminForm.status || 'Pending',
+      rackLocation: assignedRack,
+      weight: `${parcelWeight}kg`,
+      recipientName: recipientUser?.name || '',
+      recipientIdNo: recipientUser?.idNo || recipientUser?.id_no || ''
+    };
     delete newParcel.senderOther;
     delete newParcel.assignRack;
     delete newParcel.selectedRackShelf;
@@ -2976,7 +2989,12 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
                 <tr key={p.id} style={{ transition: 'background-color 0.15s' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.tableRowHover; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
                   <td style={styles.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.trackingNo}</span></td>
                   <td style={styles.td}>{p.sender}</td>
-                  <td style={styles.td}>{p.recipient}</td>
+                  <td style={styles.td}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>{p.recipientName || p.recipient}</span>
+                      {p.recipientIdNo && <span style={{ fontSize: '11px', color: theme.textSecondary }}>ID: {p.recipientIdNo}</span>}
+                    </div>
+                  </td>
                   <td style={styles.td}>{p.rackLocation ? <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</span> : <span style={{ color: theme.textMuted }}>—</span>}</td>
                   <td style={styles.td}><span style={styles.badge(p.status)}>{p.status}</span></td>
                   <td style={styles.td}>{p.dateReceived}</td>
@@ -3031,7 +3049,14 @@ function HistoryView({ parcels, user, theme }) {
               ) : historyParcels.map(p => (
                 <tr key={p.id}>
                   <td style={styles.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.trackingNo}</span></td>
-                  {isAdmin && <td style={styles.td}>{p.recipient}</td>}
+                  {isAdmin && (
+                    <td style={styles.td}>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontWeight: 600 }}>{p.recipientName || p.recipient}</span>
+                        {p.recipientIdNo && <span style={{ fontSize: '11px', color: theme.textSecondary }}>ID: {p.recipientIdNo}</span>}
+                      </div>
+                    </td>
+                  )}
                   <td style={styles.td}>{p.sender}</td>
                   <td style={styles.td}>{p.dateReceived}</td>
                   <td style={styles.td}>{p.dateCollected ? new Date(p.dateCollected).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</td>
@@ -3284,7 +3309,12 @@ function AdminView({ parcels, users = [], form, setForm, onAdd, onRequestCollect
               {parcels.map(p => (
                 <tr key={p.id} style={{ transition: 'background-color 0.15s' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.tableRowHover; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
                   <td style={styles.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.trackingNo}</span></td>
-                  <td style={styles.td}>{p.recipient}</td>
+                  <td style={styles.td}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>{p.recipientName || p.recipient}</span>
+                      {p.recipientIdNo && <span style={{ fontSize: '11px', color: theme.textSecondary }}>ID: {p.recipientIdNo}</span>}
+                    </div>
+                  </td>
                   <td style={styles.td}>{p.rackLocation ? <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</span> : <span style={{ color: theme.textMuted }}>—</span>}</td>
                   <td style={{ ...styles.td, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description || '-'}</td>
                   <td style={styles.td}>
