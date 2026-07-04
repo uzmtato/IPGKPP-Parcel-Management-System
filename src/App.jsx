@@ -3096,6 +3096,11 @@ function MyParcelsView({ parcels, user, rackIoTData, theme }) {
               <span style={{ fontSize: '14px', color: theme.textSecondary }}>{p.dateReceived}</span>
             </div>
             <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div style={{ gridColumn: '1 / -1', paddingBottom: '8px', borderBottom: `1px dashed ${theme.border}` }}>
+                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Penerima</p>
+                <p style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: theme.text }}>{p.recipientName || p.recipient}</p>
+                {p.recipientIdNo && <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: theme.textSecondary }}>ID/Matrik: <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.recipientIdNo}</span></p>}
+              </div>
               <div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Penghantar</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: theme.text }}>{p.sender}</p></div>
               <div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Lokasi</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: theme.text }}>{p.location}</p></div>
               {p.rackLocation && (<div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Rak</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</p></div>)}
