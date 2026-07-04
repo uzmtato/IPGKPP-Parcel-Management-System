@@ -1937,7 +1937,8 @@ export default function ParcelManagementSystem() {
       rackLocation: assignedRack,
       weight: `${parcelWeight}kg`,
       recipientName: recipientUser?.name || '',
-      recipientIdNo: recipientUser?.idNo || recipientUser?.id_no || ''
+      recipientIdNo: recipientUser?.idNo || recipientUser?.id_no || '',
+      recipientRole: recipientUser?.role || 'student'
     };
     delete newParcel.senderOther;
     delete newParcel.assignRack;
@@ -3012,21 +3013,36 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
 function HistoryView({ parcels, user, theme }) {
   const styles = createStyles(theme);
   const isAdmin = user?.role === 'admin';
+  const [activeTab, setActiveTab] = useState('student');
 
   // Filter: Hanya Collected, dan jika bukan admin hanya milik sendiri
   const historyParcels = parcels
-    .filter(p => p.status === 'Collected' && (isAdmin || p.recipient === user?.username))
+    .filter(p => {
+      const isCollected = p.status === 'Collected';
+      const isOwn = p.recipient === user?.username;
+      const matchesRole = isAdmin ? (p.recipientRole === activeTab || (!p.recipientRole && activeTab === 'student')) : true;
+
+      return isCollected && (isAdmin ? matchesRole : isOwn);
+    })
     .sort((a, b) => new Date(b.dateCollected || 0) - new Date(a.dateCollected || 0));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={{ ...styles.card, padding: '24px', background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', color: 'white', border: 'none' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '12px' }}><Icons.Clock width={32} height={32} /></div>
-          <div>
-            <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>Sejarah Pengambilan (Collection History)</h2>
-            <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Rekod disimpan selama 7 hari sebelum dipadam secara automatik.</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '12px' }}><Icons.Clock width={32} height={32} /></div>
+            <div>
+              <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>Sejarah Pengambilan (Collection History)</h2>
+              <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Rekod disimpan selama 7 hari sebelum dipadam secara automatik.</p>
+            </div>
           </div>
+          {isAdmin && (
+            <div style={{ display: 'flex', gap: '4px', backgroundColor: 'rgba(255,255,255,0.1)', padding: '4px', borderRadius: '8px' }}>
+              <button onClick={() => setActiveTab('student')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 600, backgroundColor: activeTab === 'student' ? '#4f46e5' : 'transparent', color: '#fff' }}>Student</button>
+              <button onClick={() => setActiveTab('staff')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 600, backgroundColor: activeTab === 'staff' ? '#4f46e5' : 'transparent', color: '#fff' }}>Staff</button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -3073,19 +3089,37 @@ function HistoryView({ parcels, user, theme }) {
 
 function MyParcelsView({ parcels, user, rackIoTData, theme }) {
   const styles = createStyles(theme);
+  const isAdmin = user?.role === 'admin';
+  const [activeTab, setActiveTab] = useState('student');
 
   // Fungsi untuk memadankan data IoT dengan rack location parcel
   const getIoTShelfData = (rackLocation) => {
     if (!Array.isArray(rackIoTData) || !rackLocation) return null;
     return rackIoTData.find(d => {
+      if (!d || !d.rack_id || typeof d.rack_id !== 'string') return false;
       const formattedId = d.rack_id.replace('RACK-', '').replace('-SHELF-', '-');
       return formattedId === rackLocation || d.rack_id === rackLocation;
     });
   };
 
+  const filteredParcels = parcels.filter(p => {
+    if (!isAdmin) return true; // Pelajar/Staf sudah difilter di peringkat atas
+    const matchesRole = p.recipientRole === activeTab || (!p.recipientRole && activeTab === 'student');
+    return matchesRole;
+  });
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {parcels.map(p => {
+      {isAdmin && (
+        <div style={{ ...styles.card, padding: '12px', marginBottom: '8px', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '4px', backgroundColor: styles.sectionBg, padding: '4px', borderRadius: '8px' }}>
+            <button onClick={() => setActiveTab('student')} style={{ padding: '8px 24px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 600, backgroundColor: activeTab === 'student' ? '#4f46e5' : 'transparent', color: activeTab === 'student' ? '#fff' : theme.textSecondary }}>Student Parcels</button>
+            <button onClick={() => setActiveTab('staff')} style={{ padding: '8px 24px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 600, backgroundColor: activeTab === 'staff' ? '#4f46e5' : 'transparent', color: activeTab === 'staff' ? '#fff' : theme.textSecondary }}>Staff Parcels</button>
+          </div>
+        </div>
+      )}
+
+      {filteredParcels.map(p => {
         const iotData = getIoTShelfData(p.rackLocation);
         const currentWeight = iotData ? `${iotData.weight.toFixed(2)}kg` : p.weight;
 
@@ -3216,6 +3250,7 @@ function UserManagementView({ users = [], userForm, setUserForm, onSaveUser, onE
 }
 
 function AdminView({ parcels, users = [], form, setForm, onAdd, onRequestCollect, onDelete, onUpdateStatus, onOpenScanner, scannedTracking, racks, theme }) {
+  const [activeTab, setActiveTab] = useState('student');
   const styles = createStyles(theme);
   const up = (k) => (e) => { const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value; setForm(prev => ({ ...prev, [k]: value })); };
   const isOthers = form.sender === 'Others';
@@ -3295,8 +3330,12 @@ function AdminView({ parcels, users = [], form, setForm, onAdd, onRequestCollect
       </div>
 
       <div style={styles.card}>
-        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${theme.border}` }}>
-          <h3 style={{ fontWeight: 600, color: theme.text, margin: 0, fontSize: '16px' }}>System Parcel Management (All Records)</h3>
+        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <h3 style={{ fontWeight: 600, color: theme.text, margin: 0, fontSize: '16px' }}>System Parcel Management</h3>
+          <div style={{ display: 'flex', gap: '4px', backgroundColor: styles.sectionBg, padding: '4px', borderRadius: '8px' }}>
+            <button type="button" onClick={() => setActiveTab('student')} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 600, backgroundColor: activeTab === 'student' ? '#4f46e5' : 'transparent', color: activeTab === 'student' ? '#fff' : theme.textSecondary }}>Student</button>
+            <button type="button" onClick={() => setActiveTab('staff')} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 600, backgroundColor: activeTab === 'staff' ? '#4f46e5' : 'transparent', color: activeTab === 'staff' ? '#fff' : theme.textSecondary }}>Staff</button>
+          </div>
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table style={styles.table}>
@@ -3311,7 +3350,7 @@ function AdminView({ parcels, users = [], form, setForm, onAdd, onRequestCollect
               </tr>
             </thead>
             <tbody>
-              {parcels.map(p => (
+              {parcels.filter(p => (p.recipientRole === activeTab || (!p.recipientRole && activeTab === 'student'))).map(p => (
                 <tr key={p.id} style={{ transition: 'background-color 0.15s' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.tableRowHover; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
                   <td style={styles.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.trackingNo}</span></td>
                   <td style={styles.td}>
