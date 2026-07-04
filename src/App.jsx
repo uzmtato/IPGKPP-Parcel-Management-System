@@ -2838,8 +2838,13 @@ function SignUpForm({ onSignUp, theme }) {
 }
 
 function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParcel, onRequestCollect, stats, isAdmin, user, racks, onGoToRack, onGoToMaintenance, theme }) {
+  const [activeTab, setActiveTab] = useState('student');
   const cardGrid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' };
   const styles = createStyles(theme);
+
+  const filteredParcels = isAdmin
+    ? parcels.filter(p => (p.recipientRole === activeTab || (!p.recipientRole && activeTab === 'student')))
+    : parcels;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -2969,8 +2974,14 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
       </div>
 
       <div style={styles.card}>
-        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${theme.border}` }}>
+        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <h3 style={{ fontWeight: 600, color: theme.text, margin: 0, fontSize: '16px' }}>{isAdmin ? 'All System Parcels' : 'Active Parcels'}</h3>
+          {isAdmin && (
+            <div style={{ display: 'flex', gap: '4px', backgroundColor: styles.sectionBg, padding: '4px', borderRadius: '8px' }}>
+              <button type="button" onClick={() => setActiveTab('student')} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 600, backgroundColor: activeTab === 'student' ? '#4f46e5' : 'transparent', color: activeTab === 'student' ? '#fff' : theme.textSecondary }}>Student</button>
+              <button type="button" onClick={() => setActiveTab('staff')} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 600, backgroundColor: activeTab === 'staff' ? '#4f46e5' : 'transparent', color: activeTab === 'staff' ? '#fff' : theme.textSecondary }}>Staff</button>
+            </div>
+          )}
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table style={styles.table}>
@@ -2986,7 +2997,7 @@ function DashboardView({ parcels, trackInput, setTrackInput, onTrack, foundParce
               </tr>
             </thead>
             <tbody>
-              {parcels.length === 0 ? (<tr><td colSpan="7" style={{ ...styles.td, textAlign: 'center', padding: '32px', color: theme.textSecondary }}>No parcels found</td></tr>) : parcels.map(p => (
+              {filteredParcels.length === 0 ? (<tr><td colSpan="7" style={{ ...styles.td, textAlign: 'center', padding: '32px', color: theme.textSecondary }}>No parcels found</td></tr>) : filteredParcels.map(p => (
                 <tr key={p.id} style={{ transition: 'background-color 0.15s' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.tableRowHover; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
                   <td style={styles.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.trackingNo}</span></td>
                   <td style={styles.td}>{p.sender}</td>
