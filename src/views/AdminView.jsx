@@ -1,8 +1,8 @@
+// src/views/AdminView.jsx
 import { useState, useRef } from 'react';
 import { Icons } from '../components/Icons';
 import { createStyles } from '../utils/theme';
-import { COURIERS, NOTIFIABLE_STATUSES } from '../utils/constants';
-import { getParcelNotificationMessage } from '../utils/helpers';
+import { COURIERS } from '../utils/constants'; // Removed NOTIFIABLE_STATUSES since we deleted the manual button
 
 export function AdminView({ parcels, users = [], form, setForm, onAdd, onRequestCollect, onDelete, onUpdateStatus, onOpenScanner, scannedTracking, racks, theme }) {
   const [activeTab, setActiveTab] = useState('student');
@@ -76,6 +76,7 @@ export function AdminView({ parcels, users = [], form, setForm, onAdd, onRequest
               </button>
             </div>
           </div>
+          
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <select value={form.sender} onChange={up('sender')} style={styles.input} required>
               <option value="" disabled>Select Courier</option>
@@ -83,57 +84,94 @@ export function AdminView({ parcels, users = [], form, setForm, onAdd, onRequest
             </select>
             {isOthers && <input value={form.senderOther} onChange={up('senderOther')} placeholder="Enter courier name" style={styles.input} required={isOthers} />}
           </div>
-          <div>
+          
+          {/* THE NEW STRICT DROPDOWN */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <input
               value={form.recipient}
               onChange={up('recipient')}
               list="recipient-options"
-              placeholder="Recipient username"
+              placeholder="Type name to search..."
               style={styles.input}
               required
+              onBlur={(e) => {
+                const val = e.target.value;
+                if (!val) return;
+                
+                // Check if what they typed exactly matches 'UNREGISTERED' or a real username
+                const isValid = val === 'UNREGISTERED' || recipientOptions.some(u => u.username === val);
+                
+                if (!isValid) {
+                  // ERASES THE BOX if they typed a fake name!
+                  setForm(prev => ({ ...prev, recipient: '' }));
+                  alert('Name not found in system! Please select a valid user from the popup list, or select "UNREGISTERED".');
+                }
+              }}
             />
             <datalist id="recipient-options">
+              <option value="UNREGISTERED" label="⚠ Unregistered / Guest (Manual Claim)" />
               {recipientOptions.map(u => (
                 <option key={u.username} value={u.username} label={`${u.name || u.username} - ${u.role === 'staff' ? 'Staff' : 'Student'}`} />
               ))}
             </datalist>
+
+            {form.recipient === 'UNREGISTERED' && (
+              <input 
+                value={form.recipientNameOnLabel || ''} 
+                onChange={up('recipientNameOnLabel')} 
+                placeholder="Name printed on physical parcel" 
+                style={styles.input} 
+                required 
+              />
+            )}
           </div>
+          
           <select value={form.status} onChange={up('status')} style={styles.input}>
             {statusOptions.filter(status => status !== 'Collected').map(status => <option key={status}>{status}</option>)}
           </select>
           <input value={form.location} onChange={up('location')} placeholder="Storage Location" style={{ ...styles.input, gridColumn: '1 / -1' }} required />
           <input value={form.description} onChange={up('description')} placeholder="Package Description (Visible to User)" style={{ ...styles.input, gridColumn: '1 / -1' }} />
-
-          <div style={{ gridColumn: '1 / -1', padding: '16px', backgroundColor: styles.sectionBg, borderRadius: '10px', border: `1px solid ${styles.sectionBorder}` }}>
-            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 700, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}><Icons.Zap width={18} height={18} style={{ color: '#4f46e5' }} />Smart Rack Assignment (IoT Integration)</h4>
-            {maintenanceShelves.length > 0 && (
-              <div style={{ marginBottom: '12px', padding: '8px 12px', backgroundColor: theme.maintenanceBg, border: `1px solid ${theme.maintenanceBorder}`, borderRadius: '6px', fontSize: '12px', color: theme.maintenanceText, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Icons.AlertTriangle width={14} height={14} /><span><strong>{maintenanceShelves.length} shelf{maintenanceShelves.length > 1 ? 's' : ''} under maintenance</strong> — excluded from auto-assignment</span>
-              </div>
-            )}
-            <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600, color: theme.text, marginBottom: '8px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={form.assignRack || false}
-                  onChange={up('assignRack')}
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer',
-                    accentColor: '#4f46e5',
-                    colorScheme: 'light'
-                  }}
-                />
-              </label>
-              {form.assignRack && (
-                <select value={form.selectedRackShelf || ''} onChange={up('selectedRackShelf')} style={{ ...styles.input, fontSize: '13px' }}>
-                  <option value="">Auto-find empty shelf (excludes maintenance)</option>
-                  {emptyShelves.map(s => (<option key={s.id} value={s.id}>Rack {s.rackLetter} - Shelf {s.id} (Empty)</option>))}
-                </select>
+          
+          {/* THE CONDITIONAL SMART RACK ASSIGNMENT */}
+          {form.recipient !== 'UNREGISTERED' ? (
+            <div style={{ gridColumn: '1 / -1', padding: '16px', backgroundColor: styles.sectionBg, borderRadius: '10px', border: `1px solid ${styles.sectionBorder}` }}>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 700, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}><Icons.Zap width={18} height={18} style={{ color: '#4f46e5' }} />Smart Rack Assignment (IoT Integration)</h4>
+              {maintenanceShelves.length > 0 && (
+                <div style={{ marginBottom: '12px', padding: '8px 12px', backgroundColor: theme.maintenanceBg, border: `1px solid ${theme.maintenanceBorder}`, borderRadius: '6px', fontSize: '12px', color: theme.maintenanceText, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Icons.AlertTriangle width={14} height={14} /><span><strong>{maintenanceShelves.length} shelf{maintenanceShelves.length > 1 ? 's' : ''} under maintenance</strong> — excluded from auto-assignment</span>
+                </div>
               )}
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600, color: theme.text, marginBottom: '8px', cursor: 'pointer' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={form.assignRack || false} 
+                    onChange={up('assignRack')} 
+                    style={{ 
+                      width: '16px', 
+                      height: '16px', 
+                      cursor: 'pointer',
+                      accentColor: '#4f46e5',
+                      colorScheme: 'light' 
+                    }} 
+                  />Assign to Smart Rack Shelf
+                </label>
+                {form.assignRack && (
+                  <select value={form.selectedRackShelf || ''} onChange={up('selectedRackShelf')} style={{ ...styles.input, fontSize: '13px' }}>
+                    <option value="">Auto-find empty shelf (excludes maintenance)</option>
+                    {emptyShelves.map(s => (<option key={s.id} value={s.id}>Rack {s.rackLetter} - Shelf {s.id} (Empty)</option>))}
+                  </select>
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div style={{ gridColumn: '1 / -1', padding: '16px', backgroundColor: theme.maintenanceBg, borderRadius: '10px', border: `1px solid ${theme.maintenanceBorder}` }}>
+              <p style={{ margin: 0, color: theme.maintenanceText, fontWeight: 600, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Icons.AlertTriangle width={18} height={18} />
+                Unregistered parcels cannot be assigned to the Smart Rack.
+              </p>
+            </div>
+          )}
 
           <button type="submit" style={{ ...styles.btnPrimary, gridColumn: '1 / -1' }}>Register Parcel</button>
         </form>
@@ -185,26 +223,6 @@ export function AdminView({ parcels, users = [], form, setForm, onAdd, onRequest
                   <td style={styles.td}>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                       {p.status === 'Arrived' && (<button onClick={() => onRequestCollect(p)} style={{ padding: '6px 12px', backgroundColor: '#4f46e5', color: '#ffffff', fontSize: '12px', fontWeight: 600, borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><Icons.Lock width={14} height={14} />Verify</button>)}
-
-                      {NOTIFIABLE_STATUSES.includes(p.status) && (
-                        <button
-                          onClick={() => {
-                            const recipientUser = users.find(u => u.username === p.recipient);
-                            if (recipientUser?.phone) {
-                              const message = getParcelNotificationMessage(p);
-                              const whatsappUrl = `https://wa.me/${recipientUser.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message.body)}`;
-                              window.open(whatsappUrl, '_blank');
-                            } else {
-                              alert('No phone number found for this recipient.');
-                            }
-                          }}
-                          style={{ padding: '6px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
-                          title="Hantar Mesej WhatsApp"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z" /></svg>
-                        </button>
-                      )}
-
                       <button onClick={() => onDelete(p.id)} style={styles.btnDanger}><Icons.Trash2 width={18} height={18} /></button>
                     </div>
                   </td>

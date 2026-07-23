@@ -899,7 +899,17 @@ export default function ParcelManagementSystem() {
   const openScannerForTracking = () => { setScannerCallback(null); setScannerOpen(true); };
   const openScannerForVerification = (callback) => { setScannerCallback(() => callback); setScannerOpen(true); };
 
-  const handleRequestCollect = (parcel) => setVerifyParcel(parcel);
+  const handleRequestCollect = (parcel) => {
+    if (parcel.recipient === 'UNREGISTERED') {
+      // Bypass OTP: Force manual ID check for unregistered boxes
+      if (window.confirm(`Bungkusan ini untuk pelajar tidak berdaftar (${parcel.recipientNameOnLabel || 'Tiada Nama'}).\n\nSila semak Kad Pengenalan secara manual. Adakah anda pasti ingin menyerahkan bungkusan ini?`)) {
+        handleVerifiedCollect(parcel.id);
+      }
+    } else {
+      // Normal flow: Open OTP Scanner for registered students
+      setVerifyParcel(parcel);
+    }
+  };
   const handleVerifiedCollect = (id) => { updateStatus(id, 'Collected'); showNotification("Parcel berjaya disahkan dan ditanda sebagai 'Collected'. Rak telah dibebaskan."); };
 
   const isAdmin = user?.role === 'admin';
@@ -1017,11 +1027,11 @@ export default function ParcelManagementSystem() {
             { id: 'dashboard', label: 'Dashboard', icon: Icons.LayoutDashboard },
             { id: 'myparcels', label: 'My Parcels', icon: Icons.Inbox },
             { id: 'history', label: 'Collection History', icon: Icons.Clock },
+            { id: 'admin', label: 'Manage Parcels', icon: Icons.Users, adminOnly: true },
+            { id: 'users', label: 'Manage Users', icon: Icons.User, adminOnly: true },
             { id: 'rack', label: 'Smart Rack', icon: Icons.Layers },
             { id: 'racksensors', label: 'Rack Sensors (IoT)', icon: Icons.Cpu },
-            { id: 'rackmgmt', label: 'Rack Maintenance', icon: Icons.Wrench, adminOnly: true },
-            { id: 'users', label: 'Students & Staff', icon: Icons.User, adminOnly: true },
-            { id: 'admin', label: 'Admin Panel', icon: Icons.Users, adminOnly: true }
+            { id: 'rackmgmt', label: 'Rack Maintenance', icon: Icons.Wrench, adminOnly: true }
           ].filter(item => !item.adminOnly || isAdmin).map(item => (
             <button key={item.id} onClick={() => { setView(item.id); setSidebarOpen(false); }} style={styles.navItem(view === item.id)}>
               <item.icon width={20} height={20} />{item.label}

@@ -25,8 +25,8 @@ export function HistoryView({ parcels, user, theme }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '12px' }}><Icons.Clock width={32} height={32} /></div>
             <div>
-              <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>Sejarah Pengambilan (Collection History)</h2>
-              <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Rekod disimpan selama 7 hari sebelum dipadam secara automatik.</p>
+              <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>Collection History</h2>
+              <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Records are saved for 7 days before being automatically deleted.</p>
             </div>
           </div>
           {isAdmin && (
@@ -43,17 +43,17 @@ export function HistoryView({ parcels, user, theme }) {
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={styles.th}>Tracking No</th>
+                <th style={styles.th}>Tracking No.</th>
                 {isAdmin && <th style={styles.th}>Recipient</th>}
                 <th style={styles.th}>Sender</th>
-                <th style={styles.th}>Tarikh Sampai</th>
-                <th style={styles.th}>Tarikh Diambil</th>
+                <th style={styles.th}>Date Received</th>
+                <th style={styles.th}>Date Collected</th>
                 <th style={styles.th}>Status</th>
               </tr>
             </thead>
             <tbody>
               {historyParcels.length === 0 ? (
-                <tr><td colSpan={isAdmin ? "6" : "5"} style={{ ...styles.td, textAlign: 'center', padding: '40px', color: theme.textSecondary }}>Tiada rekod sejarah pengambilan buat masa ini.</td></tr>
+                <tr><td colSpan={isAdmin ? "6" : "5"} style={{ ...styles.td, textAlign: 'center', padding: '40px', color: theme.textSecondary }}>No record history for the time being.</td></tr>
               ) : historyParcels.map(p => (
                 <tr key={p.id}>
                   <td style={styles.td}><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.trackingNo}</span></td>
@@ -68,7 +68,7 @@ export function HistoryView({ parcels, user, theme }) {
                   <td style={styles.td}>{p.sender}</td>
                   <td style={styles.td}>{p.dateReceived}</td>
                   <td style={styles.td}>{p.dateCollected ? new Date(p.dateCollected).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</td>
-                  <td style={styles.td}><span style={styles.badge('Collected')}>TELAH DIAMBIL</span></td>
+                  <td style={styles.td}><span style={styles.badge('Collected')}>COLLECTED</span></td>
                 </tr>
               ))}
             </tbody>

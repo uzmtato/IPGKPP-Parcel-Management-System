@@ -13,11 +13,6 @@ export function DashboardView({ parcels, trackInput, setTrackInput, onTrack, fou
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {isAdmin && (
-        <div style={{ ...styles.statCard, backgroundColor: theme.iconBg, border: `1px solid ${theme === 'dark' ? '#4338ca' : '#c7d2fe'}`, color: theme === 'dark' ? '#a5b4fc' : '#3730a3', padding: '10px 16px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Icons.Users width={16} height={16} />Administrator View: Showing all system parcels
-        </div>
-      )}
 
       <div style={{ backgroundColor: '#4f46e5', borderRadius: '12px', padding: '24px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', position: 'relative', zIndex: 1 }}>
         <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff', margin: '0 0 8px 0' }}>Track Your Parcel</h2>
@@ -79,7 +74,7 @@ export function DashboardView({ parcels, trackInput, setTrackInput, onTrack, fou
       <div onClick={onGoToRack} style={{ ...styles.statCard, cursor: 'pointer', background: 'linear-gradient(135deg, #0f172a 0%, #312e81 100%)', color: 'white', border: 'none' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(15,23,42,0.3)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <div style={{ padding: '10px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '10px' }}><Icons.Layers width={24} height={24} /></div>
-          <span style={{ fontSize: '12px', opacity: 0.9, fontWeight: 600 }}>SMART RACK (SMART SHELF)</span>
+          <span style={{ fontSize: '12px', opacity: 0.9, fontWeight: 600 }}>SMART RACK </span>
         </div>
         <p style={{ fontSize: '28px', fontWeight: 700, margin: '0 0 4px 0' }}>{stats.racksTotal}</p>
         <p style={{ fontSize: '13px', opacity: 0.9, margin: 0 }}>{stats.racksOccupied} occupied • {stats.racksAvailable} available{stats.racksMaintenance > 0 ? ` • ${stats.racksMaintenance} maintenance` : ''}</p>
@@ -114,28 +109,6 @@ export function DashboardView({ parcels, trackInput, setTrackInput, onTrack, fou
             <p style={{ fontSize: '14px', color: theme.textSecondary, fontWeight: 500, margin: 0 }}>{s.l}</p>
           </div>
         ))}
-      </div>
-
-      <div style={styles.card}>
-        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${theme.border}` }}>
-          <h3 style={{ fontWeight: 600, color: theme.text, margin: 0, fontSize: '16px' }}>Benefits of Smart Parcel System</h3>
-        </div>
-        <div style={{ padding: '20px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-          {[
-            { icon: Icons.Users, title: 'For Students', desc: 'Easy & fast collection, Real-time notification, Secure & convenient' },
-            { icon: Icons.User, title: 'For Staff', desc: 'Easy parcel management, Less manual work, Faster organization' },
-            { icon: Icons.Shield, title: 'Secure', desc: 'Multi-layer authentication, Real-time monitoring, Auto-lock system' },
-            { icon: Icons.Zap, title: 'Efficient', desc: 'Save time & space, Improve workflow, Smart automation' },
-            { icon: Icons.MapPin, title: 'Trackable', desc: 'Real-time tracking of every parcel, Location-based storage' },
-            { icon: Icons.Wifi, title: 'Smart & Connected', desc: 'IoT based system, Integrated with website, Smart Campus' },
-          ].map((b, idx) => (
-            <div key={idx} style={{ padding: '16px', backgroundColor: styles.sectionBg, borderRadius: '10px', border: `1px solid ${styles.sectionBorder}` }}>
-              <div style={{ padding: '8px', backgroundColor: theme.iconBg, borderRadius: '8px', display: 'inline-block', marginBottom: '8px' }}><b.icon width={20} height={20} style={{ color: theme.iconColor }} /></div>
-              <p style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: 700, color: theme.text }}>{b.title}</p>
-              <p style={{ margin: 0, fontSize: '12px', color: theme.textSecondary, lineHeight: '1.5' }}>{b.desc}</p>
-            </div>
-          ))}
-        </div>
       </div>
 
       <div style={styles.card}>
@@ -182,6 +155,30 @@ export function DashboardView({ parcels, trackInput, setTrackInput, onTrack, fou
           </table>
         </div>
       </div>
+
+      {/* MOVED BENEFITS SECTION TO THE BOTTOM */}
+      <div style={styles.card}>
+        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${theme.border}` }}>
+          <h3 style={{ fontWeight: 600, color: theme.text, margin: 0, fontSize: '16px' }}>Benefits of Smart Parcel System</h3>
+        </div>
+        <div style={{ padding: '20px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          {[
+            { icon: Icons.Users, title: 'For Students', desc: 'Easy & fast collection, Real-time notification, Secure & convenient' },
+            { icon: Icons.User, title: 'For Staff', desc: 'Easy parcel management, Less manual work, Faster organization' },
+            { icon: Icons.Shield, title: 'Secure', desc: 'Multi-layer authentication, Real-time monitoring, Auto-lock system' },
+            { icon: Icons.Zap, title: 'Efficient', desc: 'Save time & space, Improve workflow, Smart automation' },
+            { icon: Icons.MapPin, title: 'Trackable', desc: 'Real-time tracking of every parcel, Location-based storage' },
+            { icon: Icons.Wifi, title: 'Smart & Connected', desc: 'IoT based system, Integrated with website, Smart Campus' },
+          ].map((b, idx) => (
+            <div key={idx} style={{ padding: '16px', backgroundColor: styles.sectionBg, borderRadius: '10px', border: `1px solid ${styles.sectionBorder}` }}>
+              <div style={{ padding: '8px', backgroundColor: theme.iconBg, borderRadius: '8px', display: 'inline-block', marginBottom: '8px' }}><b.icon width={20} height={20} style={{ color: theme.iconColor }} /></div>
+              <p style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: 700, color: theme.text }}>{b.title}</p>
+              <p style={{ margin: 0, fontSize: '12px', color: theme.textSecondary, lineHeight: '1.5' }}>{b.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
     </div>
   );
 }

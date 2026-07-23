@@ -46,39 +46,39 @@ export function MyParcelsView({ parcels, user, rackIoTData, theme }) {
             </div>
             <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div style={{ gridColumn: '1 / -1', paddingBottom: '8px', borderBottom: `1px dashed ${theme.border}` }}>
-                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Penerima</p>
+                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Receiver</p>
                 <p style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: theme.text }}>{p.recipientName || p.recipient}</p>
-                {p.recipientIdNo && <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: theme.textSecondary }}>ID/Matrik: <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.recipientIdNo}</span></p>}
+                {p.recipientIdNo && <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: theme.textSecondary }}>ID: <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{p.recipientIdNo}</span></p>}
               </div>
-              <div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Penghantar</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: theme.text }}>{p.sender}</p></div>
-              <div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Lokasi</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: theme.text }}>{p.location}</p></div>
-              {p.rackLocation && (<div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Rak</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</p></div>)}
+              <div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Courier</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: theme.text }}>{p.sender}</p></div>
+              <div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Location</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: theme.text }}>{p.location}</p></div>
+              {p.rackLocation && (<div><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Rack</p><p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#4f46e5' }}>{p.rackLocation}</p></div>)}
               {currentWeight && (
                 <div>
-                  <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Berat {iotData ? '(Live Sensor)' : ''}</p>
+                  <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Weight {iotData ? '(Live Sensor)' : ''}</p>
                   <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: iotData ? '#16a34a' : theme.text }}>
                     {currentWeight}
                   </p>
                 </div>
               )}
-              <div style={{ gridColumn: '1 / -1' }}><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Deskripsi</p><p style={{ margin: 0, fontSize: '14px', color: theme.text }}>{p.description || '-'}</p></div>
+              <div style={{ gridColumn: '1 / -1' }}><p style={{ margin: '0 0 4px 0', fontSize: '12px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase' }}>Description</p><p style={{ margin: 0, fontSize: '14px', color: theme.text }}>{p.description || '-'}</p></div>
             </div>
             {p.status === 'Arrived' && user?.role !== 'admin' && (
               <div style={{ padding: '20px', backgroundColor: theme.successBg, borderTop: `1px solid ${theme.successBorder}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                <p style={{ margin: 0, fontWeight: 700, color: theme.successText, fontSize: '15px' }}>Kod Pengambilan Anda</p>
+                <p style={{ margin: 0, fontWeight: 700, color: theme.successText, fontSize: '15px' }}>Your Collection Code</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
                   <div style={{ textAlign: 'center' }}>
                     <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: theme.successText, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Kod OTP</p>
                     <div style={{ backgroundColor: styles.cardBg, padding: '10px 20px', borderRadius: '8px', border: '2px dashed #16a34a', fontFamily: 'monospace', fontSize: '28px', fontWeight: 800, color: '#16a34a', letterSpacing: '4px' }}>{p.otp || '------'}</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
-                    <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: theme.successText, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Kod QR</p>
+                    <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: theme.successText, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>QR Code</p>
                     <div style={{ backgroundColor: styles.cardBg, padding: '6px', borderRadius: '8px', border: `1px solid ${theme.successBorder}` }}>
                       <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(p.otp || '')}`} alt="QR Code" style={{ width: '100px', height: '100px', display: 'block' }} />
                     </div>
                   </div>
                 </div>
-                <p style={{ margin: 0, fontSize: '12px', color: theme.successText, textAlign: 'center', maxWidth: '350px', lineHeight: '1.4' }}>Tunjukkan kod ini kepada staf pos untuk pengesahan sebelum mengambil parcel.</p>
+                <p style={{ margin: 0, fontSize: '12px', color: theme.successText, textAlign: 'center', maxWidth: '350px', lineHeight: '1.4' }}>Please show this code to the staff before claiming your parcels.</p>
               </div>
             )}
           </div>
@@ -87,7 +87,7 @@ export function MyParcelsView({ parcels, user, rackIoTData, theme }) {
       {parcels.length === 0 && (
         <div style={{ ...styles.card, padding: '40px', textAlign: 'center', color: theme.textSecondary }}>
           <Icons.Inbox width={48} height={48} style={{ marginBottom: '12px', opacity: 0.3 }} />
-          <p style={{ margin: 0, fontSize: '15px' }}>Tiada rekod parcel aktif.</p>
+          <p style={{ margin: 0, fontSize: '15px' }}>No active record.</p>
         </div>
       )}
     </div>
