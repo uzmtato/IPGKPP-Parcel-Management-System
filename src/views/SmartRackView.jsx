@@ -5,7 +5,7 @@ export function SmartRackView({ racks, parcels, rackIoTData, onShelfClick, isAdm
   if (!Array.isArray(racks) || racks.length === 0) {
     return (
       <div style={{ padding: '40px', textAlign: 'center' }}>
-        <p style={{ color: theme.textSecondary }}>Tiada data rak untuk dipaparkan.</p>
+        <p style={{ color: theme.textSecondary }}>No rack data to display.</p>
       </div>
     );
   }
@@ -46,7 +46,7 @@ export function SmartRackView({ racks, parcels, rackIoTData, onShelfClick, isAdm
         return { bg: theme.occupiedBg, border: '#dc2626', led: '#dc2626', label: 'FULL' };
       }
       if (Number(iotData.weight) > 0.1) {
-         return { bg: theme.occupiedBg, border: theme.occupiedBorder, led: '#dc2626', label: 'Occupied (Sensor)' };
+        return { bg: theme.occupiedBg, border: theme.occupiedBorder, led: '#dc2626', label: 'Occupied (Sensor)' };
       }
     }
 
@@ -61,7 +61,7 @@ export function SmartRackView({ racks, parcels, rackIoTData, onShelfClick, isAdm
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
           <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '12px' }}><Icons.Layers width={32} height={32} /></div>
           <div>
-            <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>Smart Rack System (Smart Shelf)</h2>
+            <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>Smart Rack System</h2>
             <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Organized • Tracked • Real-Time Monitoring</p>
           </div>
         </div>
@@ -72,25 +72,6 @@ export function SmartRackView({ racks, parcels, rackIoTData, onShelfClick, isAdm
           <div style={{ backgroundColor: 'rgba(37,99,235,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🔵 Ready</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{readyShelves}</p></div>
           {maintenanceShelves > 0 && (<div style={{ backgroundColor: 'rgba(217,119,6,0.3)', padding: '12px', borderRadius: '8px' }}><p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>🟠 Maintenance</p><p style={{ margin: '4px 0 0 0', fontSize: '24px', fontWeight: 700 }}>{maintenanceShelves}</p></div>)}
         </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-        {[
-          { icon: Icons.Zap, label: 'LED Indicator (Status)', desc: 'Green/Red/Blue status' },
-          { icon: Icons.Activity, label: 'Occupancy Sensor', desc: 'Detects parcel presence' },
-          { icon: Icons.Scale, label: 'Weight Sensor', desc: 'Monitors parcel weight' },
-          { icon: Icons.MapPin, label: 'Shelf / Location ID', desc: 'Precise location tracking' },
-          { icon: Icons.Wifi, label: 'Real-Time Tracking', desc: 'IoT-based monitoring' },
-          { icon: Icons.Cpu, label: 'Smart Campus IoT', desc: 'Integrated with website' },
-        ].map((feat, idx) => (
-          <div key={idx} style={{ ...styles.statCard, display: 'flex', alignItems: 'center', gap: '12px', padding: '12px' }}>
-            <div style={{ padding: '8px', backgroundColor: theme.iconBg, borderRadius: '8px' }}><feat.icon width={20} height={20} style={{ color: theme.iconColor }} /></div>
-            <div>
-              <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: theme.text }}>{feat.label}</p>
-              <p style={{ margin: 0, fontSize: '11px', color: theme.textSecondary }}>{feat.desc}</p>
-            </div>
-          </div>
-        ))}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
@@ -160,6 +141,27 @@ export function SmartRackView({ racks, parcels, rackIoTData, onShelfClick, isAdm
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#d97706', boxShadow: '0 0 8px #d97706' }} /><span style={{ fontSize: '13px', color: theme.text }}><strong>ORANGE</strong> = Under Maintenance</span></div>
         </div>
       </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+        {[
+          { icon: Icons.Zap, label: 'LED Indicator (Status)', desc: 'Green/Red/Blue status' },
+          { icon: Icons.Activity, label: 'Occupancy Sensor', desc: 'Detects parcel presence' },
+          { icon: Icons.Scale, label: 'Weight Sensor', desc: 'Monitors parcel weight' },
+          { icon: Icons.MapPin, label: 'Shelf / Location ID', desc: 'Precise location tracking' },
+          { icon: Icons.Wifi, label: 'Real-Time Tracking', desc: 'IoT-based monitoring' },
+          { icon: Icons.Cpu, label: 'Smart Campus IoT', desc: 'Integrated with website' },
+        ].map((feat, idx) => (
+          <div key={idx} style={{ ...styles.statCard, display: 'flex', alignItems: 'center', gap: '12px', padding: '12px' }}>
+            <div style={{ padding: '8px', backgroundColor: theme.iconBg, borderRadius: '8px' }}><feat.icon width={20} height={20} style={{ color: theme.iconColor }} /></div>
+            <div>
+              <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: theme.text }}>{feat.label}</p>
+              <p style={{ margin: 0, fontSize: '11px', color: theme.textSecondary }}>{feat.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
+
+
   );
 }

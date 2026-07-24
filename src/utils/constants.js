@@ -4,7 +4,7 @@ export const IPGKPP_BG = 'https://image.qwenlm.ai/public_source/a5365ccb-778a-4d
 export const COURIERS = [
   { label: 'Pos Laju', value: 'Pos Laju' },
   { label: 'J&T Express', value: 'J&T Express' },
-  { label: 'Shopee Express', value: 'Shopee Express' },
+  { label: 'Shopee Express (SPX)', value: 'Shopee Express (SPX)' },
   { label: 'DHL eCommerce', value: 'DHL eCommerce' },
   { label: 'FedEx', value: 'FedEx' },
   { label: 'UPS', value: 'UPS' },

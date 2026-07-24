@@ -20,26 +20,26 @@ import {
   uploadCloudFile,
 } from './services/cloudStore';
 
-import { 
-  IPGKPP_LOGO, 
-  IPGKPP_BG, 
-  COURIERS, 
-  STORAGE_KEYS, 
-  NOTIFIABLE_STATUSES, 
-  DEFAULT_USERS, 
-  DEFAULT_PARCELS, 
-  DEFAULT_RACKS, 
-  MAX_POSTGRES_INT 
+import {
+  IPGKPP_LOGO,
+  IPGKPP_BG,
+  COURIERS,
+  STORAGE_KEYS,
+  NOTIFIABLE_STATUSES,
+  DEFAULT_USERS,
+  DEFAULT_PARCELS,
+  DEFAULT_RACKS,
+  MAX_POSTGRES_INT
 } from './utils/constants';
 
-import { 
-  formatDate, 
-  getTimeAgo, 
-  getNotificationStorageKey, 
-  getParcelNotificationId, 
-  getParcelNotificationMessage, 
-  normalizeRacks, 
-  generateParcelId 
+import {
+  formatDate,
+  getTimeAgo,
+  getNotificationStorageKey,
+  getParcelNotificationId,
+  getParcelNotificationMessage,
+  normalizeRacks,
+  generateParcelId
 } from './utils/helpers';
 
 import { Icons } from './components/Icons';
@@ -54,12 +54,130 @@ import { DashboardView } from './views/DashboardView';
 import { MyParcelsView } from './views/MyParcelsView';
 import { HistoryView } from './views/HistoryView';
 import { UserManagementView } from './views/UserManagementView';
-import { AdminView } from './views/AdminView';
+import { ParcelManagementView } from './views/ParcelManagementView';
 import { SmartRackView } from './views/SmartRackView';
 import { RackSensorView } from './views/RackSensorView';
 import { RackManagementView } from './views/RackManagementView';
 import { ShelfDetailModal } from './components/ShelfDetailModal';
 import { RackMaintenanceModal } from './components/RackMaintenanceModal';
+
+import emailjs from '@emailjs/browser';
+
+const sendParcelOTP = (recipientEmail, recipientName, trackingNo, otpCode, rackLocation) => {
+  if (!recipientEmail) return;
+
+  emailjs.send(
+    'service_b85yfd9',         // <-- Replace with your Service ID
+    'template_bzx28rr',    // <-- Replace with your "Parcel Arrived" Template ID
+    {
+      to_name: recipientName,
+      to_email: recipientEmail,
+      tracking_no: trackingNo,
+      otp: otpCode,
+      rack_location: rackLocation || 'Main Counter'
+    },
+    'JT3OFA36C4eS3rqWS'          // <-- Replace with your Public Key
+  ).then(() => {
+    console.log(`OTP Email sent successfully to ${recipientEmail}`);
+  }).catch((err) => {
+    console.error("Failed to send OTP email:", err);
+  });
+};
+
+// NEW: Combined Security & Profile Modal Component
+function ChangeInfoModal({ user, onClose, onSave, isCloudConfigured, themeObj }) {
+  const styles = createStyles(themeObj);
+  const [form, setForm] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    countryCode: user?.phone?.startsWith('+82') ? '+82' : user?.phone?.startsWith('+65') ? '+65' : user?.phone?.startsWith('+62') ? '+62' : '+60',
+    phoneLocal: user?.phone ? user.phone.replace(/^\+\d{2,3}/, '') : '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const EyeIcon = ({ hidden }) => hidden ? (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+  ) : (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+  );
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!form.name || !form.email || !form.currentPassword) {
+      return alert('Name, email, and current password are required.');
+    }
+
+    if (!isCloudConfigured && form.currentPassword !== user.password) {
+      return alert('Current password is incorrect. Changes discarded.');
+    }
+
+    if (form.newPassword) {
+      const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+      if (!passwordRegex.test(form.newPassword)) {
+        return alert('New password must be at least 8 characters long, and include at least 1 capital letter, 1 number, and 1 special character.');
+      }
+      if (form.newPassword !== form.confirmPassword) {
+        return alert('New passwords do not match.');
+      }
+    }
+
+    onSave(form);
+  };
+
+  return (
+    <Modal onClose={onClose} title="Settings & Security" theme={themeObj}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <h4 style={{ margin: 0, fontSize: '13px', color: themeObj.textSecondary, textTransform: 'uppercase', fontWeight: 700 }}>Personal Information</h4>
+          <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value.toUpperCase() })} placeholder="FULL NAME" style={styles.input} />
+          <input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="Email Address" style={styles.input} />
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <select value={form.countryCode} onChange={e => setForm({ ...form, countryCode: e.target.value })} style={{ ...styles.input, width: '100px', flexShrink: 0, padding: '10px 8px' }}>
+              <option value="+60">🇲🇾 +60</option>
+              <option value="+82">🇰🇷 +82</option>
+              <option value="+65">🇸🇬 +65</option>
+              <option value="+62">🇮🇩 +62</option>
+            </select>
+            <input value={form.phoneLocal} onChange={e => setForm({ ...form, phoneLocal: e.target.value.replace(/\D/g, '') })} type="tel" style={{ ...styles.input, flex: 1 }} placeholder="1046379730" />
+          </div>
+        </div>
+
+        <div style={{ height: '1px', backgroundColor: themeObj.border }} />
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <h4 style={{ margin: 0, fontSize: '13px', color: themeObj.textSecondary, textTransform: 'uppercase', fontWeight: 700 }}>Change Password (Optional)</h4>
+          <div style={{ position: 'relative' }}>
+            <input type={showNew ? "text" : "password"} value={form.newPassword} onChange={e => setForm({ ...form, newPassword: e.target.value })} placeholder="New Password" style={{ ...styles.input, width: '100%', paddingRight: '40px', boxSizing: 'border-box' }} />
+            <button type="button" onClick={() => setShowNew(!showNew)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#64748b' }}><EyeIcon hidden={!showNew} /></button>
+          </div>
+          <div style={{ position: 'relative' }}>
+            <input type={showConfirm ? "text" : "password"} value={form.confirmPassword} onChange={e => setForm({ ...form, confirmPassword: e.target.value })} placeholder="Confirm New Password" style={{ ...styles.input, width: '100%', paddingRight: '40px', boxSizing: 'border-box' }} />
+            <button type="button" onClick={() => setShowConfirm(!showConfirm)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#64748b' }}><EyeIcon hidden={!showConfirm} /></button>
+          </div>
+        </div>
+
+        <div style={{ padding: '16px', backgroundColor: themeObj.iconBg, borderRadius: '8px', border: `1px solid ${themeObj.border}`, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <h4 style={{ margin: 0, fontSize: '13px', color: '#dc2626', textTransform: 'uppercase', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}><Icons.Shield width={14} height={14} /> Security Verification</h4>
+          <p style={{ margin: 0, fontSize: '12px', color: themeObj.textSecondary }}>Please enter your current password to save changes.</p>
+          <div style={{ position: 'relative' }}>
+            <input type={showCurrent ? "text" : "password"} value={form.currentPassword} onChange={e => setForm({ ...form, currentPassword: e.target.value })} placeholder="Current Password (Required)" style={{ ...styles.input, width: '100%', paddingRight: '40px', boxSizing: 'border-box', borderColor: '#f87171' }} />
+            <button type="button" onClick={() => setShowCurrent(!showCurrent)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#64748b' }}><EyeIcon hidden={!showCurrent} /></button>
+          </div>
+        </div>
+
+        <button type="submit" style={styles.btnPrimary}>Save & Verify Changes</button>
+      </form>
+    </Modal>
+  );
+}
 
 export default function ParcelManagementSystem() {
   const [user, setUser] = useState(null);
@@ -93,7 +211,7 @@ export default function ParcelManagementSystem() {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.THEME);
       if (saved === 'dark' || saved === 'light') return saved;
-    } catch {}
+    } catch { }
     return 'light';
   });
 
@@ -103,7 +221,7 @@ export default function ParcelManagementSystem() {
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
-    try { localStorage.setItem(STORAGE_KEYS.THEME, newTheme); } catch {}
+    try { localStorage.setItem(STORAGE_KEYS.THEME, newTheme); } catch { }
   };
 
   const menuRef = useRef(null);
@@ -289,18 +407,18 @@ export default function ParcelManagementSystem() {
 
   useEffect(() => {
     if (isCloudConfigured) return;
-    try { localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users)); } catch (e) {}
+    try { localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users)); } catch (e) { }
   }, [users]);
 
   useEffect(() => {
     if (!isCloudConfigured) {
-      try { localStorage.setItem(STORAGE_KEYS.PARCELS, JSON.stringify(parcels)); } catch (e) {}
+      try { localStorage.setItem(STORAGE_KEYS.PARCELS, JSON.stringify(parcels)); } catch (e) { }
     }
   }, [parcels]);
 
   useEffect(() => {
     if (!isCloudConfigured) {
-      try { localStorage.setItem(STORAGE_KEYS.RACKS, JSON.stringify(racks)); } catch (e) {}
+      try { localStorage.setItem(STORAGE_KEYS.RACKS, JSON.stringify(racks)); } catch (e) { }
       return;
     }
     if (cloudHydratingRef.current) return;
@@ -312,13 +430,13 @@ export default function ParcelManagementSystem() {
     try {
       const savedSession = localStorage.getItem(STORAGE_KEYS.SESSION);
       if (savedSession) { const parsed = JSON.parse(savedSession); setUser(parsed); setProfileForm({ name: parsed.name, email: parsed.email, phone: parsed.phone || '', address: '' }); }
-    } catch {}
+    } catch { }
   }, []);
 
   useEffect(() => {
     if (isCloudConfigured) return;
-    if (user) { try { localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(user)); } catch {} }
-    else { try { localStorage.removeItem(STORAGE_KEYS.SESSION); } catch {} }
+    if (user) { try { localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(user)); } catch { } }
+    else { try { localStorage.removeItem(STORAGE_KEYS.SESSION); } catch { } }
   }, [user]);
 
   useEffect(() => {
@@ -341,7 +459,7 @@ export default function ParcelManagementSystem() {
     if (!user?.username) return;
     try {
       localStorage.setItem(getNotificationStorageKey(user.username), JSON.stringify(readNotificationIds));
-    } catch {}
+    } catch { }
   }, [readNotificationIds, user?.username]);
 
   useEffect(() => { const timer = setInterval(() => setCurrentTime(new Date()), 1000); return () => clearInterval(timer); }, []);
@@ -599,17 +717,19 @@ export default function ParcelManagementSystem() {
           }));
           return { ...r, shelves: updatedShelves };
         } else {
-          return { ...r, shelves: r.shelves.map(s => {
-            if (s.id !== shelfId) return s;
-            const willBeMaintenance = !s.maintenance;
-            statusText = willBeMaintenance ? 'MAINTENANCE' : 'AVAILABLE';
-            return {
-              ...s,
-              maintenance: willBeMaintenance,
-              maintenanceReason: willBeMaintenance ? reason : '',
-              maintenanceDate: willBeMaintenance ? new Date().toISOString() : null
-            };
-          }) };
+          return {
+            ...r, shelves: r.shelves.map(s => {
+              if (s.id !== shelfId) return s;
+              const willBeMaintenance = !s.maintenance;
+              statusText = willBeMaintenance ? 'MAINTENANCE' : 'AVAILABLE';
+              return {
+                ...s,
+                maintenance: willBeMaintenance,
+                maintenanceReason: willBeMaintenance ? reason : '',
+                maintenanceDate: willBeMaintenance ? new Date().toISOString() : null
+              };
+            })
+          };
         }
       });
 
@@ -703,7 +823,18 @@ export default function ParcelManagementSystem() {
     const phone = recipientUser?.phone || newParcel.recipient;
     const message = getParcelNotificationMessage(newParcel);
 
-    showNotification(`Notifikasi dihantar kepada ${phone}: ${message.title}`);
+    showNotification(`Notification sent to ${phone}: ${message.title}`);
+
+    // NEW: Trigger Email if status is Arrived
+    if (newParcel.status === 'Arrived' && recipientUser?.email) {
+      sendParcelOTP(
+        recipientUser.email,
+        recipientUser.name || newParcel.recipientName,
+        newParcel.trackingNo,
+        newParcel.otp,
+        newParcel.rackLocation
+      );
+    }
 
     // Auto-trigger WhatsApp link for admin
     if (isAdmin && recipientUser?.phone) {
@@ -763,12 +894,23 @@ export default function ParcelManagementSystem() {
       const contact = recipientUser?.phone || recipientUser?.email || parcel.recipient;
       const message = getParcelNotificationMessage({ ...parcel, status });
 
-      showNotification(`Notifikasi dihantar kepada ${contact}: ${message.title}`);
+      showNotification(`Notication sent to ${contact}: ${message.title}`);
+
+      // NEW: Trigger Email if status was updated to Arrived
+      if (status === 'Arrived' && recipientUser?.email) {
+        sendParcelOTP(
+          recipientUser.email,
+          recipientUser.name || parcel.recipientName,
+          parcel.trackingNo,
+          parcel.otp,
+          parcel.rackLocation
+        );
+      }
 
       // Auto-trigger WhatsApp link for admin
       if (isAdmin && recipientUser?.phone) {
         const whatsappUrl = `https://wa.me/${recipientUser.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message.body)}`;
-        if (window.confirm(`Adakah anda mahu menghantar mesej WhatsApp kepada ${recipientUser.name}?`)) {
+        if (window.confirm(`Would you like to send a WhatsApp message to ${recipientUser.name}?`)) {
           window.open(whatsappUrl, '_blank');
         }
       }
@@ -787,19 +929,27 @@ export default function ParcelManagementSystem() {
     else { setFoundParcel(null); alert('Parcel not found.'); }
   };
 
-  const handleSaveInfo = async () => {
-    if (!profileForm.name || !profileForm.email) { alert('Name and email are required'); return; }
-    const updatedUser = { ...user, ...profileForm };
+  const handleSaveInfo = async (submittedForm) => {
+    const finalPhone = `${submittedForm.countryCode}${submittedForm.phoneLocal}`;
+    let updatedUser = { ...user, name: submittedForm.name, email: submittedForm.email, phone: finalPhone };
+
+    if (submittedForm.newPassword) {
+      updatedUser.password = submittedForm.newPassword;
+    }
+
     if (isCloudConfigured) {
       try {
+        if (submittedForm.newPassword) {
+          await updateCloudPassword(cloudSession, submittedForm.newPassword);
+        }
         const cloudUser = { ...updatedUser, email: user.email };
-        if (profileForm.email !== user.email) alert('Email login is managed by Supabase Auth and was kept unchanged.');
+        if (submittedForm.email !== user.email) alert('Notice: Email login is managed by Supabase Auth and cannot be changed here.');
         const savedUser = await upsertCloudProfile(cloudUser, cloudSession?.access_token);
+
         setUser(savedUser);
-        setProfileForm({ name: savedUser.name, email: savedUser.email, phone: savedUser.phone || '', address: '' });
         setUsers(prev => prev.map(u => u.username === savedUser.username ? savedUser : u));
         setActiveModal(null);
-        alert('Profile updated successfully!');
+        alert('Profile and security settings updated successfully!');
       } catch (error) {
         console.error('Cloud profile update failed:', error);
         alert('Unable to update cloud profile.');
@@ -810,7 +960,7 @@ export default function ParcelManagementSystem() {
     setUser(updatedUser);
     setUsers(prev => prev.map(u => u.username === updatedUser.username ? updatedUser : u));
     setActiveModal(null);
-    alert('Profile updated successfully!');
+    alert('Profile and security settings updated successfully!');
   };
 
   const handleChangePassword = async () => {
@@ -844,12 +994,12 @@ export default function ParcelManagementSystem() {
       try {
         const savedUser = await upsertCloudProfile(updatedUser, cloudSession?.access_token);
         setUser(savedUser);
-      } catch (err) { alert('Gagal membuang gambar.'); }
+      } catch (err) { alert('Failed to update profile picture.'); }
       return;
     }
 
     try {
-      showNotification('Sedang memproses & memuat naik gambar...');
+      showNotification('Processing profile picture update...');
 
       // 1. Upload to Supabase Storage first
       const publicUrl = await uploadCloudFile(user.id || user.username, picData);
@@ -865,16 +1015,16 @@ export default function ParcelManagementSystem() {
         localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(savedUser));
       }
 
-      showNotification('Gambar profil berjaya dikemaskini!');
+      showNotification('Profile picture updated successfully!');
     } catch (error) {
       console.error('Cloud profile picture update failed:', error);
       // Fallback: If storage fails (maybe bucket not created), try direct table update with compressed base64
       try {
         const savedUser = await upsertCloudProfile({ ...user, profilePic: picData }, cloudSession?.access_token);
         setUser(savedUser);
-        showNotification('Gambar dikemaskini (Table Storage)');
+        showNotification('Picture updated directly in profile (Supabase Storage may not be configured).');
       } catch (fallbackError) {
-        alert(`Gagal: ${error.message || 'Ralat storan'}. Pastikan bucket "profiles" telah dicipta di Supabase.`);
+        alert(`Failed: ${error.message || 'Storage error'}. Please ensure the "profiles" bucket is created in Supabase.`);
       }
     }
   };
@@ -883,7 +1033,7 @@ export default function ParcelManagementSystem() {
   const handleUniversalScan = (decodedText) => {
     const cleanText = decodedText.trim();
     if (!cleanText) return;
-    
+
     if (scannerCallback) {
       scannerCallback(cleanText);
       setScannerCallback(null);
@@ -902,7 +1052,7 @@ export default function ParcelManagementSystem() {
   const handleRequestCollect = (parcel) => {
     if (parcel.recipient === 'UNREGISTERED') {
       // Bypass OTP: Force manual ID check for unregistered boxes
-      if (window.confirm(`Bungkusan ini untuk pelajar tidak berdaftar (${parcel.recipientNameOnLabel || 'Tiada Nama'}).\n\nSila semak Kad Pengenalan secara manual. Adakah anda pasti ingin menyerahkan bungkusan ini?`)) {
+      if (window.confirm(`This parcel is for an unregistered student (${parcel.recipientNameOnLabel || 'No Name'}).\n\nPlease verify the ID manually. Are you sure you want to collect this parcel?`)) {
         handleVerifiedCollect(parcel.id);
       }
     } else {
@@ -910,7 +1060,7 @@ export default function ParcelManagementSystem() {
       setVerifyParcel(parcel);
     }
   };
-  const handleVerifiedCollect = (id) => { updateStatus(id, 'Collected'); showNotification("Parcel berjaya disahkan dan ditanda sebagai 'Collected'. Rak telah dibebaskan."); };
+  const handleVerifiedCollect = (id) => { updateStatus(id, 'Collected'); showNotification("Parcel verified and marked as 'Collected'. Rack is now free."); };
 
   const isAdmin = user?.role === 'admin';
   const filtered = isAdmin ? parcels : parcels.filter(p => p.recipient === user?.username && p.status !== 'Collected');
@@ -1025,7 +1175,7 @@ export default function ParcelManagementSystem() {
         <nav style={styles.nav}>
           {[
             { id: 'dashboard', label: 'Dashboard', icon: Icons.LayoutDashboard },
-            { id: 'myparcels', label: 'My Parcels', icon: Icons.Inbox },
+            { id: 'myparcels', label: 'Parcel Tracker', icon: Icons.Inbox },
             { id: 'history', label: 'Collection History', icon: Icons.Clock },
             { id: 'admin', label: 'Manage Parcels', icon: Icons.Users, adminOnly: true },
             { id: 'users', label: 'Manage Users', icon: Icons.User, adminOnly: true },
@@ -1135,17 +1285,16 @@ export default function ParcelManagementSystem() {
                     <Icons.Eye width={18} height={18} /> View Info
                   </button>
                   <button onClick={() => { setActiveModal('changeInfo'); setUserMenuOpen(false); }} style={styles.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.dropdownHover; e.currentTarget.style.color = styles.dropdownHoverText; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = themeObj.text; }}>
-                    <Icons.Edit width={18} height={18} /> Change Info
+                    <Icons.Shield width={18} height={18} /> Settings & Security
                   </button>
                   <button onClick={() => { setPicModalOpen(true); setUserMenuOpen(false); }} style={styles.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.dropdownHover; e.currentTarget.style.color = styles.dropdownHoverText; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = themeObj.text; }}>
                     <Icons.Camera width={18} height={18} /> Profile Picture
                   </button>
+                  {/*}
                   <button onClick={() => { setActiveModal('details'); setUserMenuOpen(false); }} style={styles.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.dropdownHover; e.currentTarget.style.color = styles.dropdownHoverText; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = themeObj.text; }}>
                     <Icons.Info width={18} height={18} /> Details
                   </button>
-                  <button onClick={() => { setActiveModal('password'); setUserMenuOpen(false); }} style={styles.dropdownItem} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = styles.dropdownHover; e.currentTarget.style.color = styles.dropdownHoverText; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = themeObj.text; }}>
-                    <Icons.Lock width={18} height={18} /> Password
-                  </button>
+                  */}
                   <div style={styles.divider} />
                   <button onClick={handleLogout} style={{ ...styles.dropdownItem, ...styles.dropdownLogout }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
                     <Icons.LogOut width={18} height={18} /> Sign Out
@@ -1202,7 +1351,7 @@ export default function ParcelManagementSystem() {
             )}
 
             {view === 'admin' && isAdmin && (
-              <AdminView parcels={parcels} users={users} form={adminForm} setForm={setAdminForm} onAdd={handleAddParcel} onRequestCollect={handleRequestCollect} onDelete={handleDeleteParcel} onUpdateStatus={updateStatus} onOpenScanner={openScannerForTracking} scannedTracking={scannedTracking} racks={racks} theme={themeObj} />
+              <ParcelManagementView parcels={parcels} users={users} form={adminForm} setForm={setAdminForm} onAdd={handleAddParcel} onRequestCollect={handleRequestCollect} onDelete={handleDeleteParcel} onUpdateStatus={updateStatus} onOpenScanner={openScannerForTracking} scannedTracking={scannedTracking} racks={racks} theme={themeObj} />
             )}
 
             {totalPages > 1 && (view === 'dashboard' || view === 'myparcels' || view === 'admin') && (
@@ -1235,16 +1384,10 @@ export default function ParcelManagementSystem() {
       )}
 
       {activeModal === 'changeInfo' && (
-        <Modal onClose={() => setActiveModal(null)} title="Change Information" theme={themeObj}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <input value={profileForm.name} onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} placeholder="Full Name" style={styles.input} />
-            <input value={profileForm.email} onChange={e => setProfileForm({ ...profileForm, email: e.target.value })} placeholder="Email Address" style={styles.input} />
-            <input value={profileForm.phone} onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} placeholder="Phone Number" style={styles.input} />
-            <button onClick={handleSaveInfo} style={styles.btnPrimary}>Save Changes</button>
-          </div>
-        </Modal>
+        <ChangeInfoModal user={user} onClose={() => setActiveModal(null)} onSave={handleSaveInfo} isCloudConfigured={isCloudConfigured} themeObj={themeObj} />
       )}
 
+      {/*
       {activeModal === 'details' && (
         <Modal onClose={() => setActiveModal(null)} title="Account Details" theme={themeObj}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '14px' }}>
@@ -1256,23 +1399,13 @@ export default function ParcelManagementSystem() {
           </div>
         </Modal>
       )}
-
-      {activeModal === 'password' && (
-        <Modal onClose={() => setActiveModal(null)} title="Change Password" theme={themeObj}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <input type="password" value={passwordForm.current} onChange={e => setPasswordForm({ ...passwordForm, current: e.target.value })} placeholder="Current Password" style={styles.input} />
-            <input type="password" value={passwordForm.new} onChange={e => setPasswordForm({ ...passwordForm, new: e.target.value })} placeholder="New Password" style={styles.input} />
-            <input type="password" value={passwordForm.confirm} onChange={e => setPasswordForm({ ...passwordForm, confirm: e.target.value })} placeholder="Confirm Password" style={styles.input} />
-            <button onClick={handleChangePassword} style={styles.btnPrimary}>Update Password</button>
-          </div>
-        </Modal>
-      )}
+      */}
 
       {verifyParcel && (<CollectionVerifier parcel={verifyParcel} onClose={() => setVerifyParcel(null)} onVerify={handleVerifiedCollect} onOpenScanner={openScannerForVerification} theme={themeObj} />)}
-      
+
       {/* UNIVERSAL SCANNER - Works with or without HTTPS */}
       {scannerOpen && (<UniversalScanner onScan={handleUniversalScan} onClose={() => { setScannerOpen(false); setScannerCallback(null); }} theme={themeObj} />)}
-      
+
       {picModalOpen && (<ProfilePicUpload currentUser={user} onUpdate={handleUpdateProfilePic} onClose={() => setPicModalOpen(false)} theme={themeObj} />)}
 
       {selectedShelf && (
@@ -1304,7 +1437,7 @@ export default function ParcelManagementSystem() {
         <div style={{ position: 'fixed', top: '20px', right: '20px', backgroundColor: '#16a34a', color: 'white', padding: '16px 24px', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)', zIndex: 9999, display: 'flex', alignItems: 'flex-start', gap: '12px', maxWidth: '400px', animation: 'slideIn 0.3s ease-out' }}>
           <Icons.CheckCircle width={20} height={20} style={{ flexShrink: 0, marginTop: '2px' }} />
           <div>
-            <p style={{ margin: 0, fontWeight: 700, fontSize: '14px', letterSpacing: '0.025em' }}>Notifikasi Dihantar</p>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: '14px', letterSpacing: '0.025em' }}>Notification Sent</p>
             <p style={{ margin: '4px 0 0 0', fontSize: '13px', opacity: 0.95, lineHeight: '1.4' }}>{notification}</p>
           </div>
         </div>

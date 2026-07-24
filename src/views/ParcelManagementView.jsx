@@ -1,10 +1,9 @@
-// src/views/AdminView.jsx
 import { useState, useRef } from 'react';
 import { Icons } from '../components/Icons';
 import { createStyles } from '../utils/theme';
-import { COURIERS } from '../utils/constants'; // Removed NOTIFIABLE_STATUSES since we deleted the manual button
+import { COURIERS } from '../utils/constants';
 
-export function AdminView({ parcels, users = [], form, setForm, onAdd, onRequestCollect, onDelete, onUpdateStatus, onOpenScanner, scannedTracking, racks, theme }) {
+export function ParcelManagementView({ parcels, users = [], form, setForm, onAdd, onRequestCollect, onDelete, onUpdateStatus, onOpenScanner, scannedTracking, racks, theme }) {
   const [activeTab, setActiveTab] = useState('student');
   const styles = createStyles(theme);
 
@@ -135,7 +134,7 @@ export function AdminView({ parcels, users = [], form, setForm, onAdd, onRequest
           {/* THE CONDITIONAL SMART RACK ASSIGNMENT */}
           {form.recipient !== 'UNREGISTERED' ? (
             <div style={{ gridColumn: '1 / -1', padding: '16px', backgroundColor: styles.sectionBg, borderRadius: '10px', border: `1px solid ${styles.sectionBorder}` }}>
-              <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 700, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}><Icons.Zap width={18} height={18} style={{ color: '#4f46e5' }} />Smart Rack Assignment (IoT Integration)</h4>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 700, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}><Icons.Zap width={18} height={18} style={{ color: '#4f46e5' }} />Smart Rack Assignment</h4>
               {maintenanceShelves.length > 0 && (
                 <div style={{ marginBottom: '12px', padding: '8px 12px', backgroundColor: theme.maintenanceBg, border: `1px solid ${theme.maintenanceBorder}`, borderRadius: '6px', fontSize: '12px', color: theme.maintenanceText, display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Icons.AlertTriangle width={14} height={14} /><span><strong>{maintenanceShelves.length} shelf{maintenanceShelves.length > 1 ? 's' : ''} under maintenance</strong> — excluded from auto-assignment</span>

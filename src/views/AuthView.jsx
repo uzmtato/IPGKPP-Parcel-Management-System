@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Icons } from '../components/Icons';
 import { createStyles } from '../utils/theme';
 import { IPGKPP_LOGO } from '../utils/constants';
+import emailjs from '@emailjs/browser';
 
 // Added 'users' prop so we can check for duplicate usernames
 export function AuthView({ onLogin, onSignUp, view, setView, theme, users = [] }) {
@@ -125,20 +126,30 @@ function SignUpForm({ onSignUp, theme, users = [] }) {
     setStep(2);
   };
 
+  // Validation for Step 2 (ID Check & Passwords)
   const handleStep2Next = () => {
     if (!form.name || !form.idNo || !form.phoneLocal || !form.password || !form.confirmPassword) {
       return alert('Please fill in all fields.');
     }
+
+    // NEW: Check if the Matric/Staff ID already exists!
+    const idExists = users.some(u => u.idNo === form.idNo);
+    if (idExists) {
+      return alert('This Matric/Staff ID is already registered in the system.');
+    }
+
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
     if (!passwordRegex.test(form.password)) {
       return alert('Password must be at least 8 characters long, and include at least 1 capital letter, 1 number, and 1 special character (e.g., @, $, !, %).');
     }
+
     if (form.password !== form.confirmPassword) {
       return alert('Passwords do not match. Please try again.');
     }
     setStep(3);
   };
 
+  // Final Form Assembly & Email Trigger
   const handleFinalSubmit = (e) => {
     e.preventDefault();
     const finalData = {
@@ -148,8 +159,13 @@ function SignUpForm({ onSignUp, theme, users = [] }) {
       name: form.name,
       idNo: form.idNo,
       phone: `${form.countryCode}${form.phoneLocal}`,
-      role: form.role
+      role: form.role,
+      isVerified: true // Automatically verified without a code
     };
+    
+    // NEW: Trigger the welcome email in the background!
+    sendWelcomeEmail(form.name, form.email, form.role);
+    
     onSignUp(finalData);
   };
 
@@ -219,3 +235,23 @@ function SignUpForm({ onSignUp, theme, users = [] }) {
     </form>
   );
 }
+
+const sendWelcomeEmail = (userName, userEmail, userRole) => {
+  if (!userEmail) return;
+  
+  // Replace with your actual EmailJS keys
+  emailjs.send(
+    'service_b85yfd9', // service ID
+    'template_nrs5gxn', // template ID 
+    {
+      to_name: userName,
+      to_email: userEmail,
+      role: userRole === 'staff' ? 'Staff' : 'Student'
+    }, 
+    'JT3OFA36C4eS3rqWS' // public key
+  ).then(() => {
+    console.log("Welcome email sent successfully!");
+  }).catch((err) => {
+    console.error("Failed to send welcome email:", err);
+  });
+};

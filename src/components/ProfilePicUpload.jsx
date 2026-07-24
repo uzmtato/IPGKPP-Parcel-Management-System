@@ -62,21 +62,21 @@ export function ProfilePicUpload({ currentUser, onUpdate, onClose, theme }) {
   const handleRemovePic = () => { setPreview(''); onUpdate(''); };
 
   return (
-    <Modal title="Gambar Profil" onClose={onClose} large theme={theme}>
+    <Modal title="Profile Picture" onClose={onClose} large theme={theme}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-        <p style={{ fontSize: '13px', color: theme.textSecondary, margin: 0, textAlign: 'center' }}>Muat naik gambar profil untuk memperibadikan akaun anda</p>
+        <p style={{ fontSize: '13px', color: theme.textSecondary, margin: 0, textAlign: 'center' }}>Upload a profile picture to personalize your account</p>
         <div style={styles.profilePicUpload}>
           {preview ? <img src={preview} alt="Profile" style={styles.profilePicPreview} /> : (<div style={styles.profilePicPlaceholder}><Icons.User width={40} height={40} /></div>)}
           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <button onClick={() => fileInputRef.current?.click()} style={styles.uploadBtn} disabled={isUploading}><Icons.Upload width={16} height={16} />{isUploading ? 'Memuat Naik...' : 'Pilih Foto'}</button>
-            {preview && <button onClick={handleRemovePic} style={styles.removePicBtn}>Buang</button>}
+            <button onClick={() => fileInputRef.current?.click()} style={styles.uploadBtn} disabled={isUploading}><Icons.Upload width={16} height={16} />{isUploading ? 'Uploading...' : 'Choose Photo'}</button>
+            {preview && <button onClick={handleRemovePic} style={styles.removePicBtn}>Remove</button>}
           </div>
           {uploadError && <p style={{ color: '#dc2626', fontSize: '12px', margin: 0, textAlign: 'center' }}>{uploadError}</p>}
-          <p style={{ fontSize: '11px', color: theme.textMuted, margin: 0, textAlign: 'center' }}>Format disokong: JPG, PNG, GIF • Saiz maksimum: 2MB</p>
+          <p style={{ fontSize: '11px', color: theme.textMuted, margin: 0, textAlign: 'center' }}>Supported formats: JPG, PNG, GIF • Maximum size: 2MB</p>
         </div>
         <div style={{ display: 'flex', gap: '12px', width: '100%', maxWidth: '280px' }}>
-          <button onClick={onClose} style={{ ...styles.btnPrimary, backgroundColor: styles.btnSecondaryBg, color: styles.btnSecondaryText }}>Selesai</button>
+          <button onClick={onClose} style={{ ...styles.btnPrimary, backgroundColor: styles.btnSecondaryBg, color: styles.btnSecondaryText }}>Done</button>
         </div>
       </div>
     </Modal>
