@@ -184,16 +184,32 @@ export function UniversalScanner({ onScan, onClose, theme }) {
             </div>
           ) : (
             <>
+              {/* ========================================== */}
+              {/* FIX: THE STRICTLY EMPTY CONTAINER          */}
+              {/* React is no longer allowed to put text     */}
+              {/* or update anything inside this specific div*/}
+              {/* ========================================== */}
               <div style={styles.scannerContainer}>
-                <div id={scannerContainerId} ref={scannerRef} style={{ width: '100%', minWidth: '300px', minHeight: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.textSecondary, fontSize: '13px' }}>
-                  {!isScanning && !isStarting && 'Camera preview will appear here'}
-                </div>
-                {isScanning && (<><div style={styles.scannerOverlay}></div><div style={styles.scannerLine}></div></>)}
-              </div>
-              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                {!isScanning && !isStarting && (<button onClick={startCameraScanner} style={{ ...styles.btnPrimary, maxWidth: '220px', backgroundColor: '#16a34a', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><Icons.Play width={16} height={16} />Start Camera</button>)}
-                {isScanning && (<button onClick={stopCameraScanner} style={{ ...styles.btnPrimary, maxWidth: '220px', backgroundColor: '#dc2626', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><Icons.Stop width={16} height={16} />Stop Camera</button>)}
-                {isStarting && (<div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', color: theme.textSecondary, fontSize: '13px' }}><div style={{ width: '16px', height: '16px', border: `2px solid ${theme.border}`, borderTop: '2px solid #4f46e5', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div><span>Initializing camera...</span></div>)}
+
+                <div
+                  id={scannerContainerId}
+                  ref={scannerRef}
+                  style={{
+                    width: '100%',
+                    minWidth: '300px',
+                    minHeight: '300px',
+                    backgroundColor: '#000',
+                    overflow: 'hidden'
+                  }}
+                />
+                {/* Notice the /> above? It is self-closing now. No text inside! */}
+
+                {isScanning && (
+                  <>
+                    <div style={styles.scannerOverlay}></div>
+                    <div style={styles.scannerLine}></div>
+                  </>
+                )}
               </div>
             </>
           )}
