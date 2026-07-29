@@ -136,7 +136,7 @@ export function UniversalScanner({ onScan, onClose, theme }) {
         } finally {
           setIsStarting(false);
         }
-      }, 150); // <-- 150ms delay added here!
+      }, 500); // <-- 150ms delay added here!
 
     } catch (err) {
       console.error('Scanner start error:', err);
