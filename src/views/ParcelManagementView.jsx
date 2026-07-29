@@ -95,9 +95,6 @@ export function ParcelManagementView({ parcels, users = [], form, setForm, onAdd
                 required
                 autoFocus
               />
-              <button type="button" onClick={() => onOpenScanner('camera')} style={{ ...styles.btnSecondary, flexShrink: 0, padding: '10px 14px' }} title="Scan with Phone Camera">
-                <Icons.Camera width={18} height={18} />
-              </button>
               <button type="button" onClick={handlePasteClipboard} style={{ ...styles.btnSecondary, flexShrink: 0, padding: '10px 14px' }} title="Paste from Clipboard">
                 <Icons.Clipboard width={18} height={18} />
               </button>
