@@ -104,30 +104,45 @@ export function UniversalScanner({ onScan, onClose, theme }) {
 
       const config = { fps: 10, qrbox: { width: 250, height: 150 } };
 
-      await html5QrCode.start(
-        cameraId, config,
-        (decodedText) => {
-          onScan(decodedText);
-          if (qrInstanceRef.current) {
-            qrInstanceRef.current.stop().catch(() => { });
-            qrInstanceRef.current.clear().catch(() => { });
-            qrInstanceRef.current = null;
-          }
-          setLastScanned(decodedText);
+      // ==========================================
+      // FIX: ADD A SLIGHT DELAY (150ms)
+      // This gives React time to paint the <div> on the screen 
+      // so the canvas doesn't crash with "width is 0"
+      // ==========================================
+      setTimeout(async () => {
+        try {
+          await html5QrCode.start(
+            cameraId, config,
+            (decodedText) => {
+              onScan(decodedText);
+              if (qrInstanceRef.current) {
+                qrInstanceRef.current.stop().catch(() => { });
+                qrInstanceRef.current.clear().catch(() => { });
+                qrInstanceRef.current = null;
+              }
+              setLastScanned(decodedText);
+              setIsScanning(false);
+              setIsStarting(false);
+            },
+            (error) => {
+              if (error && !error.includes('No MultiFormat Readers')) console.warn('Scan frame error:', error);
+            }
+          );
+          setIsScanning(true);
+        } catch (err) {
+          console.error('Scanner start error:', err);
+          setError(`Camera error: ${err.message || 'Unknown'}`);
           setIsScanning(false);
+        } finally {
           setIsStarting(false);
-        },
-        (error) => {
-          if (error && !error.includes('No MultiFormat Readers')) console.warn('Scan frame error:', error);
         }
-      );
-      setIsScanning(true);
+      }, 150); // <-- 150ms delay added here!
+
     } catch (err) {
       console.error('Scanner start error:', err);
       setError(`Camera error: ${err.message || 'Unknown'}`);
       setIsScanning(false);
-    } finally {
-      setIsStarting(false);
+      setIsStarting(false); // Make sure to release the loading state if the initial check fails
     }
   };
 
@@ -170,7 +185,7 @@ export function UniversalScanner({ onScan, onClose, theme }) {
           ) : (
             <>
               <div style={styles.scannerContainer}>
-                <div id={scannerContainerId} ref={scannerRef} style={{ width: '100%', minHeight: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.textSecondary, fontSize: '13px' }}>
+                <div id={scannerContainerId} ref={scannerRef} style={{ width: '100%', minWidth: '300px', minHeight: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.textSecondary, fontSize: '13px' }}>
                   {!isScanning && !isStarting && 'Camera preview will appear here'}
                 </div>
                 {isScanning && (<><div style={styles.scannerOverlay}></div><div style={styles.scannerLine}></div></>)}
